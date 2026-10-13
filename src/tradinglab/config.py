@@ -69,6 +69,7 @@ class PortfolioConfig:
     max_gross: float = 1.5            # max sum |w|
     max_weight: float = 0.35          # max |w| per asset
     rebalance_band: float = 0.02      # skip trades smaller than this fraction of equity
+    signal_span: int = 5              # EMA span applied to rule-based signals (turnover control)
     min_trade_notional: float = 10.0  # exchange-style minimum order size (quote ccy)
 
 

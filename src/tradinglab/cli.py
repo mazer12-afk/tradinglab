@@ -54,7 +54,7 @@ def cmd_fetch(cfg, args) -> int:
 def cmd_research(cfg, args) -> int:
     from tradinglab.research.pipeline import run_research
 
-    sel = run_research(cfg, include_deep=not args.no_deep, workers=args.workers)
+    sel = run_research(cfg, include_deep=not args.no_deep, workers=args.workers, train_live=not args.no_train)
     print(json.dumps({k: sel[k] for k in ("strategies", "alphas", "holdout", "live_rules_oos")}, indent=2,
                      default=str))
     return 0
@@ -155,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("research")
     p.add_argument("--no-deep", action="store_true", help="skip the deep-learning candidates")
     p.add_argument("--workers", type=int, default=None, help="parallel walk-forward folds")
+    p.add_argument("--no-train", action="store_true", help="reuse existing live deep models instead of refitting")
     sub.add_parser("train-live")
     p = sub.add_parser("backtest")
     p.add_argument("strategy")

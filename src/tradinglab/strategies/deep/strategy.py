@@ -25,6 +25,7 @@ DESCRIPTIONS = {
 
 class DeepStrategy(Strategy):
     trainable = True
+    smooth_signals = False  # turnover is already penalised in the training objective
 
     def __init__(self, kind: str, cfg: DeepConfig, cost_bps: float, bars_per_year: float,
                  asset_vol_target: float, vol_lookback: int, min_history_bars: int,

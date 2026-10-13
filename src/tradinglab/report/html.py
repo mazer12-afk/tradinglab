@@ -216,7 +216,8 @@ def research_report(report, out_path: Path) -> Path:
     sel_t = report.selection_table
     srows = "".join(
         f"<tr class='{'sel' if r.get('selected') else ''}'><td>{html.escape(n)}</td><td>{_num(r.get('sharpe'))}</td>"
-        f"<td>{_num(r.get('psr'))}</td><td>{_num(r.get('dsr'))}</td><td>{'yes' if r.get('eligible') else ''}</td>"
+        f"<td>{_num(r.get('psr'))}</td><td>{_num(r.get('dsr'))}</td><td>{_num(r.get('dsr_xs'))}</td>"
+        f"<td>{'yes' if r.get('eligible') else ''}</td>"
         f"<td>{'★' if r.get('selected') else ''}</td></tr>"
         for n, r in sel_t.sort_values("dsr", ascending=False).iterrows())
     h = report.holdout_ensemble or {}
@@ -248,10 +249,13 @@ def research_report(report, out_path: Path) -> Path:
                 f"{head}<th style='text-align:left'>Description</th></tr>{rows}</table></div>")
     body.append(f"<h2>Selection window {html.escape(report.selection_window[0])} → "
                 f"{html.escape(report.selection_window[1])}</h2><div class='tablewrap'><table><tr><th>Strategy</th>"
-                f"<th>Sharpe</th><th>PSR</th><th>DSR</th><th>Eligible</th><th>Chosen</th></tr>{srows}</table></div>")
+                f"<th>Sharpe</th><th>PSR</th><th>DSR</th><th>DSR (cross-sectional)</th><th>Eligible</th><th>Chosen</th></tr>"
+                f"{srows}</table></div>")
     body.append("<p class='note'>Sharpe ratios are annualised on daily bars. PSR = probability the true Sharpe exceeds 0; "
-                "DSR = PSR against the best Sharpe expected from luck alone given the number of strategies tried "
-                "(Bailey &amp; López de Prado). Benchmarks (hold_btc, basket_long) are shown but not eligible. "
+                "DSR = PSR against the best Sharpe expected from luck alone given the (correlation-adjusted) number of "
+                "strategies tried, under the null that every strategy has zero true Sharpe (Bailey &amp; López de "
+                "Prado); the stricter cross-sectional variant uses the observed dispersion of all candidates' Sharpe "
+                "ratios as the luck variance. Benchmarks (hold_btc, basket_long) are shown but not eligible. "
                 "Universe: today's liquid Binance listings, so results carry survivorship bias (delisted coins "
                 "such as LUNA/FTT are absent).</p>")
     out_path.parent.mkdir(parents=True, exist_ok=True)

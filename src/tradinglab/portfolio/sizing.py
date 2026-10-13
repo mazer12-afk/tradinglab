@@ -36,9 +36,11 @@ def ewma_cov(returns: np.ndarray, span: int) -> np.ndarray:
 
 def size_weights(signals: pd.DataFrame, panel: Panel, cfg: PortfolioConfig, bars_per_year: float,
                  instrument: str = "perp", min_history_bars: int = 0,
-                 outputs_weights: bool = False) -> pd.DataFrame:
+                 outputs_weights: bool = False, smoothing_span: int = 1) -> pd.DataFrame:
     close = panel.close.reindex(columns=signals.columns)
     sig = signals.reindex(close.index)
+    if smoothing_span > 1:
+        sig = sig.ewm(span=smoothing_span, min_periods=1).mean().where(sig.notna())
     rets = close.pct_change(fill_method=None)
     ann = np.sqrt(bars_per_year)
     vol = rets.ewm(span=cfg.vol_lookback, min_periods=cfg.vol_lookback // 2).std() * ann
@@ -57,6 +59,16 @@ def size_weights(signals: pd.DataFrame, panel: Panel, cfg: PortfolioConfig, bars
         raw = (sig * (cfg.asset_vol_target / vol)).div(n_active, axis=0).fillna(0.0)
 
     return vol_target(raw, panel, cfg, bars_per_year, instrument)
+
+
+def strategy_weights(strategy, signals: pd.DataFrame, panel: Panel, lab_cfg) -> pd.DataFrame:
+    """Signals → weights with the lab's settings (the single path used by research *and* live)."""
+    from tradinglab.config import bars_per_year
+
+    span = lab_cfg.portfolio.signal_span if getattr(strategy, "smooth_signals", False) else 1
+    return size_weights(signals.reindex(panel.close.index), panel, lab_cfg.portfolio,
+                        bars_per_year(lab_cfg.market.bar), lab_cfg.market.instrument,
+                        lab_cfg.universe.min_history_bars, strategy.outputs_weights, smoothing_span=span)
 
 
 def vol_target(raw: pd.DataFrame, panel: Panel, cfg: PortfolioConfig, bars_per_year: float,

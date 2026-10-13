@@ -26,6 +26,8 @@ class Strategy(ABC):
     trainable: bool = False
     #: signals are already portfolio weights (skip per-asset vol normalisation)
     outputs_weights: bool = False
+    #: apply the portfolio-level EMA signal smoothing (rule-based strategies)
+    smooth_signals: bool = True
 
     def fit(self, panel: Panel, train_end: pd.Timestamp) -> None:  # pragma: no cover - default no-op
         """Train using only bars strictly before ``train_end``."""

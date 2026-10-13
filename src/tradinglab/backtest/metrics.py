@@ -66,17 +66,30 @@ def effective_trials(returns: pd.DataFrame) -> float:
     return rho + (1.0 - rho) * m
 
 
-def deflated_sharpe(r: pd.Series, trial_sharpes_per_period: list[float], n_trials: float | None = None) -> float:
-    """DSR: PSR against the expected max Sharpe of ``n_trials`` trials (per-period units).
+def deflated_sharpe(r: pd.Series, trial_sharpes_per_period: list[float] | None = None,
+                    n_trials: float | None = None, null_variance: bool = True) -> float:
+    """Deflated Sharpe Ratio (Bailey & López de Prado 2014), per-period units.
 
-    The dispersion of the trials' Sharpe ratios estimates the null variance; ``n_trials``
-    defaults to the number of trials but should be the *effective* number when the
-    trials are correlated (see :func:`effective_trials`).
+    PSR of ``r`` against the Sharpe ratio expected from the best of ``n_trials``
+    attempts by luck alone. Two estimates of the variance of those lucky draws:
+
+    * ``null_variance=True`` (default): the False-Strategy-Theorem null – every
+      trial has zero true Sharpe, so draws vary only by estimation error,
+      Var ≈ 1/(T-1).
+    * ``null_variance=False``: the observed dispersion of the trials' Sharpe
+      ratios. Much stricter when trials differ structurally (a strategy with a
+      genuinely negative Sharpe inflates it), reported as a robustness check.
+
+    ``n_trials`` should be the *effective* number of trials (see :func:`effective_trials`).
     """
-    trials = [s for s in trial_sharpes_per_period if np.isfinite(s)]
+    x = pd.Series(r).dropna()
+    trials = [s for s in (trial_sharpes_per_period or []) if np.isfinite(s)]
     n = n_trials if n_trials is not None else max(len(trials), 1)
-    var = float(np.var(trials, ddof=1)) if len(trials) > 1 else 0.0
-    return probabilistic_sharpe(r, expected_max_sharpe(var, max(int(round(n)), 1)))
+    if null_variance:
+        var = 1.0 / max(len(x) - 1, 1)
+    else:
+        var = float(np.var(trials, ddof=1)) if len(trials) > 1 else 0.0
+    return probabilistic_sharpe(x, expected_max_sharpe(var, max(int(round(n)), 1)))
 
 
 def newey_west_tstat(r: pd.Series, lags: int | None = None) -> float:

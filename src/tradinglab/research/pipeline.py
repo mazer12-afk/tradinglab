@@ -51,9 +51,15 @@ def run_research(cfg: LabConfig, include_deep: bool = True, workers: int | None 
     save_report(report, results, out_dir)
 
     deep_paths = {}
-    if include_deep and train_live and deep_available():
+    if include_deep and deep_available():
         kinds = [k for k in DEEP_KINDS if cfg.live.shadow_all or f"dl_{k}" in report.live_choice]
-        deep_paths = train_live_models(cfg, panel, kinds)
+        if train_live:
+            deep_paths = train_live_models(cfg, panel, kinds)
+        else:  # keep previously trained live models
+            for k in kinds:
+                path = Path(cfg.paths.models_dir) / f"dl_{k}"
+                if (path / "weights.pt").exists():
+                    deep_paths[f"dl_{k}"] = str(path)
 
     selection = {
         "created_at": report.created_at,

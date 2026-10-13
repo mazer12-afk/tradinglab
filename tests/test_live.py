@@ -13,7 +13,7 @@ from tradinglab.live.broker import PaperBroker
 from tradinglab.live.engine import LiveEngine
 from tradinglab.live.feed import LiveFeed
 from tradinglab.live.state import StateStore
-from tradinglab.portfolio.sizing import size_weights
+from tradinglab.portfolio.sizing import strategy_weights
 from tradinglab.strategies.classic import TSMOM
 
 H = pd.Timedelta(hours=1)
@@ -100,7 +100,7 @@ def test_live_engine_matches_backtest(tmp_path, cfg, hourly, instrument, funding
     _run_days(engine, feed, days, hour=0)
 
     panel = build_panel(hourly, {s: pd.Series(dtype="float64") for s in hourly}, "1d", 0, funding)
-    w = size_weights(TSMOM().signals(panel), panel, cfg.portfolio, 365.0, instrument, cfg.universe.min_history_bars)
+    w = strategy_weights(TSMOM(), TSMOM().signals(panel), panel, cfg)
     bt = run_backtest(w, panel, cfg.costs, band=cfg.portfolio.rebalance_band, risk=cfg.risk, start=days[0],
                       end=days[-1])
     bt_eq = cfg.portfolio.initial_capital * (1 + bt.returns).cumprod()

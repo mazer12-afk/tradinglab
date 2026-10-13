@@ -30,7 +30,7 @@ from tradinglab.backtest.metrics import deflated_sharpe, effective_trials, summa
 from tradinglab.config import LabConfig, bars_per_year, utc
 from tradinglab.data.store import Panel
 from tradinglab.portfolio.allocator import combine_weights, correlation_filter, strategy_alphas
-from tradinglab.portfolio.sizing import size_weights
+from tradinglab.portfolio.sizing import strategy_weights
 from tradinglab.research.walkforward import walk_forward_signals
 from tradinglab.strategies.base import Strategy
 
@@ -63,8 +63,7 @@ def evaluate_candidate(strategy: Strategy, panel: Panel, cfg: LabConfig, workers
     bpy = bars_per_year(cfg.market.bar)
     t0 = time.time()
     sig = walk_forward_signals(strategy, panel, cfg, workers=workers, cache_dir=cache_dir)
-    w = size_weights(sig.reindex(panel.close.index), panel, cfg.portfolio, bpy, cfg.market.instrument,
-                     cfg.universe.min_history_bars, strategy.outputs_weights)
+    w = strategy_weights(strategy, sig, panel, cfg)
     bt = run_backtest(w, panel, cfg.costs, band=cfg.portfolio.rebalance_band, start=cfg.walkforward.first_test)
     res = CandidateResult(strategy.name, strategy.describe(), w, bt, bt.metrics(bpy))
     log.info("%-12s OOS Sharpe %.2f CAGR %.1f%% MDD %.1f%% (%.0fs)", strategy.name,
@@ -83,7 +82,8 @@ def select(results: dict[str, CandidateResult], cfg: LabConfig, start, end,
     rows = {}
     for n, r in rets.items():
         m = summarize(r, bpy)
-        m["dsr"] = deflated_sharpe(r, per_period_sr, n_eff)
+        m["dsr"] = deflated_sharpe(r, per_period_sr, n_eff, null_variance=True)
+        m["dsr_xs"] = deflated_sharpe(r, per_period_sr, n_eff, null_variance=False)
         m["n_eff_trials"] = n_eff
         rows[n] = m
     table = pd.DataFrame(rows).T

@@ -36,8 +36,8 @@ def test_classic_signals_and_sizing_are_causal(hourly, strategy):
     s_part = strategy.signals(part)
     pd.testing.assert_frame_equal(s_full.iloc[-30:], s_part.iloc[-30:], check_freq=False)
     cfg = PortfolioConfig(vol_lookback=20)
-    w_full = size_weights(strategy.signals(full), full, cfg, 365.0, "perp", 30).loc[:cut]
-    w_part = size_weights(s_part, part, cfg, 365.0, "perp", 30)
+    w_full = size_weights(strategy.signals(full), full, cfg, 365.0, "perp", 30, smoothing_span=5).loc[:cut]
+    w_part = size_weights(s_part, part, cfg, 365.0, "perp", 30, smoothing_span=5)
     np.testing.assert_allclose(w_full.iloc[-30:].to_numpy(), w_part.iloc[-30:].to_numpy(), atol=1e-12)
 
 

@@ -31,7 +31,10 @@ def test_psr_dsr_behave():
     assert 0.05 < probabilistic_sharpe(noise) < 0.95
     trials = [s.mean() / s.std() for s in [pd.Series(rng.normal(0, 0.01, 1000)) for _ in range(50)]]
     # Deflating against many trials can only lower the probability.
-    assert deflated_sharpe(good, trials) <= probabilistic_sharpe(good) + 1e-12
+    assert deflated_sharpe(good, trials, null_variance=False) <= probabilistic_sharpe(good) + 1e-12
+    assert deflated_sharpe(good, trials, n_trials=50) <= probabilistic_sharpe(good) + 1e-12
+    # More trials → a higher luck hurdle → lower DSR.
+    assert deflated_sharpe(noise, n_trials=100) < deflated_sharpe(noise, n_trials=2)
     assert abs(newey_west_tstat(good)) > 3
 
 

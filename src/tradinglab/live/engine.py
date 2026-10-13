@@ -33,7 +33,7 @@ from tradinglab.live.feed import LiveFeed, latest_bar
 from tradinglab.live.state import StateStore
 from tradinglab.portfolio.allocator import combine_weights
 from tradinglab.portfolio.risk import DrawdownGuard
-from tradinglab.portfolio.sizing import size_weights
+from tradinglab.portfolio.sizing import strategy_weights
 from tradinglab.strategies.base import Strategy
 from tradinglab.strategies.registry import by_name
 
@@ -178,9 +178,7 @@ class LiveEngine:
                     sig = strat.signals(panel, start=panel.close.index[-1])
                 else:
                     sig = strat.signals(panel)
-                cache[name] = size_weights(sig.reindex(panel.close.index), panel, self.cfg.portfolio, self.bpy,
-                                           self.cfg.market.instrument, self.cfg.universe.min_history_bars,
-                                           strat.outputs_weights)
+                cache[name] = strategy_weights(strat, sig, panel, self.cfg)
             weights[name] = cache[name]
         combined = combine_weights(weights, spec.alphas, panel, self.cfg)
         return combined.iloc[-1].fillna(0.0)
