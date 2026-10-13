@@ -16,7 +16,74 @@ prices: unattended, crash-safe, with every decision and fill journaled.
                                                                                     reports/live.html
 ```
 
-<!-- RESULTS -->
+## Research results (data through 2026-10-12)
+
+Walk-forward out-of-sample, **net of 10 bps per side, real funding and a 3-hour
+signal→fill delay**, 30 coins, daily bars. Full OOS = 2021-01 → 2026-10;
+selection window = 2021–2024; holdout = 2025-01 → 2026-10.
+
+| strategy | OOS Sharpe | CAGR | max DD | turnover/yr | Sharpe 2021–24 | Sharpe 2025–26 |
+|---|---|---|---|---|---|---|
+| `tsmom_lf` | 0.86 | 21.4% | -35% | 16× | 1.25 | -0.06 |
+| `breakout_lf` | 0.84 | 21.6% | -38% | 19× | 1.25 | -0.10 |
+| `macd_lf` | 0.71 | 16.3% | -35% | 8× | 1.13 | -0.33 |
+| `basket_long` (benchmark) | 0.69 | 15.0% | -36% | 2× | 0.97 | 0.03 |
+| `tsmom` | 0.63 | 13.9% | -35% | 29× | 0.74 | 0.41 |
+| `macd` | 0.61 | 13.1% | -33% | 14× | 0.78 | 0.24 |
+| `breakout` | 0.57 | 11.9% | -33% | 37× | 0.89 | -0.21 |
+| `hold_btc` (benchmark) | 0.41 | 6.1% | -38% | 2× | 0.56 | -0.04 |
+| `dl_deepm` | 0.40 | 7.3% | -40% | 55× | 0.62 | -0.11 |
+| `dl_lstm` | 0.20 | 1.8% | -42% | 40× | 0.26 | 0.06 |
+| `xsmom_63` | -0.14 | -5.4% | -36% | 43× | 0.05 | -0.61 |
+| `dl_mom_trans` | -0.37 | -14.3% | -67% | 117× | -0.29 | -0.60 |
+| `xs_rev_5` | -1.44 | -29.5% | -91% | 175× | -1.36 | -1.64 |
+
+**What is actually profitable.** Time-series trend following is the only family
+with robust out-of-sample profits after costs. It comes in two nearly
+uncorrelated flavours: long/flat trend (ρ≈0.9 with simply holding the basket,
+i.e. timed beta) and long/short trend (ρ≈−0.1 with the market).
+Cross-sectional momentum and short-term reversal lose money after costs.
+
+**Deep models.** The Momentum Transformer, LSTM-DMN and DeePM-lite did *not* beat
+the simple rules on ~5 years of crypto data (they were designed on 50 futures
+× 30 years). Their positions were too jumpy, with turnover up to 117×/yr eating the
+edge. They keep running as live shadow accounts, retrained weekly, so the lab
+keeps measuring them.
+
+**Selection → live portfolio.** Strategies are clustered by return correlation.
+A cluster is chosen when its equal-weight stream clears Sharpe ≥ 0.5 and a
+Deflated Sharpe ≥ 0.5 (trials = number of clusters). All eligible members are
+held, equal-weighted inside the cluster, and clusters are split by inverse
+volatility. The live `main` account holds two clusters, long/flat trend
+(`tsmom_lf`, `macd_lf`, `breakout_lf`, 16% each) and long/short trend
+(`tsmom`, `macd`, 26% each).
+* Applying these rules over the full OOS period gives Sharpe 0.73, CAGR 16.3%,
+  max drawdown -29%, +139% total.
+* Selection frozen on 2021–24 and evaluated on 2025-01 → 2026-10 gives
+  Sharpe 0.16, +1.7%, max drawdown -21%. The last 21 months were a poor regime
+  for crypto trend following.
+
+**Research log (honest disclosure).** A first selection rule (single-strategy
+DSR with the cross-sectional variance, plus a 0.9 correlation filter) selected
+long/flat trend only. That choice then lost 23.6% in the holdout, partly because
+a −15%/−30% drawdown guard de-risked at the lows and missed the recoveries (it
+also lowered Sharpe in the 2021–24 window). The guard is now a catastrophe
+breaker (−25%/−40%) and selection is cluster-based. Both changes were made
+*after* seeing that holdout, so the holdout above is no longer an untouched test.
+Turnover controls (EMA-5 signal smoothing, 0.5% rebalance band) were chosen on
+2021–24 data only.
+
+Full tables: `reports/research/` (`index.html`, `candidates_oos.csv`,
+`selection_window.csv`, `holdout_window.csv`, `equity_curves.csv`).
+
+## Live paper trading
+
+Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The
+first decisions were for the daily bar closing 2026-10-13 00:00 UTC. `main` opened
+30 long positions (45% gross). See `state/status.json`, `state/journal/` and
+`reports/live.html`. This sandbox cannot reach exchange APIs, so the engine runs in
+archive mode: fills and marks appear once Binance publishes each day (~03:00 UTC).
+
 
 ## Quick start
 
