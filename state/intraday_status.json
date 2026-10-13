@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-10-13 21:20:02.770275+00:00",
-  "last_bar": "2026-10-13 21:20:00+00:00",
-  "new_bars": 1,
+  "updated_at": "2026-10-13 22:19:35.891576+00:00",
+  "last_bar": "2026-10-13 22:15:00+00:00",
+  "new_bars": 10,
   "traded": true,
-  "orders": 0,
+  "orders": 1,
   "warnings": [],
   "models": {
     "deep": {
@@ -37,20 +37,22 @@
       "equity": 100000.0,
       "pnl": 0.0,
       "return": 0.0,
-      "marked_at": "2026-10-13T21:20:00+00:00",
+      "marked_at": "2026-10-13T22:15:00+00:00",
       "gross": 0.0,
       "net": 0.0,
-      "trades": 0,
-      "fees_paid": 0.0,
+      "trades": 1,
+      "fees_paid": 19.997998801111414,
       "funding_paid": -0.0,
-      "positions": {}
+      "positions": {
+        "BTCUSDT": -0.4796033967670775
+      }
     },
     "intraday:lgbm_4h": {
       "model": "LightGBM 4-hour forecast; enters at |z|>2.5, holds \u22652h, exits on sign flip.",
       "equity": 100000.0,
       "pnl": 0.0,
       "return": 0.0,
-      "marked_at": "2026-10-13T21:20:00+00:00",
+      "marked_at": "2026-10-13T22:15:00+00:00",
       "gross": 0.0,
       "net": 0.0,
       "trades": 0,
@@ -60,12 +62,12 @@
     },
     "intraday:deep_lstm_attn": {
       "model": "LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.",
-      "equity": 100005.34657603105,
-      "pnl": 5.346576031050063,
-      "return": 5.346576031040051e-05,
-      "marked_at": "2026-10-13T21:20:00+00:00",
-      "gross": 0.36064976384818914,
-      "net": 0.36064976384818914,
+      "equity": 99956.80112772732,
+      "pnl": -43.19887227268191,
+      "return": -0.0004319887227268726,
+      "marked_at": "2026-10-13T22:15:00+00:00",
+      "gross": 0.36033925427318353,
+      "net": 0.36033925427318353,
       "trades": 12,
       "fees_paid": 18.021768141014928,
       "funding_paid": -0.0,
