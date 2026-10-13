@@ -109,6 +109,7 @@ class BinanceSpot(Exchange):
         rows = []
         step = self.STEP_MS[interval]
         cursor = int(pd.Timestamp(start).timestamp() * 1000)
+        asof = pd.Timestamp.now(tz="UTC")  # before the request: a bar is closed only if it ended before we asked
         for _ in range(200):
             data = self._get(f"{self.host}/api/v3/klines",
                              {"symbol": symbol, "interval": interval, "startTime": cursor, "limit": 1000})
@@ -118,13 +119,14 @@ class BinanceSpot(Exchange):
             if len(data) < 1000:
                 break
             cursor = int(data[-1][0]) + step
-        return self.parse_klines(rows, full=full, bar=pd.Timedelta(milliseconds=step))
+        return self.parse_klines(rows, full=full, bar=pd.Timedelta(milliseconds=step), asof=asof)
 
     def klines_1h(self, symbol: str, start: pd.Timestamp) -> pd.DataFrame:
         return self.klines(symbol, "1h", start)
 
     @staticmethod
-    def parse_klines(rows: list, full: bool = False, bar: pd.Timedelta = pd.Timedelta(hours=1)) -> pd.DataFrame:
+    def parse_klines(rows: list, full: bool = False, bar: pd.Timedelta = pd.Timedelta(hours=1),
+                     asof: pd.Timestamp | None = None) -> pd.DataFrame:
         cols = ["t", "open", "high", "low", "close", "volume", "ct", "quote_volume", "trades",
                 "taker_buy_volume", "taker_buy_quote_volume"]
         if not rows:
@@ -133,8 +135,10 @@ class BinanceSpot(Exchange):
         df.index = pd.to_datetime(df["t"].astype("int64"), unit="ms", utc=True)
         df.index.name = "open_time"
         df = df[~df.index.duplicated(keep="last")].sort_index()
-        now = pd.Timestamp.now(tz="UTC")
-        df = df[df.index + bar <= now]  # closed bars only
+        asof = asof or pd.Timestamp.now(tz="UTC")
+        # Closed bars only: the bar must have ended (with 1s margin for the exchange to finalise it)
+        # before the request was sent.
+        df = df[df.index + bar + pd.Timedelta(seconds=1) <= asof]
         keep = ["open", "high", "low", "close", "volume", "quote_volume"]
         if full:
             keep += ["trades", "taker_buy_volume", "taker_buy_quote_volume"]

@@ -10,6 +10,7 @@ behaviour is what research evaluated.
 
 from __future__ import annotations
 
+import warnings
 from collections import deque
 from dataclasses import dataclass
 
@@ -75,7 +76,8 @@ class SelectivePolicy:
         """Update forecast history with bar t's prediction and return score_t."""
         self.preds.append(np.asarray(pred, dtype=float))
         P = np.array(self.preds)                                 # [≤H, n]
-        with np.errstate(invalid="ignore"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)       # all-NaN column → NaN (no view)
             s = np.nanmean(np.where(np.isfinite(P), P, np.nan), axis=0)
         s = np.where(np.isfinite(P).any(axis=0), s, np.nan)
         self.abs_s.append(np.abs(s))

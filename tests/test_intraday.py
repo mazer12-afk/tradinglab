@@ -149,7 +149,7 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
 
     ex = FakeExchange(kl)
     feed = L.IntradayFeed(md=None, symbols=SYMS, exchange=ex, buffer_days=25)
-    monkeypatch.setattr(L, "okx_funding_rates", lambda syms, session=None: {s: 0.0001 for s in syms})
+    monkeypatch.setattr(L, "okx_funding_rates", lambda syms, session=None: {s: (0.0001, None) for s in syms})
     ex.now = split
     feed.kl = {s: k[k.index + pd.Timedelta(minutes=5) <= split - pd.Timedelta(days=0)] for s, k in kl.items()}
     store = StateStore(tmp_path / "intraday.sqlite")
@@ -187,3 +187,135 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
     # Re-running a cycle for the same bar is a no-op (idempotent).
     rep = eng.cycle(times[-1])
     assert rep.new_bars == 0 and rep.orders == 0
+
+
+# ----------------------------------------------------------------- regression tests from the review
+def _engine(tmp_path, kl, icfg, monkeypatch, specs, sub="e"):
+    from tradinglab.intraday import live as L
+    from tradinglab.intraday.models import LGBMForecaster
+    from tradinglab.intraday.research import train_rows
+
+    pytest.importorskip("lightgbm")
+    root = tmp_path / sub
+    root.mkdir()
+    ic = icfg.intraday
+    icfg.paths.state_dir = str(root)
+    ic.train_days, ic.valid_days = 20, 3
+    d = assemble_intraday(kl, {}, {}, "5m", 0.0)
+    fs = build_features(d, 12)
+    split = d.index[288 * 30]
+    mdir = tmp_path / "models"
+    if not (mdir / "manifest.json").exists():
+        tr, _ = train_rows(fs, ic, split)
+        X, y, _, a = fs.rows(tr)
+        LGBMForecaster(threads=1, min_data_in_leaf=50).fit(X, y, asset=a).save(mdir / "lgbm_h12")
+        (mdir / "manifest.json").write_text(json.dumps({"features": fs.names, "symbols": SYMS,
+                                                         "models": {"lgbm_h12": {}}}))
+    ex = FakeExchange(kl)
+    feed = L.IntradayFeed(md=None, symbols=SYMS, exchange=ex, buffer_days=25)
+    monkeypatch.setattr(L, "okx_funding_rates", lambda syms, session=None: {s: (0.0001, None) for s in syms})
+    ex.now = split
+    feed.kl = {s: k[k.index + pd.Timedelta(minutes=5) <= split] for s, k in kl.items()}
+    store = StateStore(root / "intraday.sqlite")
+    eng = L.IntradayEngine(icfg, feed, store, mdir, policies=specs)
+    times = pd.date_range(split + pd.Timedelta(seconds=5), periods=288, freq="5min")
+    return eng, ex, store, times
+
+
+SPECS = [PolicySpec("a", "lgbm", horizon=12, enter=1.0, exit=0.0, min_hold=3, norm_window=288 * 5),
+         PolicySpec("b", "lgbm", horizon=12, enter=1.5, exit=0.0, min_hold=6, norm_window=288 * 5)]
+
+
+def _run(eng, ex, times, fail_at=None, fail_what=None):
+    for i, t in enumerate(times):
+        ex.now = t
+        if i == fail_at:
+            if fail_what == "quotes":
+                orig = eng.feed.quotes
+                eng.feed.quotes = lambda: (_ for _ in ()).throw(ConnectionError("quote outage"))
+            else:
+                orig = eng._outputs
+                def boom(spec, *a, **k):
+                    if spec.name == "b":
+                        raise RuntimeError("model failure")
+                    return orig(spec, *a, **k)
+                eng._outputs = boom
+            with pytest.raises((ConnectionError, RuntimeError)):
+                eng.cycle(t)
+            if fail_what == "quotes":
+                eng.feed.quotes = orig
+            else:
+                eng._outputs = orig
+        eng.cycle(t)  # the daemon's retry
+
+
+@pytest.mark.parametrize("fail_what", ["model", "quotes"])
+def test_failed_cycle_is_retried_atomically(tmp_path, kl, icfg, monkeypatch, fail_what):
+    """A mid-cycle failure must neither double-apply a bar to policy state nor drop its trades."""
+    clean, ex1, s1, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "clean")
+    _run(clean, ex1, times)
+    faulty, ex2, s2, _ = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "faulty")
+    _run(faulty, ex2, times, fail_at=100, fail_what=fail_what)
+    for acct in ("intraday:a", "intraday:b"):
+        assert s1.get_meta(f"policy:{acct}") == s2.get_meta(f"policy:{acct}")
+        pd.testing.assert_series_equal(s1.equity_curve(acct)["equity"], s2.equity_curve(acct)["equity"],
+                                       rtol=1e-12)
+        n1 = s1.conn.execute("select count(*) from decisions where account=?", (acct,)).fetchone()[0]
+        n2 = s2.conn.execute("select count(*) from decisions where account=?", (acct,)).fetchone()[0]
+        assert n1 == n2 == len(times)
+
+
+def test_gap_bars_marked_at_last_price(tmp_path, kl, icfg, monkeypatch):
+    """A symbol missing bars must be marked at its last price, not dropped from equity."""
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS[:1])
+    _run(eng, ex, times[:150])
+    acct = "intraday:a"
+    pos = store.positions(acct)
+    assert pos, "test needs an open position"
+    sym = next(iter(pos))
+    # Remove the next 6 bars of that symbol from the exchange (an outage), while others continue.
+    k = ex.full[sym]
+    gap = (k.index > times[149]) & (k.index <= times[149] + pd.Timedelta(minutes=30))
+    ex.full[sym] = k[~gap]
+    cash_before, pos_before = store.account(acct)["cash"], dict(store.positions(acct))
+    ex.now = times[150]
+    eng.cycle(times[150])
+    eq = store.equity_curve(acct)["equity"].iloc[-1]
+    assert abs(eq - cash_before) > 1.0  # position still valued
+    assert eq == pytest.approx(cash_before + sum(
+        u * float(ex.full[s]["close"][ex.full[s].index + pd.Timedelta(minutes=5) <= eq_t].iloc[-1])
+        for s, u in pos_before.items() for eq_t in [store.equity_curve(acct).index[-1]]), rel=1e-9)
+
+
+def test_lagging_symbol_does_not_freeze_book(tmp_path, kl, icfg, monkeypatch):
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS[:1])
+    _run(eng, ex, times[:20])
+    halted = "CCCUSDT"
+    ex.full[halted] = ex.full[halted][ex.full[halted].index <= times[19]]
+    reps = []
+    for t in times[20:40]:
+        ex.now = t
+        reps.append(eng.cycle(t))
+    assert all(r.new_bars == 1 for r in reps[5:])          # the book keeps moving
+    assert any("lagging" in w for r in reps for w in r.warnings)
+
+
+def test_forming_bar_is_not_accepted():
+    from tradinglab.data.exchanges import BinanceSpot
+
+    t0 = pd.Timestamp("2026-01-01 00:00", tz="UTC")
+    rows = [[int((t0 + pd.Timedelta(minutes=5 * i)).timestamp() * 1000), "1", "1", "1", "1", "1", 0, "1", 1, "1", "1"]
+            for i in range(3)]
+    # Asked at 00:14:59.5 – the 00:10 bar is still forming even if the response arrives later.
+    df = BinanceSpot.parse_klines(rows, full=True, bar=pd.Timedelta(minutes=5),
+                                  asof=t0 + pd.Timedelta(minutes=14, seconds=59.5))
+    assert list(df.index) == [t0, t0 + pd.Timedelta(minutes=5)]
+
+
+def test_engine_refuses_misaligned_model_symbols(tmp_path, kl, icfg, monkeypatch):
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS[:1])
+    from tradinglab.intraday import live as L
+
+    feed = L.IntradayFeed(md=None, symbols=list(reversed(SYMS)), exchange=ex)
+    with pytest.raises(RuntimeError, match="misaligned"):
+        L.IntradayEngine(icfg, feed, store, tmp_path / "models", policies=SPECS[:1])

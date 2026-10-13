@@ -72,7 +72,7 @@ class IntradayFeed:
             if add.empty:
                 return sym, h
             out = pd.concat([h, add[[c for c in h.columns if c in add.columns] or add.columns]])
-            out = out[~out.index.duplicated(keep="first")].sort_index()
+            out = out[~out.index.duplicated(keep="last")].sort_index()  # newest copy of a bar wins
             cutoff = out.index[-1] - pd.Timedelta(days=self.buffer_days)
             return sym, out[out.index >= cutoff]
 
@@ -80,9 +80,18 @@ class IntradayFeed:
             for sym, frame in pool.map(top_up, self.symbols):
                 self.kl[sym] = frame
 
-    def last_common_close(self) -> pd.Timestamp:
-        """Close time of the newest bar that every symbol has."""
-        return min(k.index[-1] for k in self.kl.values()) + self.td
+    def last_common_close(self, with_lagging: bool = False, max_lag: pd.Timedelta = pd.Timedelta(minutes=15)):
+        """Close time of the newest bar every *active* symbol has.
+
+        A symbol more than ``max_lag`` behind the freshest one (halted, delisted,
+        API trouble) is excluded so it cannot freeze the whole book; it simply has
+        no new bars (no new view, positions marked at its last price).
+        """
+        last = {s: k.index[-1] + self.td for s, k in self.kl.items() if not k.empty}
+        newest = max(last.values())
+        lagging = sorted(s for s, t in last.items() if newest - t > max_lag)
+        t = min(v for s, v in last.items() if s not in lagging)
+        return (t, lagging) if with_lagging else t
 
     def data(self, until: pd.Timestamp | None = None) -> IntradayData:
         until = until or self.last_common_close()
@@ -93,8 +102,8 @@ class IntradayFeed:
         return self.ex.quotes(self.symbols)
 
 
-def okx_funding_rates(symbols: list[str], session=None) -> dict[str, float]:
-    """Live perpetual funding rates (per 8h settlement) from OKX USDT swaps."""
+def okx_funding_rates(symbols: list[str], session=None) -> dict[str, tuple[float, pd.Timestamp | None]]:
+    """Live perpetual funding rates from OKX USDT swaps → {symbol: (rate, settlement time it applies to)}."""
     import requests
 
     s = session or requests.Session()
@@ -103,7 +112,9 @@ def okx_funding_rates(symbols: list[str], session=None) -> dict[str, float]:
         base = sym.removesuffix("USDT")
         try:
             r = s.get(f"{OKX}/api/v5/public/funding-rate", params={"instId": f"{base}-USDT-SWAP"}, timeout=10)
-            out[sym] = float(r.json()["data"][0]["fundingRate"])
+            row = r.json()["data"][0]
+            settle = pd.Timestamp(int(row["fundingTime"]), unit="ms", tz="UTC") if row.get("fundingTime") else None
+            out[sym] = (float(row["fundingRate"]), settle)
         except Exception as exc:  # noqa: BLE001 - keep last known / default
             log.debug("funding rate %s unavailable: %s", sym, exc)
         time.sleep(0.12)
@@ -134,7 +145,11 @@ class IntradayEngine:
         self.broker = PaperBroker(store, CostConfig(fee_bps=self.ic.fee_bps, slippage_bps=1.0), "perp")
         self.models: dict[str, object] = {}
         self.manifest = json.loads((self.models_dir / "manifest.json").read_text())
-        self.funding: dict[str, float] = {}
+        trained_syms = self.manifest.get("symbols")
+        if trained_syms is not None and list(trained_syms) != list(feed.symbols):
+            raise RuntimeError(f"model symbols/order {trained_syms} != live feed {feed.symbols} "
+                               "(asset ids and embeddings would be misaligned)")
+        self.funding: dict[str, tuple[float, pd.Timestamp | None]] = {}
         self.funding_fetched: pd.Timestamp | None = None
 
     # ------------------------------------------------------------- models
@@ -189,11 +204,24 @@ class IntradayEngine:
 
     # --------------------------------------------------------------- cycle
     def cycle(self, now: pd.Timestamp | None = None) -> IntradayCycle:
+        """Process every bar that closed since the last cycle – atomically.
+
+        Policy steps, targets and quotes are computed in memory first; marks,
+        funding, policy state, executions, decisions and the ``last_bar`` marker
+        are then committed in ONE transaction. Any failure (model, quotes, DB)
+        rolls everything back and the next cycle redoes the same bars from the
+        same persisted state – a bar is never applied twice and never skipped.
+        """
         now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
         rep = IntradayCycle(now=now)
         self.feed.update()
-        t_last = self.feed.last_common_close()
+        t_last, lagging = self.feed.last_common_close(with_lagging=True)
         rep.bar = t_last
+        if lagging:
+            rep.warnings.append(f"lagging symbols excluded: {', '.join(lagging)}")
+        stale = now - t_last > self.stale
+        if stale:
+            rep.warnings.append(f"latest bar {t_last} is stale at {now}; not trading")
         last_done = self.store.get_meta("intraday:last_bar")
         last_done = utc(last_done) if last_done else None
         if last_done is not None and t_last <= last_done:
@@ -202,34 +230,37 @@ class IntradayEngine:
         d = self.feed.data(t_last)
         fs = build_features(d, 12)
         idx = d.index
-        if last_done is None:
-            new = idx[-1:]
-        else:
-            new = idx[(idx > last_done) & (idx <= t_last)]
+        new = idx[-1:] if last_done is None else idx[(idx > last_done) & (idx <= t_last)]
         rep.new_bars = len(new)
         rows = np.searchsorted(idx, new)
-        stale = now - t_last > self.stale
-        if stale:
-            rep.warnings.append(f"latest bar {t_last} is stale at {now}; not trading")
         self._refresh_funding(now)
-        targets = {}
+
+        targets: dict[str, pd.Series] = {}
+        states: dict[str, dict] = {}
         for spec in self.specs:
             pol = self._policy(spec)
             if spec.rule == "selective" and not pol.preds:
                 self._warm_up(spec, pol, fs, d, rows[0])
+            done_until = utc(pol.last_bar) if pol.last_bar else None
             out = self._outputs(spec, fs, d, rows)
             for k, r in enumerate(rows):
+                if done_until is not None and idx[r] <= done_until:
+                    log.warning("%s: bar %s already applied to policy state; skipping", spec.name, idx[r])
+                    continue
                 last = k == len(rows) - 1
                 w = pol.update(out[k], idx[r], d, self.ic, size=last and not stale)
                 if w is not None:
                     targets[spec.name] = w
-            self.store.set_meta(f"policy:{self.account(spec)}", pol.state())
+            states[spec.name] = pol.state()
+        quotes = self.feed.quotes() if targets else {}
+
         with self.store.transaction():
             for spec in self.specs:
                 self._mark_and_fund(spec, d, new, last_done, rep)
+                self.store.set_meta(f"policy:{self.account(spec)}", states[spec.name])
+            if targets:
+                self._execute(targets, quotes, t_last, now, rep)
             self.store.set_meta("intraday:last_bar", str(t_last))
-        if targets:
-            self._execute(targets, d, t_last, now, rep)
         self._export(rep)
         return rep
 
@@ -243,33 +274,49 @@ class IntradayEngine:
         log.info("%s warmed up on %d bars", spec.name, len(rows))
 
     def _refresh_funding(self, now: pd.Timestamp) -> None:
+        """Refresh live funding rates at most every 30 min (also after failures – no per-bar retries)."""
         if self.funding_fetched is None or now - self.funding_fetched > pd.Timedelta(minutes=30):
-            rates = okx_funding_rates(self.feed.symbols)
-            if rates:
-                self.funding.update(rates)
-                self.funding_fetched = now
+            self.funding_fetched = now
+            try:
+                rates = okx_funding_rates(self.feed.symbols)
+            except Exception as exc:  # noqa: BLE001
+                log.warning("funding refresh failed: %s", exc)
+                return
+            for sym, (rate, settle) in rates.items():
+                self.funding[sym] = (rate, settle)
+
+    def _funding_rate(self, sym: str, stamp: pd.Timestamp) -> tuple[float, bool]:
+        """Rate for the settlement at ``stamp`` → (rate, estimated)."""
+        cached = self.funding.get(sym)
+        if cached is None:
+            return 0.0001, True
+        rate, settle = cached
+        return rate, not (settle is not None and settle == stamp)
 
     def _mark_and_fund(self, spec: PolicySpec, d: IntradayData, new: pd.DatetimeIndex,
                        last_done: pd.Timestamp | None, rep: IntradayCycle) -> None:
         name = self.account(spec)
+        closes = d.close.ffill()  # last known price for symbols missing a bar (gaps, lagging feeds)
         prev = last_done
         for t in new:
-            prices = {s: float(p) for s, p in d.close.loc[t].items() if np.isfinite(p)}
+            prices = {s: float(p) for s, p in closes.loc[t].items() if np.isfinite(p)}
             if prev is not None:
                 for stamp in pd.date_range(prev.ceil("8h"), t, freq="8h"):
                     if prev < stamp <= t:
                         for sym in self.store.positions(name):
-                            rate = self.funding.get(sym, 0.0001)
-                            if self.broker.apply_funding(name, sym, stamp, rate, prices.get(sym, 0.0), False):
+                            if sym not in prices:
+                                continue
+                            rate, est = self._funding_rate(sym, stamp)
+                            if self.broker.apply_funding(name, sym, stamp, rate, prices[sym], est):
                                 rep.funding_events += 1
             eq, gross, net = self.broker.equity(name, prices)
             cash = self.store.account(name)["cash"]
             self.store.record_equity(name, t, eq, cash, gross / eq if eq else 0.0, net / eq if eq else 0.0)
             prev = t
 
-    def _execute(self, targets: dict[str, pd.Series], d: IntradayData, t_last: pd.Timestamp,
+    def _execute(self, targets: dict[str, pd.Series], quotes: dict[str, Quote], t_last: pd.Timestamp,
                  now: pd.Timestamp, rep: IntradayCycle) -> None:
-        quotes = self.feed.quotes()
+        """Rebalance every account at the live quotes (caller holds the transaction)."""
         mids = {s: q.mid for s, q in quotes.items()}
         for spec in self.specs:
             if spec.name not in targets:
@@ -280,15 +327,16 @@ class IntradayEngine:
             guard.restore(self.store.get_meta(f"guard:{name}", {}))
             scale = guard.update(eq)
             tgt = {s: float(w) * scale for s, w in targets[spec.name].items() if abs(w) > 1e-12}
-            with self.store.transaction():
-                ids = self.broker.rebalance(name, tgt, mids, now, now, self.ic.rebalance_band,
-                                            self.ic.min_trade_notional, reason=f"bar {t_last}")
-                for o in self.store.pending_orders(name):
-                    q = quotes.get(o["symbol"])
-                    if q is not None:
-                        self.broker.fill(o, q.mid, now, quote=q)
-                self.store.record_decision(name, t_last, now, eq, scale, tgt)
-                self.store.set_meta(f"guard:{name}", guard.state())
+            ids = self.broker.rebalance(name, tgt, mids, now, now, self.ic.rebalance_band,
+                                        self.ic.min_trade_notional, reason=f"bar {t_last}")
+            for o in self.store.pending_orders(name):
+                q = quotes.get(o["symbol"])
+                if q is not None:
+                    self.broker.fill(o, q.mid, now, quote=q)
+                else:
+                    self.store.cancel_order(o["id"], "no live quote")
+            self.store.record_decision(name, t_last, now, eq, scale, tgt)
+            self.store.set_meta(f"guard:{name}", guard.state())
             rep.orders += len(ids)
         rep.traded = True
 

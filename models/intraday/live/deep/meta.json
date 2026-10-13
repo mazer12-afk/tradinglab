@@ -1,0 +1,22 @@
+{
+ "cfg": {
+  "kind": "lstm_attn",
+  "seq_len": 96,
+  "burn_in": 24,
+  "hidden": 32,
+  "heads": 4,
+  "dropout": 0.2,
+  "lr": 0.001,
+  "batch_windows": 16,
+  "train_stride": 24,
+  "max_epochs": 12,
+  "patience": 3,
+  "cost_bps": 7.0,
+  "turnover_penalty": 1.0,
+  "seeds": 2,
+  "threads": 4,
+  "asset_vol_target": 0.6
+ },
+ "n_feat": 32,
+ "n_assets": 12
+}

@@ -148,7 +148,7 @@ def cmd_report(cfg, args) -> int:
 def cmd_intraday_train(cfg, args) -> int:
     from tradinglab.intraday.train import train_live_intraday
 
-    m = train_live_intraday(cfg, deep_epochs=args.deep_epochs)
+    m = train_live_intraday(cfg, deep_epochs=args.deep_epochs, kinds=tuple(args.kinds.split(",")))
     print(json.dumps({k: m[k] for k in ("trained_at", "data_end", "models")}, indent=2, default=str))
     return 0
 
@@ -201,6 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("report")
     p = sub.add_parser("intraday-train", help="train + freeze the live intraday AI models")
     p.add_argument("--deep-epochs", type=int, default=None)
+    p.add_argument("--kinds", default="lgbm,deep", help="which models to (re)train: lgbm,deep")
     p = sub.add_parser("intraday-run", help="real-time intraday paper trading daemon (5m bars)")
     p.add_argument("--poll", type=float, default=10.0)
     p.add_argument("--max-cycles", type=int, default=None)
