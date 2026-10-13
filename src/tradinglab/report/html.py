@@ -106,7 +106,7 @@ def _num(v, kind="f2"):
     if kind == "pct0":
         return f"{100 * v:.1f}%"
     if kind == "money":
-        return f"${v:,.0f}"
+        return f"${v:,.0f}" if round(v) != 0 else "$0"
     return f"{v:.2f}"
 
 
@@ -167,10 +167,13 @@ def live_report(cfg, store, out_path: Path) -> Path:
     body.append("<h2>Accounts</h2><div class='tablewrap'><table><tr><th>Account</th><th>Strategy</th><th>Equity</th>"
                 f"<th>P&amp;L</th><th>Return</th><th>Gross</th><th>Net</th><th>Pending</th></tr>{rows}</table></div>")
     if main.get("positions"):
-        prow = "".join(f"<tr><td>{html.escape(s)}</td><td>{u:,.6f}</td></tr>"
-                       for s, u in sorted(main["positions"].items(), key=lambda kv: kv[0]))
-        body.append(f"<h2>Main positions (units)</h2><div class='tablewrap'><table><tr><th>Symbol</th><th>Units</th>"
-                    f"</tr>{prow}</table></div>")
+        weights = main.get("weights", {})
+        prow = "".join(
+            f"<tr><td>{html.escape(s)}</td><td>{u:,.6f}</td><td>{_num(weights.get(s, float('nan')) * main['equity'], 'money')}"
+            f"</td><td>{_num(weights.get(s), 'pct')}</td></tr>"
+            for s, u in sorted(main["positions"].items(), key=lambda kv: -abs(weights.get(kv[0], 0.0))))
+        body.append(f"<h2>Main positions</h2><div class='tablewrap'><table><tr><th>Symbol</th><th>Units</th>"
+                    f"<th>Value</th><th>Weight</th></tr>{prow}</table></div>")
     orders = store.orders("main", limit=40)
     if not orders.empty:
         orow = "".join(

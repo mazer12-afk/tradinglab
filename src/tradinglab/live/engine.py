@@ -291,7 +291,7 @@ class LiveEngine:
         return rep
 
     # -------------------------------------------------------------- export
-    def status(self) -> dict:
+    def status(self, horizon: pd.Timestamp | None = None) -> dict:
         out = {"accounts": {}}
         for spec in self.specs:
             acct = self.store.account(spec.name)
@@ -299,6 +299,13 @@ class LiveEngine:
                 continue
             last = self.store.last_equity(spec.name)
             eq = last["equity"] if last else acct["initial_capital"]
+            positions = self.store.positions(spec.name)
+            weights = {}
+            if horizon is not None and eq > 0:
+                for sym, units in positions.items():
+                    px = self.feed.price_at(sym, horizon)
+                    if px is not None:
+                        weights[sym] = units * px / eq
             out["accounts"][spec.name] = {
                 "strategy": spec.label,
                 "initial_capital": acct["initial_capital"],
@@ -308,7 +315,8 @@ class LiveEngine:
                 "marked_at": last["ts"] if last else None,
                 "gross": last["gross"] if last else 0.0,
                 "net": last["net"] if last else 0.0,
-                "positions": self.store.positions(spec.name),
+                "positions": positions,
+                "weights": weights,
                 "pending_orders": len(self.store.pending_orders(spec.name)),
                 "funding_paid": -self.store.funding_total(spec.name),
             }
@@ -316,7 +324,7 @@ class LiveEngine:
 
     def _export(self, rep: CycleReport) -> None:
         state_dir = Path(self.cfg.paths.state_dir)
-        status = self.status()
+        status = self.status(rep.horizon)
         status.update({
             "updated_at": str(rep.now), "feed_mode": rep.mode, "data_horizon": str(rep.horizon),
             "signal_bar": str(rep.signal_bar), "last_cycle": {
