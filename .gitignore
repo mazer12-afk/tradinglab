@@ -12,3 +12,4 @@ state/*.log
 state/heartbeat.json
 state/maintenance.json
 models/intraday/wf_*.parquet
+state/intraday_heartbeat.json
