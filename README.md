@@ -85,6 +85,42 @@ first decisions were for the daily bar closing 2026-10-13 00:00 UTC. `main` open
 archive mode: fills and marks appear once Binance publishes each day (~03:00 UTC).
 
 
+## Intraday AI day-trading (live, 5-minute bars)
+
+Three AI paper-trading accounts run in **real time** on 12 liquid crypto pairs
+(BTC, ETH, SOL, XRP, DOGE, BNB, ADA, AVAX, LINK, LTC, DOT, BCH):
+
+| account | model | trading rule |
+|---|---|---|
+| `intraday:lgbm_1h` | LightGBM forecasting the next-hour vol-normalised return | trade only extreme forecasts (|z| > 3), hold ≥ 1h, exit on sign flip |
+| `intraday:lgbm_4h` | LightGBM forecasting the next 4 hours | enter at |z| > 2.5, hold ≥ 2h, exit on sign flip |
+| `intraday:deep_lstm_attn` | LSTM + causal attention network (Momentum-Transformer-lite) | positions straight from the network, trained end-to-end to maximise the Sharpe ratio **net of trading costs** |
+
+**Each 5-minute cycle:**
+- **Data:** the daemon pulls the bars that just closed from Binance's public market-data API.
+- **Features:** 32 causal features (multi-horizon returns, volatility regime, order-flow imbalance from taker-buy volume, volume surprise, time of day, market and cross-sectional context).
+- **Inference:** each model runs and its stateful trading policy advances.
+- **Execution:** orders fill at the **live best bid/ask + 1 bp impact + 5 bp taker fee**.
+- **Funding:** perpetual funding is charged at OKX's live rates at 00/08/16 UTC.
+
+**Robustness:** each bar is committed atomically (marks, policy state, orders, decisions), so a failure (model, network, database) rolls back and the bar is retried. A bar can never be applied twice or skipped. An adversarial multi-agent review of the live path found five real bugs before launch. All are fixed, and each has a regression test.
+
+```bash
+tradinglab intraday-train              # train + freeze models on all history up to the last closed bar
+tradinglab intraday-run --commit-every 60   # real-time daemon (commits state/ hourly)
+tradinglab intraday-status             # live P&L per AI account
+```
+
+**What development research showed** (history was used only to build the models; *evaluation is live*):
+- **The forecasts carry information:** the LightGBM next-hour forecasts had a daily rank IC of ≈0.07 out-of-sample from July 2023, versus 0.01 for a linear model.
+- **Turning that into net profit is hard at taker fees:** a 1-hour IC of 0.07 is worth only ~4 bps per trade, against a ~12–16 bp round trip.
+- **The response:** two accounts trade only rare, extreme forecasts and hold for hours, and the deep model is trained directly on returns after costs.
+- **Not backtested:** the exact live configurations were not backtested. Their verdict is the live P&L in `state/intraday_status.json` and `state/intraday.sqlite`. Models are frozen in git (`models/intraday/live/`, with `manifest.json`) before the live data they are judged on.
+
+Live endpoint notes: Binance.com and Binance futures APIs geo-block this cloud region
+(HTTP 451), so live features use Binance **spot** 5-minute data (identical source for
+training and live). Positions are accounted as perpetuals (shorting, funding).
+
 ## Quick start
 
 ```bash
