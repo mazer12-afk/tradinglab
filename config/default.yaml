@@ -1,0 +1,82 @@
+# TradingLab default configuration.
+# Every component (research, backtests, live paper trading) reads these values,
+# so simulated and live results are produced under identical assumptions.
+
+paths:
+  data_dir: data/cache        # downloaded market data (not committed)
+  state_dir: state            # live paper-trading state + journal (committed for audit)
+  models_dir: models          # trained models + research selection
+  reports_dir: reports        # generated research / live reports
+
+universe:
+  # Liquid Binance USDT pairs with USD-M perpetuals. Newer listings join the
+  # tradable cross-section only after `min_history_bars` bars of history.
+  symbols: [BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, TRXUSDT,
+            LINKUSDT, AVAXUSDT, DOTUSDT, LTCUSDT, BCHUSDT, XLMUSDT, ATOMUSDT, NEARUSDT,
+            UNIUSDT, ETCUSDT, FILUSDT, AAVEUSDT, HBARUSDT, ALGOUSDT, VETUSDT, INJUSDT,
+            SUIUSDT, APTUSDT, ARBUSDT, OPUSDT, ICPUSDT, LDOUSDT]
+  min_history_bars: 300
+
+market:
+  instrument: perp          # perp: long/short with funding | spot: long-only
+  bar: 1d
+  exec_lag_hours: 3         # daily bars → trades filled 3h after the UTC close
+  default_funding_8h: 0.0001
+
+costs:
+  fee_bps: 5.0              # Binance USD-M taker fee (VIP0 is 5bps; 4.5 with BNB)
+  slippage_bps: 5.0         # half-spread + impact for small clips on liquid pairs
+
+portfolio:
+  initial_capital: 100000
+  target_vol: 0.25
+  asset_vol_target: 0.60
+  vol_lookback: 60
+  max_gross: 1.5
+  max_weight: 0.35
+  rebalance_band: 0.02
+  min_trade_notional: 10.0
+
+risk:
+  dd_derisk_start: 0.15
+  dd_halt: 0.30
+  dd_floor_scale: 0.25
+  stale_data_hours: 60
+  max_price_jump: 0.6
+
+walkforward:
+  data_start: "2018-01-01"
+  first_test: "2021-01-01"      # first out-of-sample bar of the walk-forward
+  holdout_start: "2025-01-01"   # selection sees OOS data before this; after = untouched holdout
+  step_months: 6                # retrain deep models every 6 months in the walk-forward
+  valid_fraction: 0.15
+
+selection:
+  min_oos_sharpe: 0.5
+  min_psr: 0.80
+  min_dsr: 0.50
+  max_strategies: 4
+  weighting: inverse_vol
+
+deep:
+  seq_len: 63
+  burn_in: 21
+  hidden: 32
+  heads: 4
+  dropout: 0.3
+  lr: 0.001
+  batch_size: 128
+  max_epochs: 60
+  patience: 10
+  seeds: 3
+  turnover_penalty: 1.0
+  softmin_lambda: 0.1
+  softmin_beta: 5.0
+  threads: 4
+
+live:
+  feed: auto                # auto: realtime exchange APIs, falling back to the archive
+  poll_seconds: 300
+  retrain_days: 7
+  fill_latency_seconds: 60
+  shadow_all: true
