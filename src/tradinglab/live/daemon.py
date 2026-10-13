@@ -38,6 +38,7 @@ class Daemon:
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.maint_path = self.state_dir / "maintenance.json"
         self._child: subprocess.Popen | None = None
+        self._child_key = ""
 
     def _handle_signal(self, signum, _frame):
         log.info("signal %s received – stopping after current step", signum)
@@ -62,9 +63,17 @@ class Daemon:
             rc = self._child.poll()
             if rc is None:
                 return
-            log.info("maintenance job finished with code %s", rc)
+            log.info("maintenance job %s finished with code %s", self._child_key, rc)
+            if rc != 0:
+                # Failed job: forget its timestamp and retry after a cool-off.
+                m = self._maint()
+                m.pop(self._child_key, None)
+                m["retry_after"] = (now + pd.Timedelta(hours=6)).isoformat()
+                self.maint_path.write_text(json.dumps(m))
             self._child = None
         m = self._maint()
+        if m.get("retry_after") and now < utc(m["retry_after"]):
+            return
         last_research = utc(m["research"]) if m.get("research") else None
         last_retrain = utc(m["retrain"]) if m.get("retrain") else None
         job = None
@@ -80,12 +89,14 @@ class Daemon:
         m[key] = now.isoformat()
         if key == "research":
             m["retrain"] = now.isoformat()
+        m.pop("retry_after", None)
         self.maint_path.write_text(json.dumps(m))
         log_file = open(self.state_dir / f"{key}.log", "a")  # noqa: SIM115 - handed to the child
         self._child = subprocess.Popen(job, stdout=log_file, stderr=subprocess.STDOUT)
+        self._child_key = key
         if not sel_exists:
             self._child.wait()
-            self._child = None
+            self.maybe_maintain(now)
 
     # ---------------------------------------------------------------- loop
     def run(self) -> None:
