@@ -155,7 +155,7 @@ class BinanceSpot(Exchange):
     def quotes(self, symbols: list[str]) -> dict[str, Quote]:
         import json as _json
 
-        data = self._get(f"{self.host}/api/v3/ticker/bookTicker", {"symbols": _json.dumps(symbols)})
+        data = self._get(f"{self.host}/api/v3/ticker/bookTicker", {"symbols": _json.dumps(symbols, separators=(",", ":"))})
         now = pd.Timestamp.now(tz="UTC")
         return {d["symbol"]: Quote(float(d["bidPrice"]), float(d["askPrice"]), now, self.name) for d in data}
 

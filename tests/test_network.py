@@ -34,3 +34,10 @@ def test_exchange_quote_and_klines(exchange):
     assert len(k) >= 20
     assert k.index[-1] + pd.Timedelta(hours=1) <= pd.Timestamp.now(tz="UTC")   # closed bars only
     assert (k["high"] >= k["low"]).all()
+
+
+def test_binance_bulk_quotes():
+    from tradinglab.data.exchanges import BinanceSpot
+
+    q = BinanceSpot("https://data-api.binance.vision", "binance-data").quotes(["BTCUSDT", "ETHUSDT", "SOLUSDT"])
+    assert set(q) == {"BTCUSDT", "ETHUSDT", "SOLUSDT"} and all(v.ask >= v.bid > 0 for v in q.values())

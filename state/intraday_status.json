@@ -1,0 +1,88 @@
+{
+  "updated_at": "2026-10-13 21:15:56.767172+00:00",
+  "last_bar": "2026-10-13 21:15:00+00:00",
+  "new_bars": 1,
+  "traded": true,
+  "orders": 12,
+  "warnings": [],
+  "models": {
+    "deep": {
+      "kind": "lstm_attn",
+      "val_sharpe": [
+        1.5236152410507202,
+        1.5187333822250366
+      ],
+      "seconds": 1890.9
+    },
+    "lgbm_h12": {
+      "rows": 420378,
+      "train_from": "2025-10-13 20:50:00+00:00",
+      "train_to_label_end": "2026-10-13 20:40:00+00:00",
+      "horizon_bars": 12,
+      "rounds": 150,
+      "seconds": 34.0
+    },
+    "lgbm_h48": {
+      "rows": 420090,
+      "train_from": "2025-10-13 20:50:00+00:00",
+      "train_to_label_end": "2026-10-13 20:40:00+00:00",
+      "horizon_bars": 48,
+      "rounds": 150,
+      "seconds": 32.6
+    }
+  },
+  "accounts": {
+    "intraday:lgbm_1h": {
+      "model": "LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip.",
+      "equity": 100000.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "marked_at": "2026-10-13T21:15:00+00:00",
+      "gross": 0.0,
+      "net": 0.0,
+      "trades": 0,
+      "fees_paid": 0.0,
+      "funding_paid": -0.0,
+      "positions": {}
+    },
+    "intraday:lgbm_4h": {
+      "model": "LightGBM 4-hour forecast; enters at |z|>2.5, holds \u22652h, exits on sign flip.",
+      "equity": 100000.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "marked_at": "2026-10-13T21:15:00+00:00",
+      "gross": 0.0,
+      "net": 0.0,
+      "trades": 0,
+      "fees_paid": 0.0,
+      "funding_paid": -0.0,
+      "positions": {}
+    },
+    "intraday:deep_lstm_attn": {
+      "model": "LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.",
+      "equity": 100000.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "marked_at": "2026-10-13T21:15:00+00:00",
+      "gross": 0.0,
+      "net": 0.0,
+      "trades": 12,
+      "fees_paid": 18.021768141014928,
+      "funding_paid": -0.0,
+      "positions": {
+        "ADAUSDT": 8938.796134767093,
+        "AVAXUSDT": 203.7597574304734,
+        "BCHUSDT": 9.080066254581652,
+        "BNBUSDT": 7.187121185143699,
+        "BTCUSDT": 0.06226179328409181,
+        "DOGEUSDT": 32647.637512248864,
+        "DOTUSDT": 1468.7187144772445,
+        "ETHUSDT": 1.4723035877653574,
+        "LINKUSDT": 174.77239433039676,
+        "LTCUSDT": 44.415366133678354,
+        "SOLUSDT": 24.551639410960885,
+        "XRPUSDT": 2216.864099187054
+      }
+    }
+  }
+}
