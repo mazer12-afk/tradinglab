@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 from tradinglab.backtest.engine import BacktestResult, run_backtest
-from tradinglab.backtest.metrics import deflated_sharpe, summarize
+from tradinglab.backtest.metrics import deflated_sharpe, effective_trials, summarize
 from tradinglab.config import LabConfig, bars_per_year, utc
 from tradinglab.data.store import Panel
 from tradinglab.portfolio.allocator import combine_weights, correlation_filter, strategy_alphas
@@ -58,10 +58,11 @@ def _period(r: pd.Series, start=None, end=None) -> pd.Series:
     return r
 
 
-def evaluate_candidate(strategy: Strategy, panel: Panel, cfg: LabConfig, workers: int | None = None) -> CandidateResult:
+def evaluate_candidate(strategy: Strategy, panel: Panel, cfg: LabConfig, workers: int | None = None,
+                       cache_dir: Path | None = None) -> CandidateResult:
     bpy = bars_per_year(cfg.market.bar)
     t0 = time.time()
-    sig = walk_forward_signals(strategy, panel, cfg, workers=workers)
+    sig = walk_forward_signals(strategy, panel, cfg, workers=workers, cache_dir=cache_dir)
     w = size_weights(sig.reindex(panel.close.index), panel, cfg.portfolio, bpy, cfg.market.instrument,
                      cfg.universe.min_history_bars, strategy.outputs_weights)
     bt = run_backtest(w, panel, cfg.costs, band=cfg.portfolio.rebalance_band, start=cfg.walkforward.first_test)
@@ -78,10 +79,12 @@ def select(results: dict[str, CandidateResult], cfg: LabConfig, start, end,
     bpy = bars_per_year(cfg.market.bar)
     rets = {n: _period(r.backtest.returns, start, end) for n, r in results.items()}
     per_period_sr = [float(r.mean() / r.std()) if r.std() > 0 else float("nan") for r in rets.values()]
+    n_eff = effective_trials(pd.DataFrame(rets).dropna(how="all").fillna(0.0))
     rows = {}
     for n, r in rets.items():
         m = summarize(r, bpy)
-        m["dsr"] = deflated_sharpe(r, per_period_sr)
+        m["dsr"] = deflated_sharpe(r, per_period_sr, n_eff)
+        m["n_eff_trials"] = n_eff
         rows[n] = m
     table = pd.DataFrame(rows).T
     sc = cfg.selection
@@ -135,11 +138,12 @@ class TournamentReport:
 
 
 def run_tournament(strategies: list[Strategy], panel: Panel, cfg: LabConfig, holdout_start: str,
-                   workers: int | None = None) -> tuple[TournamentReport, dict[str, CandidateResult]]:
+                   workers: int | None = None,
+                   cache_dir: Path | None = None) -> tuple[TournamentReport, dict[str, CandidateResult]]:
     bpy = bars_per_year(cfg.market.bar)
     results: dict[str, CandidateResult] = {}
     for s in strategies:
-        results[s.name] = evaluate_candidate(s, panel, cfg, workers=workers)
+        results[s.name] = evaluate_candidate(s, panel, cfg, workers=workers, cache_dir=cache_dir)
 
     first_test = cfg.walkforward.first_test
     data_end = str(panel.close.index[-1])

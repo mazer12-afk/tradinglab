@@ -190,10 +190,17 @@ class LiveEngine:
         g.restore(self.store.get_meta(f"guard:{account}", {}))
         return g
 
+    @property
+    def halt_file(self) -> Path:
+        return Path(self.cfg.paths.state_dir) / "HALT"
+
     def _decide(self, spec: AccountSpec, panel, bar_ts: pd.Timestamp, horizon: pd.Timestamp,
                 now: pd.Timestamp, cache: dict, rep: CycleReport) -> None:
         account = spec.name
         targets = self._target_weights(spec, panel, cache)
+        if self.halt_file.exists():
+            # Operator kill switch: flatten everything, take no new risk.
+            targets = targets * 0.0
         # Size with the freshest known prices (== bar close in archive mode).
         prices = {}
         for s in set(targets.index) | set(self.store.positions(account)):
@@ -253,6 +260,8 @@ class LiveEngine:
             self._export(rep)
             return rep
 
+        if self.halt_file.exists():
+            rep.warnings.append("HALT file present: flattening all accounts, no new risk")
         due = []
         for spec in self.specs:
             last = self.store.last_decision(spec.name)

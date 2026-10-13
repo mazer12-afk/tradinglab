@@ -1,0 +1,11 @@
+services:
+  tradinglab:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ../state:/app/state
+      - ../data:/app/data
+      - ../reports:/app/reports
+      - ../models:/app/models

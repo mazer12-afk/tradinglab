@@ -172,3 +172,20 @@ def test_engine_recovers_after_restart(tmp_path, cfg, hourly):
     assert set(a) == set(b) == {"main", "shadow:tsmom", "shadow:breakout"}
     for k in a:
         pd.testing.assert_series_equal(a[k], b[k])
+
+
+def test_halt_file_flattens_book(tmp_path, cfg, hourly):
+    cfg.market.exec_lag_hours = 0
+    cfg.live.fill_latency_seconds = 0
+    cfg.live.shadow_all = False
+    cfg.paths.state_dir = str(tmp_path)
+    feed = ReplayFeed(hourly)
+    store = StateStore(tmp_path / "lab.sqlite")
+    engine = LiveEngine(cfg, feed, store, _selection())
+    days = pd.date_range("2024-09-01", "2024-09-20", freq="D", tz="UTC")
+    _run_days(engine, feed, days, 0)
+    assert store.positions("main")
+    (tmp_path / "HALT").write_text("manual stop")
+    _run_days(engine, feed, pd.date_range("2024-09-21", "2024-09-22", freq="D", tz="UTC"), 0)
+    assert store.positions("main") == {}
+    assert store.last_decision("main")["targets"] == {}

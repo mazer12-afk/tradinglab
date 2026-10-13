@@ -50,12 +50,33 @@ def expected_max_sharpe(sr_variance: float, n_trials: int) -> float:
     return math.sqrt(max(sr_variance, 0.0)) * ((1.0 - EULER_GAMMA) * z1 + EULER_GAMMA * z2)
 
 
-def deflated_sharpe(r: pd.Series, trial_sharpes_per_period: list[float]) -> float:
-    """DSR: PSR against the expected max Sharpe of all trials (per-period units)."""
+def effective_trials(returns: pd.DataFrame) -> float:
+    """Effective number of independent trials, M_eff = ρ̄ + (1 - ρ̄)·M.
+
+    ρ̄ is the average pairwise correlation of the trials' return streams. Highly
+    correlated variants (e.g. several trend filters) count as fewer independent
+    attempts than structurally different strategies.
+    """
+    m = returns.shape[1]
+    if m <= 1:
+        return float(m)
+    c = returns.corr().to_numpy()
+    rho = float(np.nanmean(c[~np.eye(m, dtype=bool)]))
+    rho = min(max(rho, 0.0), 1.0)
+    return rho + (1.0 - rho) * m
+
+
+def deflated_sharpe(r: pd.Series, trial_sharpes_per_period: list[float], n_trials: float | None = None) -> float:
+    """DSR: PSR against the expected max Sharpe of ``n_trials`` trials (per-period units).
+
+    The dispersion of the trials' Sharpe ratios estimates the null variance; ``n_trials``
+    defaults to the number of trials but should be the *effective* number when the
+    trials are correlated (see :func:`effective_trials`).
+    """
     trials = [s for s in trial_sharpes_per_period if np.isfinite(s)]
-    n = max(len(trials), 1)
+    n = n_trials if n_trials is not None else max(len(trials), 1)
     var = float(np.var(trials, ddof=1)) if len(trials) > 1 else 0.0
-    return probabilistic_sharpe(r, expected_max_sharpe(var, n))
+    return probabilistic_sharpe(r, expected_max_sharpe(var, max(int(round(n)), 1)))
 
 
 def newey_west_tstat(r: pd.Series, lags: int | None = None) -> float:

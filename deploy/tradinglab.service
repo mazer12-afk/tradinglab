@@ -1,0 +1,20 @@
+# systemd unit: copy to /etc/systemd/system/, adjust paths/user, then
+#   systemctl daemon-reload && systemctl enable --now tradinglab
+[Unit]
+Description=TradingLab autonomous paper trading
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tradinglab
+WorkingDirectory=/opt/tradinglab
+ExecStart=/opt/tradinglab/.venv/bin/tradinglab run
+Restart=always
+RestartSec=30
+# The daemon traps SIGTERM and stops after the current step.
+KillSignal=SIGTERM
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

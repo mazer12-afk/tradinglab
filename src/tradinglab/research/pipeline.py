@@ -45,7 +45,8 @@ def run_research(cfg: LabConfig, include_deep: bool = True, workers: int | None 
                      default_funding_8h=cfg.market.default_funding_8h)
     log.info("panel %s → %s, %d symbols", panel.close.index[0], panel.close.index[-1], panel.close.shape[1])
     strategies = build_candidates(cfg, include_deep=include_deep)
-    report, results = run_tournament(strategies, panel, cfg, cfg.walkforward.holdout_start, workers=workers)
+    report, results = run_tournament(strategies, panel, cfg, cfg.walkforward.holdout_start, workers=workers,
+                                     cache_dir=Path(cfg.paths.models_dir) / "cache" / "walkforward")
     out_dir = Path(cfg.paths.reports_dir) / "research"
     save_report(report, results, out_dir)
 
