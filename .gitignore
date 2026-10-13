@@ -8,3 +8,6 @@ models/**/*.tmp
 /build/
 /dist/
 *.log
+state/*.log
+state/heartbeat.json
+state/maintenance.json
