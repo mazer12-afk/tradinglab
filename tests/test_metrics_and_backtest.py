@@ -93,3 +93,14 @@ def test_drawdown_guard_scales_halts_and_recovers():
     assert g.update(81) == 0.0          # last cooldown bar → peak reset to 81
     assert g.update(81) == 1.0
     assert g.halts == 1
+
+
+def test_numba_kernel_matches_reference(panel):
+    rng = np.random.default_rng(3)
+    w = pd.DataFrame(rng.normal(0, 0.3, panel.close.shape), index=panel.close.index, columns=panel.close.columns)
+    risk = RiskConfig(dd_derisk_start=0.02, dd_halt=0.05, dd_floor_scale=0.5)  # trigger the guard often
+    a = run_backtest(w, panel, CostConfig(5, 5), band=0.01, risk=risk, use_kernel=True)
+    b = run_backtest(w, panel, CostConfig(5, 5), band=0.01, risk=risk, use_kernel=False)
+    pd.testing.assert_series_equal(a.returns, b.returns)
+    pd.testing.assert_frame_equal(a.weights, b.weights)
+    assert (a.exposure_scale < 1).any()

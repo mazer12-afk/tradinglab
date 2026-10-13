@@ -80,16 +80,22 @@ class MarketData:
         self.consolidated.mkdir(parents=True, exist_ok=True)
 
     def _klines_1h(self, symbol: str, start) -> pd.DataFrame:
-        """All archived 1h klines since ``start`` via a per-symbol consolidated cache.
+        return self.klines(symbol, "1h", start, market="spot")
+
+    def klines(self, symbol: str, interval: str, start, market: str = "spot",
+               dataset: str = "klines") -> pd.DataFrame:
+        """All archived klines since ``start`` via a per-symbol consolidated cache.
 
         Only archive files not yet merged into the consolidated frame are parsed,
         so a refresh after the initial download costs one listing + a few files.
+        ``market`` is ``spot`` or ``um`` (USD-M perpetual futures).
         """
         start = pd.Timestamp(start)
-        path = self.consolidated / f"{symbol}_1h.parquet"
+        tag = ("" if market == "spot" else f"_{market}") + ("" if dataset == "klines" else f"_{dataset}")
+        path = self.consolidated / f"{symbol}_{interval}{tag}.parquet"
         manifest_path = path.with_suffix(".json")
         manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-        files = self.archive.kline_files(symbol, "1h", start)
+        files = self.archive.kline_files(symbol, interval, start, market=market, dataset=dataset)
         cached_start = pd.Timestamp(manifest["start"]) if manifest.get("start") else None
         if cached_start is None or cached_start > start or not path.exists():
             df = self.archive._load_many(files, parse_kline_csv)

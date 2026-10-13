@@ -197,13 +197,18 @@ class BinanceVision:
         return {"spot": "data/spot", "um": "data/futures/um"}[market]
 
     def kline_files(self, symbol: str, interval: str, start: pd.Timestamp,
-                    end: pd.Timestamp | None = None, market: str = "spot") -> list[ArchiveFile]:
-        """Monthly files for full months plus daily files where no monthly exists yet."""
+                    end: pd.Timestamp | None = None, market: str = "spot",
+                    dataset: str = "klines") -> list[ArchiveFile]:
+        """Monthly files for full months plus daily files where no monthly exists yet.
+
+        ``dataset`` may be ``klines`` or, for USD-M futures, ``premiumIndexKlines``,
+        ``markPriceKlines`` or ``indexPriceKlines`` (same CSV layout).
+        """
         mp = self._market_prefix(market)
         start = pd.Timestamp(start).tz_localize(None) if pd.Timestamp(start).tzinfo else pd.Timestamp(start)
         end = (pd.Timestamp(end).tz_localize(None) if end is not None and pd.Timestamp(end).tzinfo
                else (pd.Timestamp(end) if end is not None else None))
-        monthly = self.list_files(f"{mp}/monthly/klines/{symbol}/{interval}/")
+        monthly = self.list_files(f"{mp}/monthly/{dataset}/{symbol}/{interval}/")
         month_re = re.compile(r"-(\d{4})-(\d{2})\.zip$")
         covered: set[str] = set()
         chosen: list[ArchiveFile] = []
@@ -224,8 +229,9 @@ class BinanceVision:
         else:
             daily_from = start.normalize()
         daily_from = max(daily_from, start.normalize())
-        marker = f"{mp}/daily/klines/{symbol}/{interval}/{symbol}-{interval}-{(daily_from - pd.Timedelta(days=1)):%Y-%m-%d}.zip.CHECKSUM"
-        daily = self.list_files(f"{mp}/daily/klines/{symbol}/{interval}/", start_after=marker)
+        marker = (f"{mp}/daily/{dataset}/{symbol}/{interval}/{symbol}-{interval}-"
+                  f"{(daily_from - pd.Timedelta(days=1)):%Y-%m-%d}.zip.CHECKSUM")
+        daily = self.list_files(f"{mp}/daily/{dataset}/{symbol}/{interval}/", start_after=marker)
         day_re = re.compile(r"-(\d{4}-\d{2}-\d{2})\.zip$")
         for f in daily:
             m = day_re.search(f.key)

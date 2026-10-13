@@ -21,17 +21,40 @@ def history_mask(close: pd.DataFrame, min_bars: int) -> pd.DataFrame:
     return close.notna().cumsum() >= min_bars
 
 
-def ewma_cov(returns: np.ndarray, span: int) -> np.ndarray:
-    """Recursive EWMA covariance, returns array [T, N, N] (causal: uses rows <= t)."""
-    lam = 1.0 - 2.0 / (span + 1.0)
-    T, N = returns.shape
-    r = np.nan_to_num(returns, nan=0.0)
-    out = np.empty((T, N, N))
+def _ewma_port_var_py(r: np.ndarray, W: np.ndarray, lam: float) -> np.ndarray:
+    T, N = r.shape
     S = np.zeros((N, N))
+    out = np.empty(T)
     for t in range(T):
-        S = lam * S + (1.0 - lam) * np.outer(r[t], r[t])
-        out[t] = S
+        for i in range(N):
+            for j in range(N):
+                S[i, j] = lam * S[i, j] + (1.0 - lam) * r[t, i] * r[t, j]
+        v = 0.0
+        for i in range(N):
+            for j in range(N):
+                v += W[t, i] * S[i, j] * W[t, j]
+        out[t] = v
     return out
+
+
+_PV_KERNEL = None
+
+
+def ewma_portfolio_variance(returns: np.ndarray, W: np.ndarray, span: int) -> np.ndarray:
+    """w_t' Σ_t w_t with a causal EWMA covariance Σ_t (uses rows <= t)."""
+    global _PV_KERNEL
+    lam = 1.0 - 2.0 / (span + 1.0)
+    r = np.nan_to_num(np.asarray(returns, dtype="float64"), nan=0.0)
+    W = np.ascontiguousarray(W, dtype="float64")
+    if _PV_KERNEL is None:
+        try:
+            import numba
+
+            _PV_KERNEL = numba.njit(cache=True)(_ewma_port_var_py)
+        except Exception:  # noqa: BLE001
+            _PV_KERNEL = False
+    fn = _PV_KERNEL or _ewma_port_var_py
+    return fn(r, W, lam)
 
 
 def size_weights(signals: pd.DataFrame, panel: Panel, cfg: PortfolioConfig, bars_per_year: float,
@@ -77,9 +100,8 @@ def vol_target(raw: pd.DataFrame, panel: Panel, cfg: PortfolioConfig, bars_per_y
     close = panel.close.reindex(index=raw.index, columns=raw.columns)
     rets = close.pct_change(fill_method=None)
     ann = np.sqrt(bars_per_year)
-    cov = ewma_cov(rets.to_numpy(), cfg.vol_lookback)
     W = raw.fillna(0.0).to_numpy()
-    port_var = np.einsum("ti,tij,tj->t", W, cov, W)
+    port_var = ewma_portfolio_variance(rets.to_numpy(), W, cfg.vol_lookback)
     port_vol = np.sqrt(np.maximum(port_var, 0.0)) * ann
     with np.errstate(divide="ignore", invalid="ignore"):
         scale = np.where(port_vol > 1e-8, cfg.target_vol / port_vol, 0.0)

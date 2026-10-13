@@ -21,6 +21,8 @@ dependencies = [
 [project.optional-dependencies]
 deep = ["torch>=2.2"]
 dev = ["pytest>=8"]
+fast = ["numba>=0.60"]
+intraday = ["lightgbm>=4.0"]
 
 [project.scripts]
 tradinglab = "tradinglab.cli:main"
