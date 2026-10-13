@@ -1,8 +1,8 @@
 """Paper broker: unit-level accounting identical in spirit to the backtester.
 
 * Buy fills at ``price·(1+slippage)``, sells at ``price·(1-slippage)``; a fee of
-  ``fee_bps`` is charged on filled notional. With a live quote the fill uses the
-  touch (ask for buys, bid for sells) instead of mid ± slippage.
+  ``fee_bps`` is charged on filled notional. With a live quote the fill starts
+  from the touch (ask for buys, bid for sells) and adds the slippage as impact.
 * Positions are linear (perpetual-style) units; cash may go negative for
   leveraged longs and above equity for shorts – equity = cash + Σ units·price.
 * Funding: at each funding stamp ``cash -= units · price · rate``.
@@ -51,7 +51,8 @@ class PaperBroker:
         side = 1.0 if qty > 0 else -1.0
         slip = self.costs.slippage_bps * 1e-4
         if quote is not None:
-            px = quote.ask if qty > 0 else quote.bid
+            # Cross the live spread, plus impact beyond the touch.
+            px = (quote.ask if qty > 0 else quote.bid) * (1.0 + side * slip)
         else:
             px = market_price * (1.0 + side * slip)
         notional = abs(qty) * px

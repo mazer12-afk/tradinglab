@@ -54,11 +54,25 @@ class Exchange(ABC):
         self.session = session or requests.Session()
         self.timeout = timeout
 
-    def _get(self, url: str, params: dict | None = None):
-        r = self.session.get(url, params=params, timeout=self.timeout)
-        if r.status_code != 200:
-            raise ExchangeError(f"{self.name}: HTTP {r.status_code} {r.text[:200]}")
-        return r.json()
+    def _get(self, url: str, params: dict | None = None, retries: int = 3):
+        delay = 0.5
+        for attempt in range(retries):
+            try:
+                r = self.session.get(url, params=params, timeout=self.timeout)
+            except requests.RequestException as exc:
+                if attempt == retries - 1:
+                    raise ExchangeError(f"{self.name}: {exc}") from exc
+                time.sleep(delay)
+                delay *= 2
+                continue
+            if r.status_code in (429, 418, 500, 502, 503, 504) and attempt < retries - 1:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            if r.status_code != 200:
+                raise ExchangeError(f"{self.name}: HTTP {r.status_code} {r.text[:200]}")
+            return r.json()
+        raise ExchangeError(f"{self.name}: retries exhausted for {url}")
 
     @abstractmethod
     def klines_1h(self, symbol: str, start: pd.Timestamp) -> pd.DataFrame:

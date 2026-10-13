@@ -1,0 +1,1 @@
+{"params": {"objective": "huber", "alpha": 1.5, "learning_rate": 0.02, "num_leaves": 31, "min_data_in_leaf": 2000, "feature_fraction": 0.7, "bagging_fraction": 0.7, "bagging_freq": 1, "lambda_l2": 10.0, "verbose": -1, "num_threads": 4, "seed": 0}, "best_iteration": 150}

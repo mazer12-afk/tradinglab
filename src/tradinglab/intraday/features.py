@@ -91,9 +91,10 @@ def build_features(d: IntradayData, horizon: int = 12) -> FeatureSet:
     f["trades_1"] = np.log((d.trades + 1.0) / (_ewm_mean(d.trades, WEEK) + 1.0))
 
     prem = d.premium
-    f["prem"] = prem * 1e3
-    f["prem_z"] = _z(prem)
-    f["prem_chg_12"] = (prem - prem.shift(12)) / np.sqrt(_ewm_mean((prem - prem.shift(12)) ** 2, WEEK))
+    if prem.notna().any().any():  # perpetual basis (only for futures data)
+        f["prem"] = prem * 1e3
+        f["prem_z"] = _z(prem)
+        f["prem_chg_12"] = (prem - prem.shift(12)) / np.sqrt(_ewm_mean((prem - prem.shift(12)) ** 2, WEEK))
 
     idx = close.index
     minutes = (idx.hour * 60 + idx.minute).to_numpy()

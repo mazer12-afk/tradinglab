@@ -145,6 +145,36 @@ def cmd_report(cfg, args) -> int:
     return 0
 
 
+def cmd_intraday_train(cfg, args) -> int:
+    from tradinglab.intraday.train import train_live_intraday
+
+    m = train_live_intraday(cfg, deep_epochs=args.deep_epochs)
+    print(json.dumps({k: m[k] for k in ("trained_at", "data_end", "models")}, indent=2, default=str))
+    return 0
+
+
+def cmd_intraday_run(cfg, args) -> int:
+    from tradinglab.intraday.live import run_intraday
+
+    run_intraday(cfg, poll_seconds=args.poll, max_cycles=args.max_cycles,
+                 commit_every_minutes=args.commit_every)
+    return 0
+
+
+def cmd_intraday_status(cfg, args) -> int:
+    path = Path(cfg.paths.state_dir) / "intraday_status.json"
+    if not path.exists():
+        print("no intraday state yet – run `tradinglab intraday-run`")
+        return 1
+    st = json.loads(path.read_text())
+    print(f"updated {st['updated_at']}  last bar {st['last_bar']}")
+    print(f"{'account':26s} {'equity':>12s} {'P&L':>10s} {'return':>8s} {'trades':>7s} {'fees':>9s} {'gross':>6s}")
+    for name, a in st["accounts"].items():
+        print(f"{name:26s} {a['equity']:12,.2f} {a['pnl']:+10,.2f} {100 * a['return']:+7.2f}% {a['trades']:7d} "
+              f"{a['fees_paid']:9,.2f} {a['gross']:6.2f}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tradinglab", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -169,12 +199,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--git-commit", action="store_true", help="commit + push state/ after trading events")
     sub.add_parser("status")
     sub.add_parser("report")
+    p = sub.add_parser("intraday-train", help="train + freeze the live intraday AI models")
+    p.add_argument("--deep-epochs", type=int, default=None)
+    p = sub.add_parser("intraday-run", help="real-time intraday paper trading daemon (5m bars)")
+    p.add_argument("--poll", type=float, default=10.0)
+    p.add_argument("--max-cycles", type=int, default=None)
+    p.add_argument("--commit-every", type=float, default=None, help="commit state/ every N minutes")
+    sub.add_parser("intraday-status")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)
     handler = {"fetch": cmd_fetch, "research": cmd_research, "train-live": cmd_train_live,
                "backtest": cmd_backtest, "probe": cmd_probe, "cycle": cmd_cycle, "run": cmd_run,
-               "status": cmd_status, "report": cmd_report}[args.cmd]
+               "status": cmd_status, "report": cmd_report, "intraday-train": cmd_intraday_train,
+               "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status}[args.cmd]
     return handler(cfg, args)
 
 

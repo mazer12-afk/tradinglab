@@ -117,7 +117,7 @@ class BinanceVision:
                 if r.status_code in (429, 500, 502, 503, 504):
                     raise requests.HTTPError(f"{r.status_code} for {url}")
                 return r
-            except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as exc:
+            except requests.RequestException as exc:  # incl. resets mid-body (ChunkedEncodingError)
                 last_exc = exc
                 time.sleep(delay)
                 delay *= 2

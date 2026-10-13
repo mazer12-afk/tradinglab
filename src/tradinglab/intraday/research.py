@@ -237,8 +237,8 @@ def freeze_between_changes(pos: pd.DataFrame, w: pd.DataFrame) -> pd.DataFrame:
 
 
 def selective_weights(pred: pd.DataFrame, d: IntradayData, cfg: IntradayConfig, horizon: int,
-                      enter: float, exit_: float, min_hold: int) -> pd.DataFrame:
-    score = forecast_score(pred.reindex(d.index), horizon)
+                      enter: float, exit_: float, min_hold: int, norm_window: int = 288 * 30) -> pd.DataFrame:
+    score = forecast_score(pred.reindex(d.index), horizon, norm_window)
     pos = hysteresis_positions(score, enter, exit_, min_hold)
     w = signal_to_weights(pos.where(score.notna()), d, cfg)
     return freeze_between_changes(pos, w)
