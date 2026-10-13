@@ -34,7 +34,7 @@ portfolio:
   vol_lookback: 60
   max_gross: 1.5
   max_weight: 0.35
-  rebalance_band: 0.02
+  rebalance_band: 0.005     # skip trades < 0.5% of equity (chosen on 2021-24 only)
   signal_span: 5            # EMA smoothing of rule-based signals: halves turnover (chosen on 2021-24 only)
   min_trade_notional: 10.0
 
