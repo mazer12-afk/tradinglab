@@ -29,7 +29,7 @@ from tradinglab.backtest.engine import BacktestResult, run_backtest
 from tradinglab.backtest.metrics import deflated_sharpe, effective_trials, summarize
 from tradinglab.config import LabConfig, bars_per_year, utc
 from tradinglab.data.store import Panel
-from tradinglab.portfolio.allocator import combine_weights, correlation_filter, strategy_alphas
+from tradinglab.portfolio.allocator import combine_weights, correlation_clusters, strategy_alphas
 from tradinglab.portfolio.sizing import strategy_weights
 from tradinglab.research.walkforward import walk_forward_signals
 from tradinglab.strategies.base import Strategy
@@ -73,30 +73,66 @@ def evaluate_candidate(strategy: Strategy, panel: Panel, cfg: LabConfig, workers
 
 
 def select(results: dict[str, CandidateResult], cfg: LabConfig, start, end,
-           include_benchmarks: bool = False) -> tuple[list[str], pd.DataFrame]:
-    """Apply the selection rules on returns within [start, end). Returns (chosen, table)."""
+           include_benchmarks: bool = False) -> tuple[list[str], dict[str, float], pd.DataFrame]:
+    """Cluster-based selection on returns within [start, end).
+
+    1. Candidates are grouped into correlation clusters (average linkage).
+    2. A member is eligible if its own Sharpe and PSR clear the thresholds
+       (benchmarks never are).
+    3. A cluster is selected if the equal-weight stream of its eligible members
+       clears the Sharpe threshold and the Deflated Sharpe threshold, with the
+       number of clusters as the number of independent trials.
+    4. All eligible members of selected clusters are held, equally weighted
+       inside their cluster; clusters are weighted by inverse volatility.
+
+    Returns (chosen, alphas, per-strategy table).
+    """
     bpy = bars_per_year(cfg.market.bar)
+    sc = cfg.selection
     rets = {n: _period(r.backtest.returns, start, end) for n, r in results.items()}
+    frame = pd.DataFrame(rets).dropna(how="all").fillna(0.0)
+    clusters = correlation_clusters(frame, sc.cluster_corr)
+    n_clusters = len(set(clusters.values()))
     per_period_sr = [float(r.mean() / r.std()) if r.std() > 0 else float("nan") for r in rets.values()]
-    n_eff = effective_trials(pd.DataFrame(rets).dropna(how="all").fillna(0.0))
     rows = {}
     for n, r in rets.items():
         m = summarize(r, bpy)
-        m["dsr"] = deflated_sharpe(r, per_period_sr, n_eff, null_variance=True)
-        m["dsr_xs"] = deflated_sharpe(r, per_period_sr, n_eff, null_variance=False)
-        m["n_eff_trials"] = n_eff
+        m["dsr"] = deflated_sharpe(r, per_period_sr, n_clusters, null_variance=True)
+        m["dsr_xs"] = deflated_sharpe(r, per_period_sr, n_clusters, null_variance=False)
+        m["cluster"] = clusters[n]
         rows[n] = m
     table = pd.DataFrame(rows).T
-    sc = cfg.selection
-    eligible = table[(table["sharpe"] >= sc.min_oos_sharpe) & (table["psr"] >= sc.min_psr)
-                     & (table["dsr"] >= sc.min_dsr)]
+    table["n_clusters"] = n_clusters
+    member_ok = (table["sharpe"] >= sc.min_oos_sharpe) & (table["psr"] >= sc.min_psr)
     if not include_benchmarks:
-        eligible = eligible[~eligible.index.isin(BENCHMARKS)]
-    ranked = list(eligible.sort_values(["dsr", "sharpe"], ascending=False).index)
-    chosen = correlation_filter(rets, ranked, max_corr=0.9, limit=sc.max_strategies)
-    table["eligible"] = table.index.isin(eligible.index)
+        member_ok &= ~table.index.isin(BENCHMARKS)
+    table["eligible"] = member_ok
+    table["cluster_sharpe"] = np.nan
+    table["cluster_dsr"] = np.nan
+    picked: dict[int, list[str]] = {}
+    streams: dict[int, pd.Series] = {}
+    for c in sorted(set(clusters.values())):
+        members = [n for n in table.index if clusters[n] == c and member_ok[n]]
+        if not members:
+            continue
+        stream = frame[members].mean(axis=1)
+        cs = summarize(stream, bpy)
+        cdsr = deflated_sharpe(stream, per_period_sr, n_clusters, null_variance=True)
+        table.loc[[n for n in table.index if clusters[n] == c], ["cluster_sharpe", "cluster_dsr"]] = [
+            cs["sharpe"], cdsr]
+        if cs["sharpe"] >= sc.min_oos_sharpe and cdsr >= sc.min_dsr:
+            picked[c] = members
+            streams[c] = stream
+    # Keep the strongest clusters if there are more than allowed.
+    ranked = sorted(picked, key=lambda c: -float(table.loc[picked[c][0], "cluster_dsr"]))[: sc.max_clusters]
+    cluster_alpha = strategy_alphas({str(c): streams[c] for c in ranked}, sc.weighting)
+    alphas: dict[str, float] = {}
+    for c in ranked:
+        for n in picked[c]:
+            alphas[n] = cluster_alpha[str(c)] / len(picked[c])
+    chosen = list(alphas)
     table["selected"] = table.index.isin(chosen)
-    return chosen, table
+    return chosen, alphas, table
 
 
 def ensemble_backtest(results: dict[str, CandidateResult], chosen: list[str], alphas: dict[str, float],
@@ -148,16 +184,13 @@ def run_tournament(strategies: list[Strategy], panel: Panel, cfg: LabConfig, hol
     first_test = cfg.walkforward.first_test
     data_end = str(panel.close.index[-1])
     # 1) selection on the selection window, evaluated on the holdout
-    h_choice, sel_table = select(results, cfg, first_test, holdout_start)
-    h_alphas = strategy_alphas({n: _period(results[n].backtest.returns, first_test, holdout_start)
-                                for n in h_choice}, cfg.selection.weighting)
+    h_choice, h_alphas, sel_table = select(results, cfg, first_test, holdout_start)
     h_bt = ensemble_backtest(results, h_choice, h_alphas, panel, cfg, start=holdout_start) if h_choice else None
     h_metrics = h_bt.metrics(bpy) if h_bt is not None else {}
-    _, hold_table = select(results, cfg, holdout_start, None)
+    _, _, hold_table = select(results, cfg, holdout_start, None)
 
     # 2) live choice on the full OOS history
-    l_choice, _ = select(results, cfg, first_test, None)
-    l_alphas = strategy_alphas({n: results[n].backtest.returns for n in l_choice}, cfg.selection.weighting)
+    l_choice, l_alphas, _ = select(results, cfg, first_test, None)
     l_bt = ensemble_backtest(results, l_choice, l_alphas, panel, cfg) if l_choice else None
 
     cand = pd.DataFrame({n: r.metrics for n, r in results.items()}).T

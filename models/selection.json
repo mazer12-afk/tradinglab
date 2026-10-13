@@ -1,0 +1,205 @@
+{
+  "created_at": "2026-10-13T13:29:18.878376+00:00",
+  "data_end": "2026-10-13 00:00:00+00:00",
+  "strategies": [
+    "tsmom_lf",
+    "macd_lf",
+    "breakout_lf",
+    "tsmom",
+    "macd"
+  ],
+  "alphas": {
+    "tsmom_lf": 0.15996268308899483,
+    "macd_lf": 0.15996268308899483,
+    "breakout_lf": 0.15996268308899483,
+    "tsmom": 0.26005597536650776,
+    "macd": 0.26005597536650776
+  },
+  "candidates": [
+    "hold_btc",
+    "basket_long",
+    "tsmom",
+    "tsmom_lf",
+    "macd",
+    "macd_lf",
+    "breakout",
+    "breakout_lf",
+    "xsmom_63",
+    "xs_rev_5",
+    "dl_lstm",
+    "dl_mom_trans",
+    "dl_deepm"
+  ],
+  "deep_models": {
+    "dl_lstm": "/home/user/tradinglab/models/dl_lstm",
+    "dl_mom_trans": "/home/user/tradinglab/models/dl_mom_trans",
+    "dl_deepm": "/home/user/tradinglab/models/dl_deepm"
+  },
+  "holdout": {
+    "window": [
+      "2025-01-01",
+      "2026-10-13 00:00:00+00:00"
+    ],
+    "choice": [
+      "tsmom_lf",
+      "macd_lf",
+      "breakout_lf",
+      "breakout",
+      "tsmom",
+      "macd"
+    ],
+    "metrics": {
+      "start": "2025-01-01",
+      "end": "2026-10-11",
+      "bars": 649,
+      "total_return": 0.017123473370320275,
+      "cagr": 0.009594517006126013,
+      "ann_vol": 0.23443875404825051,
+      "sharpe": 0.15847927561927458,
+      "sortino": 0.2124702573710054,
+      "max_drawdown": -0.21384456319937006,
+      "calmar": 0.044866780163033276,
+      "hit_rate": 0.5100154083204931,
+      "skew": -0.6954548874457323,
+      "kurtosis": 3.6728724156274266,
+      "psr": 0.5833785381378033,
+      "nw_tstat": 0.21060524313358736,
+      "turnover_ann": 37.45838167631693,
+      "cost_drag_ann": 0.03745838167631693,
+      "funding_drag_ann": 9.627873751018057e-05,
+      "avg_gross": 0.881992052165578,
+      "avg_net": 0.06155071168805297
+    }
+  },
+  "live_rules_oos": {
+    "start": "2021-01-01",
+    "end": "2026-10-11",
+    "bars": 2103,
+    "total_return": 1.388792692711179,
+    "cagr": 0.16315408662091824,
+    "ann_vol": 0.2489968265790534,
+    "sharpe": 0.7316766189474884,
+    "sortino": 1.042587256881894,
+    "max_drawdown": -0.29366346338868465,
+    "calmar": 0.5555818375845145,
+    "hit_rate": 0.5183071802187351,
+    "skew": -0.1233745071651428,
+    "kurtosis": 3.4516654943781404,
+    "psr": 0.9599393995352795,
+    "nw_tstat": 1.7693403952923505,
+    "turnover_ann": 29.366789801311608,
+    "cost_drag_ann": 0.029366789801311608,
+    "funding_drag_ann": 0.011691819517090874,
+    "avg_gross": 0.8859737419831057,
+    "avg_net": 0.1578814775871368
+  },
+  "config": {
+    "paths": {
+      "data_dir": "/home/user/tradinglab/data/cache",
+      "state_dir": "/home/user/tradinglab/state",
+      "models_dir": "/home/user/tradinglab/models",
+      "reports_dir": "/home/user/tradinglab/reports"
+    },
+    "universe": {
+      "symbols": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "TRXUSDT",
+        "LINKUSDT",
+        "AVAXUSDT",
+        "DOTUSDT",
+        "LTCUSDT",
+        "BCHUSDT",
+        "XLMUSDT",
+        "ATOMUSDT",
+        "NEARUSDT",
+        "UNIUSDT",
+        "ETCUSDT",
+        "FILUSDT",
+        "AAVEUSDT",
+        "HBARUSDT",
+        "ALGOUSDT",
+        "VETUSDT",
+        "INJUSDT",
+        "SUIUSDT",
+        "APTUSDT",
+        "ARBUSDT",
+        "OPUSDT",
+        "ICPUSDT",
+        "LDOUSDT"
+      ],
+      "min_history_bars": 300
+    },
+    "market": {
+      "instrument": "perp",
+      "bar": "1d",
+      "exec_lag_hours": 3,
+      "default_funding_8h": 0.0001
+    },
+    "costs": {
+      "fee_bps": 5.0,
+      "slippage_bps": 5.0
+    },
+    "portfolio": {
+      "initial_capital": 100000,
+      "target_vol": 0.25,
+      "asset_vol_target": 0.6,
+      "vol_lookback": 60,
+      "max_gross": 1.5,
+      "max_weight": 0.35,
+      "rebalance_band": 0.005,
+      "signal_span": 5,
+      "min_trade_notional": 10.0
+    },
+    "risk": {
+      "dd_derisk_start": 0.25,
+      "dd_halt": 0.4,
+      "dd_floor_scale": 0.5,
+      "stale_data_hours": 60,
+      "max_price_jump": 0.6
+    },
+    "walkforward": {
+      "data_start": "2018-01-01",
+      "first_test": "2021-01-01",
+      "holdout_start": "2025-01-01",
+      "step_months": 6,
+      "valid_fraction": 0.15
+    },
+    "selection": {
+      "min_oos_sharpe": 0.5,
+      "min_psr": 0.8,
+      "min_dsr": 0.5,
+      "cluster_corr": 0.7,
+      "max_clusters": 4,
+      "weighting": "inverse_vol"
+    },
+    "deep": {
+      "seq_len": 63,
+      "burn_in": 21,
+      "hidden": 32,
+      "heads": 4,
+      "dropout": 0.3,
+      "lr": 0.001,
+      "batch_size": 128,
+      "max_epochs": 60,
+      "patience": 10,
+      "seeds": 3,
+      "turnover_penalty": 1.0,
+      "softmin_lambda": 0.1,
+      "softmin_beta": 5.0,
+      "threads": 4
+    },
+    "live": {
+      "feed": "auto",
+      "poll_seconds": 300,
+      "retrain_days": 7,
+      "fill_latency_seconds": 60,
+      "shadow_all": true
+    }
+  }
+}

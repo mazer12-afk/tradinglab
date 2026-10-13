@@ -75,9 +75,9 @@ class PortfolioConfig:
 
 @dataclass
 class RiskConfig:
-    dd_derisk_start: float = 0.15   # start scaling exposure down at this drawdown
-    dd_halt: float = 0.30           # flatten and halt new risk at this drawdown
-    dd_floor_scale: float = 0.25    # exposure multiplier just before the halt
+    dd_derisk_start: float = 0.25   # start scaling exposure down at this drawdown
+    dd_halt: float = 0.40           # flatten and halt new risk at this drawdown
+    dd_floor_scale: float = 0.5     # exposure multiplier just before the halt
     stale_data_hours: float = 60.0  # refuse to trade on data older than this
     max_price_jump: float = 0.6     # reject bars with |log return| above this (bad ticks)
 
@@ -96,8 +96,9 @@ class SelectionConfig:
     min_oos_sharpe: float = 0.5
     min_psr: float = 0.80            # probabilistic Sharpe vs 0, OOS
     min_dsr: float = 0.50            # deflated Sharpe ratio (multiple-testing adjusted)
-    max_strategies: int = 4
-    weighting: str = "inverse_vol"   # inverse_vol | equal | sharpe
+    cluster_corr: float = 0.7        # strategies correlated above this form one cluster
+    max_clusters: int = 4
+    weighting: str = "inverse_vol"   # across clusters: inverse_vol | equal | sharpe
 
 
 @dataclass

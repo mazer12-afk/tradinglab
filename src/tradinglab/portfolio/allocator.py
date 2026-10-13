@@ -43,19 +43,21 @@ def combine_weights(weights: dict[str, pd.DataFrame], alphas: dict[str, float], 
     return vol_target(total, panel, cfg.portfolio, bars_per_year(cfg.market.bar), cfg.market.instrument)
 
 
-def correlation_filter(returns: dict[str, pd.Series], ranked: list[str], max_corr: float,
-                       limit: int) -> list[str]:
-    """Greedy pick in rank order, skipping strategies too correlated with ones already chosen."""
-    chosen: list[str] = []
-    for name in ranked:
-        if len(chosen) >= limit:
-            break
-        ok = True
-        for c in chosen:
-            a, b = returns[name].align(returns[c], join="inner")
-            if len(a) > 30 and np.corrcoef(a, b)[0, 1] > max_corr:
-                ok = False
-                break
-        if ok:
-            chosen.append(name)
-    return chosen
+def correlation_clusters(returns: pd.DataFrame, threshold: float) -> dict[str, int]:
+    """Average-linkage hierarchical clusters of return streams.
+
+    Strategies whose returns correlate above ``threshold`` (on average) end up in
+    the same cluster. Returns {strategy: cluster id}.
+    """
+    from scipy.cluster.hierarchy import fcluster, linkage
+    from scipy.spatial.distance import squareform
+
+    names = list(returns.columns)
+    if len(names) == 1:
+        return {names[0]: 1}
+    corr = returns.corr().fillna(0.0).to_numpy()
+    dist = np.clip(1.0 - corr, 0.0, 2.0)
+    np.fill_diagonal(dist, 0.0)
+    z = linkage(squareform(dist, checks=False), method="average")
+    labels = fcluster(z, t=1.0 - threshold, criterion="distance")
+    return {n: int(c) for n, c in zip(names, labels)}

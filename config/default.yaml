@@ -39,9 +39,11 @@ portfolio:
   min_trade_notional: 10.0
 
 risk:
-  dd_derisk_start: 0.15
-  dd_halt: 0.30
-  dd_floor_scale: 0.25
+  # Catastrophe breaker only: de-risking on ordinary drawdowns hurts trend
+  # strategies (it sells the bottom and misses the recovery).
+  dd_derisk_start: 0.25
+  dd_halt: 0.40
+  dd_floor_scale: 0.5
   stale_data_hours: 60
   max_price_jump: 0.6
 
@@ -56,8 +58,9 @@ selection:
   min_oos_sharpe: 0.5
   min_psr: 0.80
   min_dsr: 0.50
-  max_strategies: 4
-  weighting: inverse_vol
+  cluster_corr: 0.7         # correlation above which strategies count as one idea
+  max_clusters: 4
+  weighting: inverse_vol    # risk split across clusters; equal inside a cluster
 
 deep:
   seq_len: 63
