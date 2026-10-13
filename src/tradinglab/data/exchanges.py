@@ -68,6 +68,10 @@ class Exchange(ABC):
     def quote(self, symbol: str) -> Quote:
         """Current best bid/ask."""
 
+    def minute_open(self, symbol: str, ts: pd.Timestamp) -> float | None:
+        """Open price of the 1-minute bar starting at ``ts`` (None if unsupported / not yet traded)."""
+        return None
+
     @staticmethod
     def _finish(df: pd.DataFrame, now: pd.Timestamp | None = None) -> pd.DataFrame:
         now = now or pd.Timestamp.now(tz="UTC")
@@ -84,29 +88,58 @@ class BinanceSpot(Exchange):
         self.host = host
         self.name = name
 
-    def klines_1h(self, symbol: str, start: pd.Timestamp) -> pd.DataFrame:
+    STEP_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
+
+    def klines(self, symbol: str, interval: str, start: pd.Timestamp, full: bool = False) -> pd.DataFrame:
+        """Closed klines with open time >= start. ``full`` keeps trades/taker-buy columns."""
         rows = []
+        step = self.STEP_MS[interval]
         cursor = int(pd.Timestamp(start).timestamp() * 1000)
-        for _ in range(50):
+        for _ in range(200):
             data = self._get(f"{self.host}/api/v3/klines",
-                             {"symbol": symbol, "interval": "1h", "startTime": cursor, "limit": 1000})
+                             {"symbol": symbol, "interval": interval, "startTime": cursor, "limit": 1000})
             if not data:
                 break
             rows.extend(data)
             if len(data) < 1000:
                 break
-            cursor = int(data[-1][0]) + 3_600_000
-        return self.parse_klines(rows)
+            cursor = int(data[-1][0]) + step
+        return self.parse_klines(rows, full=full, bar=pd.Timedelta(milliseconds=step))
+
+    def klines_1h(self, symbol: str, start: pd.Timestamp) -> pd.DataFrame:
+        return self.klines(symbol, "1h", start)
 
     @staticmethod
-    def parse_klines(rows: list) -> pd.DataFrame:
+    def parse_klines(rows: list, full: bool = False, bar: pd.Timedelta = pd.Timedelta(hours=1)) -> pd.DataFrame:
+        cols = ["t", "open", "high", "low", "close", "volume", "ct", "quote_volume", "trades",
+                "taker_buy_volume", "taker_buy_quote_volume"]
         if not rows:
-            return pd.DataFrame(columns=COLUMNS)
-        df = pd.DataFrame([r[:8] for r in rows],
-                          columns=["t", "open", "high", "low", "close", "volume", "ct", "quote_volume"])
+            return pd.DataFrame(columns=cols[1:] if full else COLUMNS)
+        df = pd.DataFrame([r[:11] for r in rows], columns=cols)
         df.index = pd.to_datetime(df["t"].astype("int64"), unit="ms", utc=True)
         df.index.name = "open_time"
-        return Exchange._finish(df)
+        df = df[~df.index.duplicated(keep="last")].sort_index()
+        now = pd.Timestamp.now(tz="UTC")
+        df = df[df.index + bar <= now]  # closed bars only
+        keep = ["open", "high", "low", "close", "volume", "quote_volume"]
+        if full:
+            keep += ["trades", "taker_buy_volume", "taker_buy_quote_volume"]
+        return df[keep].astype("float64")
+
+    def minute_open(self, symbol: str, ts: pd.Timestamp) -> float | None:
+        t = pd.Timestamp(ts).floor("min")
+        data = self._get(f"{self.host}/api/v3/klines",
+                         {"symbol": symbol, "interval": "1m", "startTime": int(t.timestamp() * 1000), "limit": 1})
+        if data and pd.Timestamp(int(data[0][0]), unit="ms", tz="UTC") - t <= pd.Timedelta(minutes=5):
+            return float(data[0][1])
+        return None
+
+    def quotes(self, symbols: list[str]) -> dict[str, Quote]:
+        import json as _json
+
+        data = self._get(f"{self.host}/api/v3/ticker/bookTicker", {"symbols": _json.dumps(symbols)})
+        now = pd.Timestamp.now(tz="UTC")
+        return {d["symbol"]: Quote(float(d["bidPrice"]), float(d["askPrice"]), now, self.name) for d in data}
 
     def quote(self, symbol: str) -> Quote:
         d = self._get(f"{self.host}/api/v3/ticker/bookTicker", {"symbol": symbol})

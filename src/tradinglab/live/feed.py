@@ -122,8 +122,21 @@ class LiveFeed:
         return float(s.iloc[-1]) if not s.empty else None
 
     def fill_price(self, symbol: str, ts: pd.Timestamp) -> float | None:
-        """First trade price at/after ``ts`` from 1-minute klines (None until published)."""
+        """First trade price at/after ``ts`` from 1-minute klines (None until known).
+
+        Realtime mode reads the exchange's live 1-minute klines; archive mode waits
+        for the public archive to publish that day.
+        """
         ts = utc(ts)
+        if self.mode == "realtime" and ts.floor("min") + pd.Timedelta(minutes=1) <= pd.Timestamp.now(tz="UTC"):
+            for ex in self.live_exchanges:
+                try:
+                    px = ex.minute_open(symbol, ts)
+                except Exception as exc:  # noqa: BLE001 - try the next venue / the archive
+                    log.debug("minute price %s on %s failed: %s", symbol, ex.name, exc)
+                    continue
+                if px is not None:
+                    return px
         day = ts.floor("D")
         key = (symbol, str(day.date()))
         df = self._minute_cache.get(key)
