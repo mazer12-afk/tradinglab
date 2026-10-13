@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import re
 import threading
 import time
@@ -175,7 +176,7 @@ class BinanceVision:
         if path.exists():
             return pd.read_parquet(path)
         df = parser(self._unzip(self.fetch(f.key)))
-        tmp = path.with_suffix(".tmp")
+        tmp = path.with_name(f"{path.stem}.{os.getpid()}.{threading.get_ident()}.tmp")
         df.to_parquet(tmp)
         tmp.replace(path)
         return df

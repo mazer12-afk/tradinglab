@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,9 +99,11 @@ class MarketData:
         manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
         files = self.archive.kline_files(symbol, interval, start, market=market, dataset=dataset)
         cached_start = pd.Timestamp(manifest["start"]) if manifest.get("start") else None
+        changed = False
         if cached_start is None or cached_start > start or not path.exists():
             df = self.archive._load_many(files, parse_kline_csv)
-            known = set()
+            known: set[str] = set()
+            changed = True
         else:
             df = pd.read_parquet(path)
             known = set(manifest.get("keys", []))
@@ -108,12 +112,17 @@ class MarketData:
                 add = self.archive._load_many(new, parse_kline_csv)
                 df = pd.concat([df, add])
                 df = df[~df.index.duplicated(keep="last")].sort_index()
-        if not df.empty:
-            tmp = path.with_suffix(".tmp")
+                changed = True
+        if changed and not df.empty:
+            # Unique temp names: several processes may refresh the same cache concurrently.
+            tag = f"{os.getpid()}.{threading.get_ident()}"
+            tmp = path.with_name(f"{path.stem}.{tag}.tmp")
             df.to_parquet(tmp)
             tmp.replace(path)
             keys = sorted(known | {f.key for f in files})
-            manifest_path.write_text(json.dumps({"start": str(start.date()), "keys": keys}))
+            mtmp = manifest_path.with_name(f"{manifest_path.stem}.{tag}.tmp")
+            mtmp.write_text(json.dumps({"start": str(start.date()), "keys": keys}))
+            mtmp.replace(manifest_path)
         start_utc = start.tz_localize("UTC") if start.tzinfo is None else start
         return df[df.index >= start_utc] if not df.empty else df
 

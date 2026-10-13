@@ -129,6 +129,38 @@ class LiveConfig:
 
 
 @dataclass
+class IntradayConfig:
+    """Intraday (day-trading) research + live settings: USD-M perpetuals on 5m bars."""
+
+    symbols: list[str] = field(default_factory=lambda: [
+        "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "BNBUSDT",
+        "ADAUSDT", "AVAXUSDT", "LINKUSDT", "LTCUSDT", "DOTUSDT", "BCHUSDT"])
+    bar: str = "5m"
+    data_start: str = "2022-01-01"
+    first_test: str = "2023-07-01"
+    holdout_start: str = "2025-07-01"
+    horizon_bars: int = 12            # prediction horizon (12 × 5m = 1 hour)
+    train_days: int = 365             # rolling training window
+    retrain_months: int = 1
+    valid_days: int = 30              # tail of the training window for early stopping
+    row_stride: int = 3               # subsample training rows (targets overlap heavily)
+    fee_bps: float = 5.0              # Binance USD-M taker fee (VIP0)
+    slippage_bps: dict = field(default_factory=lambda: {
+        "BTCUSDT": 1.0, "ETHUSDT": 1.0, "SOLUSDT": 2.0, "XRPUSDT": 2.0, "DOGEUSDT": 2.0, "BNBUSDT": 2.0})
+    default_slippage_bps: float = 3.0
+    target_vol: float = 0.20          # annualised portfolio vol target
+    max_gross: float = 2.0
+    max_weight: float = 0.4
+    vol_span: int = 288               # EWMA span for vol/covariance (1 day of 5m bars)
+    rebalance_band: float = 0.005
+    min_trade_notional: float = 10.0
+    initial_capital: float = 100_000.0
+
+    def cost_bps(self, symbols: list[str]) -> list[float]:
+        return [self.fee_bps + self.slippage_bps.get(s, self.default_slippage_bps) for s in symbols]
+
+
+@dataclass
 class LabConfig:
     paths: PathsConfig = field(default_factory=PathsConfig)
     universe: UniverseConfig = field(default_factory=UniverseConfig)
@@ -140,6 +172,7 @@ class LabConfig:
     selection: SelectionConfig = field(default_factory=SelectionConfig)
     deep: DeepConfig = field(default_factory=DeepConfig)
     live: LiveConfig = field(default_factory=LiveConfig)
+    intraday: IntradayConfig = field(default_factory=IntradayConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)
