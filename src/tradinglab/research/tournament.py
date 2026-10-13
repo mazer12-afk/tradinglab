@@ -197,7 +197,7 @@ def run_tournament(strategies: list[Strategy], panel: Panel, cfg: LabConfig, hol
     cand.insert(0, "description", [results[n].description for n in cand.index])
     curves = pd.DataFrame({n: r.backtest.equity for n, r in results.items()})
     if h_bt is not None:
-        curves["ENSEMBLE(holdout)"] = h_bt.equity
+        curves["ENSEMBLE(holdout, from 2025)"] = h_bt.equity
     if l_bt is not None:
         curves["ENSEMBLE(live rules)"] = l_bt.equity
 

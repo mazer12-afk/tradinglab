@@ -64,7 +64,7 @@ function renderLines(id, data){
   const span=x1-x0, days=span/864e5; const nt=6;
   for(let i=0;i<=nt;i++){const t=x0+span*i/nt; const d=new Date(t);
     const lab=days>120?d.toISOString().slice(0,7):(days>3?d.toISOString().slice(5,10):d.toISOString().slice(5,16).replace('T',' '));
-    g+=`<text x="${X(t)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${lab}</text>`}
+    g+=`<text x="${X(t)}" y="${H-8}" text-anchor="${i==0?'start':(i==nt?'end':'middle')}" font-size="11" fill="var(--muted)">${lab}</text>`}
   if(data.base!=null){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(data.base)}" y2="${Y(data.base)}" stroke="var(--muted)" stroke-width="1"/>`}
   data.series.forEach((s,k)=>{let d='',pen=false; s.y.forEach((v,i)=>{if(v==null){pen=false;return} d+=(pen?'L':'M')+X(xs[i]).toFixed(1)+','+Y(v).toFixed(1); pen=true});
     g+=`<path d="${d}" fill="none" stroke="var(--s${k+1})" stroke-width="${s.emph?2.5:1.5}" stroke-linejoin="round" stroke-linecap="round" opacity="${s.emph?1:0.9}"/>`});

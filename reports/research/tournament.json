@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-10-13T13:29:18.878376+00:00",
+  "created_at": "2026-10-13T13:33:30.402637+00:00",
   "data_end": "2026-10-13 00:00:00+00:00",
   "selection_window": [
     "2021-01-01",
@@ -292,7 +292,7 @@
       "avg_net": -0.0458576248
     },
     "xs_rev_5": {
-      "description": "Cross-sectional momentum: long recent winners, short losers (dollar neutral).",
+      "description": "Cross-sectional short-term reversal: long recent losers, short winners (dollar neutral).",
       "start": "2021-01-01",
       "end": "2026-10-11",
       "bars": 2103,

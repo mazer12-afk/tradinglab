@@ -104,6 +104,11 @@ class CrossSectionalMomentum(Strategy):
         self.reverse = reverse
         self.name = name or (f"xs_rev_{lookback}" if reverse else f"xsmom_{lookback}")
 
+    def describe(self) -> str:
+        if self.reverse:
+            return "Cross-sectional short-term reversal: long recent losers, short winners (dollar neutral)."
+        return "Cross-sectional momentum: long recent winners, short losers (dollar neutral)."
+
     def signals(self, panel: Panel) -> pd.DataFrame:
         close = panel.close
         vol = ewm_vol(close.pct_change(fill_method=None))
