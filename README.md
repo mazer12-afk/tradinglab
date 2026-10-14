@@ -81,8 +81,26 @@ Full tables: `reports/research/` (`index.html`, `candidates_oos.csv`,
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The
 first decisions were for the daily bar closing 2026-10-13 00:00 UTC. `main` opened
 30 long positions (45% gross). See `state/status.json`, `state/journal/` and
-`reports/live.html`. This sandbox cannot reach exchange APIs, so the engine runs in
-archive mode: fills and marks appear once Binance publishes each day (~03:00 UTC).
+`reports/live.html`.
+
+The engine started in archive mode (fills and marks once Binance publishes each day).
+Exchange APIs became reachable on 2026-10-13 ~20:20 UTC, and the daemon switched to
+**realtime** on its own: hourly marks from live bars and fills at the live price
+right after each decision. The first realtime daily rebalance (bar 2026-10-14 00:00)
+ran at 03:03 UTC with 118 orders across all 14 accounts.
+
+**Live result so far** (marked 2026-10-14 03:00 UTC, 14 hourly marks after launch):
+
+| account | P&L | return |
+|---|---:|---:|
+| `main` (selected portfolio) | **+$423.75** | **+0.42%** |
+| `shadow:hold_btc` (benchmark) | +$29.98 | +0.03% |
+| best shadow (`dl_mom_trans`) | +$743.56 | +0.74% |
+| worst shadow (`dl_deepm`) | −$896.81 | −0.90% |
+
+**Profit is registered on live market data**, but 14 hours is noise for strategies
+that hold for weeks: this is evidence that the system works end to end, not that it
+has an edge. The current numbers are always in `state/status.json`.
 
 
 ## Intraday AI day-trading (live, 5-minute bars)
