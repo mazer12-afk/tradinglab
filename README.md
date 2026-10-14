@@ -135,6 +135,16 @@ tradinglab intraday-status             # live P&L per AI account
 - **The response:** two accounts trade only rare, extreme forecasts and hold for hours, and the deep model is trained directly on returns after costs.
 - **Not backtested:** the exact live configurations were not backtested. Their verdict is the live P&L in `state/intraday_status.json` and `state/intraday.sqlite`. Models are frozen in git (`models/intraday/live/`, with `manifest.json`) before the live data they are judged on.
 
+**Live P&L attribution.** `tradinglab intraday-status` splits each account's live P&L against the equal-weight basket of the 12 coins:
+- **passive:** the average exposure held throughout;
+- **timing:** changing exposure as the market moves;
+- **selection:** which coins, before costs;
+- **costs:** fees, spread/impact and funding.
+
+Exposure is rebuilt exactly from the fills: positions held through each bar, valued at the previous close.
+
+The split matters. At every decision so far, the deep model has held all 12 coins long, at about 0.4× net. Its live P&L is therefore almost entirely passive market exposure, not skill. The LightGBM accounts trade both directions, so their P&L is mostly timing.
+
 Live endpoint notes: Binance.com and Binance futures APIs geo-block this cloud region
 (HTTP 451), so live features use Binance **spot** 5-minute data (identical source for
 training and live). Positions are accounted as perpetuals (shorting, funding).
