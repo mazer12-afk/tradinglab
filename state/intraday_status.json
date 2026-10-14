@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-14 05:50:07.555384+00:00",
-  "last_bar": "2026-10-14 05:50:00+00:00",
+  "updated_at": "2026-10-14 06:00:10.366004+00:00",
+  "last_bar": "2026-10-14 06:00:00+00:00",
   "new_bars": 1,
   "traded": true,
   "orders": 0,
@@ -34,25 +34,23 @@
   "accounts": {
     "intraday:lgbm_1h": {
       "model": "LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip.",
-      "equity": 99799.52683739617,
-      "pnl": -200.4731626038265,
-      "return": -0.002004731626038314,
-      "marked_at": "2026-10-14T05:50:00+00:00",
-      "gross": 0.15034846996626244,
-      "net": -0.15034846996626244,
-      "trades": 3,
-      "fees_paid": 47.34653407682488,
+      "equity": 99844.39376844058,
+      "pnl": -155.6062315594172,
+      "return": -0.001556062315594131,
+      "marked_at": "2026-10-14T06:00:00+00:00",
+      "gross": 0.0,
+      "net": 0.0,
+      "trades": 4,
+      "fees_paid": 54.82271560221971,
       "funding_paid": 1.5632508610869047,
-      "positions": {
-        "BCHUSDT": -53.83819936619828
-      }
+      "positions": {}
     },
     "intraday:lgbm_4h": {
       "model": "LightGBM 4-hour forecast; enters at |z|>2.5, holds \u22652h, exits on sign flip.",
       "equity": 100000.0,
       "pnl": 0.0,
       "return": 0.0,
-      "marked_at": "2026-10-14T05:50:00+00:00",
+      "marked_at": "2026-10-14T06:00:00+00:00",
       "gross": 0.0,
       "net": 0.0,
       "trades": 0,
@@ -62,12 +60,12 @@
     },
     "intraday:deep_lstm_attn": {
       "model": "LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.",
-      "equity": 100021.28701446237,
-      "pnl": 21.287014462373918,
-      "return": 0.00021287014462378906,
-      "marked_at": "2026-10-14T05:50:00+00:00",
-      "gross": 0.4064732218679676,
-      "net": 0.4064732218679676,
+      "equity": 99943.79953026467,
+      "pnl": -56.200469735325896,
+      "return": -0.0005620046973532355,
+      "marked_at": "2026-10-14T06:00:00+00:00",
+      "gross": 0.4060130542832093,
+      "net": 0.4060130542832093,
       "trades": 21,
       "fees_paid": 20.30652915534297,
       "funding_paid": 1.3229338455945898,
