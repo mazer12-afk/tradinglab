@@ -145,6 +145,16 @@ Exposure is rebuilt exactly from the fills: positions held through each bar, val
 
 The split matters. At every decision so far, the deep model has held all 12 coins long, at about 0.4× net. Its live P&L is therefore almost entirely passive market exposure, not skill. The LightGBM accounts trade both directions, so their P&L is mostly timing.
 
+**First 24 hours live** (2026-10-13 21:15 → 2026-10-14 21:15 UTC, 288 five-minute bars; equal-weight basket of the 12 coins −2.95%):
+
+| account | P&L | max drawdown | trades | passive | timing | selection | costs |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `intraday:lgbm_4h` | **+$2,792 (+2.79%)** | −1.42% | 34 | +$1,229 | **+$1,874** | −$171 | −$140 |
+| `intraday:deep_lstm_attn` | −$1,073 (−1.07%) | −1.52% | 37 | **−$1,094** | −$6 | +$65 | −$38 |
+| `intraday:lgbm_1h` | −$156 (−0.16%) | −0.45% | 4 | +$227 | −$171 | −$139 | −$73 |
+
+These are one day and one market regime: a steady decline. The 4-hour model profited by being net short (average exposure −0.42) and mostly from *when* it was short. The deep model lost what a 0.4× long basket loses. Neither number says anything yet about a repeatable edge; that needs weeks of live data across rising, falling and flat markets.
+
 Live endpoint notes: Binance.com and Binance futures APIs geo-block this cloud region
 (HTTP 451), so live features use Binance **spot** 5-minute data (identical source for
 training and live). Positions are accounted as perpetuals (shorting, funding).
