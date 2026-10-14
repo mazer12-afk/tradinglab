@@ -188,6 +188,13 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
     assert (buys["fill_price"] > buys["ref_price"] * 0.99).all()
     # Fees are exactly the taker fee on filled notional.
     np.testing.assert_allclose(orders["fee"], (orders["qty"].abs() * orders["fill_price"]) * ic.fee_bps * 1e-4)
+    # Exported status carries the market/skill attribution, reconciled with the account.
+    st = json.loads((tmp_path / "intraday_status.json").read_text())["accounts"][acct]
+    at = st["attribution"]
+    assert at["window_start"] == str(eq.index[0]) and at["bars"] == len(eq) - 1
+    assert at["pnl"] == pytest.approx(st["pnl"], rel=1e-9)
+    assert at["costs"] == pytest.approx(st["fees_paid"] + st["funding_paid"], rel=1e-9)
+    assert at["passive_pnl"] + at["timing_pnl"] + at["selection_pnl"] - at["costs"] == pytest.approx(at["pnl"])
     # Re-running a cycle for the same bar is a no-op (idempotent).
     rep = eng.cycle(times[-1])
     assert rep.new_bars == 0 and rep.orders == 0
@@ -323,3 +330,46 @@ def test_engine_refuses_misaligned_model_symbols(tmp_path, kl, icfg, monkeypatch
     feed = L.IntradayFeed(md=None, symbols=list(reversed(SYMS)), exchange=ex)
     with pytest.raises(RuntimeError, match="misaligned"):
         L.IntradayEngine(icfg, feed, store, tmp_path / "models", policies=SPECS[:1])
+
+
+# ------------------------------------------------------------------ P&L attribution
+def _attr_inputs(seed=4, n=500):
+    rng = np.random.default_rng(seed)
+    idx = pd.date_range("2026-01-01", periods=n, freq="5min", tz="UTC")
+    close = pd.DataFrame(100 * np.exp(np.cumsum(rng.normal(0, 0.003, (n, 3)), axis=0)), index=idx, columns=SYMS)
+    from tradinglab.intraday.attribution import basket_returns
+
+    return close, basket_returns(close).fillna(0.0)
+
+
+def _equity_from(net, m, start=100_000.0, shocks=None):
+    eq = [start]
+    for t in range(1, len(m)):
+        eq.append(eq[-1] * (1 + net[t] * m.iloc[t]) - (shocks or {}).get(t, 0.0))
+    return pd.DataFrame({"equity": eq, "net": net}, index=m.index)
+
+
+def test_attribution_passive_long_basket_is_all_passive():
+    from tradinglab.intraday.attribution import attribute
+
+    close, m = _attr_inputs()
+    a = attribute(_equity_from(np.full(len(m), 0.4), m), close)
+    assert a["beta"] == pytest.approx(0.4, abs=1e-9)
+    assert a["passive_pnl"] == pytest.approx(a["pnl"], abs=1e-6)
+    assert abs(a["timing_pnl"]) < 1e-6 and abs(a["selection_pnl"]) < 1e-6
+    assert a["market_return"] == pytest.approx(np.prod(1 + m.iloc[1:]) - 1)
+
+
+def test_attribution_market_timing_and_costs():
+    from tradinglab.intraday.attribution import attribute
+
+    close, m = _attr_inputs(seed=5)
+    net = np.where(m.to_numpy() > 0, 0.5, -0.5)           # an (impossible) perfect timer
+    eq = _equity_from(net, m, shocks={100: 30.0, 300: 20.0})
+    a = attribute(eq, close, costs=50.0)
+    assert a["timing_pnl"] > 0.9 * (a["pnl"] + 50.0)
+    assert abs(a["passive_pnl"]) < 0.1 * a["timing_pnl"]
+    assert abs(a["selection_pnl"]) < 1e-6                   # fees accounted as costs, not selection
+    assert a["passive_pnl"] + a["timing_pnl"] + a["selection_pnl"] - a["costs"] == pytest.approx(a["pnl"])
+    b = attribute(eq, close)                                # costs not given → they land in selection
+    assert b["selection_pnl"] == pytest.approx(-50.0, abs=1e-6)

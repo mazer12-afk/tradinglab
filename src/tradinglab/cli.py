@@ -172,6 +172,17 @@ def cmd_intraday_status(cfg, args) -> int:
     for name, a in st["accounts"].items():
         print(f"{name:26s} {a['equity']:12,.2f} {a['pnl']:+10,.2f} {100 * a['return']:+7.2f}% {a['trades']:7d} "
               f"{a['fees_paid']:9,.2f} {a['gross']:6.2f}")
+    attr = {k: a["attribution"] for k, a in st["accounts"].items() if a.get("attribution")}
+    if attr:
+        w = next(iter(attr.values()))
+        print(f"\nP&L attribution since {w['window_start']} (equal-weight basket {100 * w['market_return']:+.2f}%):")
+        print(f"{'account':26s} {'avg net':>8s} {'beta':>6s} {'passive':>10s} {'timing':>10s} {'selection':>10s} "
+              f"{'costs':>9s}")
+        for name, x in attr.items():
+            print(f"{name:26s} {x['avg_net']:+8.2f} {x['beta']:+6.2f} {x['passive_pnl']:+10,.2f} "
+                  f"{x['timing_pnl']:+10,.2f} {x['selection_pnl']:+10,.2f} {-x['costs']:+9,.2f}")
+        print("passive = average exposure held throughout; timing = exposure changes vs the market; "
+              "selection = asset choice before costs")
     return 0
 
 

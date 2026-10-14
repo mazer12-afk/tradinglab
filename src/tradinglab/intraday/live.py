@@ -30,6 +30,7 @@ import pandas as pd
 from tradinglab.config import CostConfig, LabConfig, bar_timedelta, utc
 from tradinglab.data.exchanges import BinanceSpot, Quote
 from tradinglab.data.store import MarketData
+from tradinglab.intraday.attribution import attribute
 from tradinglab.intraday.data import IntradayData, assemble_intraday
 from tradinglab.intraday.features import build_features
 from tradinglab.intraday.policy import DEFAULT_POLICIES, PolicySpec, make_policy
@@ -261,7 +262,7 @@ class IntradayEngine:
             if targets:
                 self._execute(targets, quotes, t_last, now, rep)
             self.store.set_meta("intraday:last_bar", str(t_last))
-        self._export(rep)
+        self._export(rep, d.close)
         return rep
 
     def _warm_up(self, spec: PolicySpec, pol, fs, d: IntradayData, upto: int) -> None:
@@ -341,7 +342,8 @@ class IntradayEngine:
         rep.traded = True
 
     # -------------------------------------------------------------- status
-    def status(self) -> dict:
+    def status(self, close: pd.DataFrame | None = None) -> dict:
+        """Account summaries; with bar ``close`` prices also the market/skill P&L attribution."""
         out = {}
         for spec in self.specs:
             name = self.account(spec)
@@ -359,13 +361,40 @@ class IntradayEngine:
                 "trades": int(len(filled)), "fees_paid": float(filled["fee"].sum()) if len(filled) else 0.0,
                 "funding_paid": -self.store.funding_total(name), "positions": self.store.positions(name),
             }
+            if close is not None:
+                out[name]["attribution"] = self._attribution(name, filled, close)
         return out
 
-    def _export(self, rep: IntradayCycle) -> None:
+    def _attribution(self, name: str, filled: pd.DataFrame, close: pd.DataFrame) -> dict | None:
+        """P&L split (see ``intraday.attribution``) over the marks the price buffer still covers."""
+        eq = self.store.equity_curve(name)
+        if eq.empty:
+            return None
+        eq = eq[eq.index >= close.index[0]]
+        if len(eq) < 3:
+            return None
+        start = eq.index[0]
+        fees = 0.0
+        if len(filled):
+            ft = pd.to_datetime(filled["fill_ts"], utc=True)
+            fees = float(filled.loc[ft > start, "fee"].sum())
+        fund = pd.DataFrame([dict(r) for r in self.store.conn.execute(
+            "SELECT ts, amount FROM funding WHERE account=?", (name,))])
+        funding = 0.0
+        if not fund.empty:
+            funding = -float(fund.loc[pd.to_datetime(fund["ts"], utc=True) > start, "amount"].sum())
+        return attribute(eq, close.reindex(columns=self.feed.symbols), costs=fees + funding)
+
+    def _export(self, rep: IntradayCycle, close: pd.DataFrame | None = None) -> None:
         state_dir = Path(self.cfg.paths.state_dir)
+        try:
+            accounts = self.status(close)
+        except Exception as exc:  # noqa: BLE001 - reporting must never block trading
+            log.warning("attribution failed: %s", exc)
+            accounts = self.status()
         status = {"updated_at": str(rep.now), "last_bar": str(rep.bar), "new_bars": rep.new_bars,
                   "traded": rep.traded, "orders": rep.orders, "warnings": rep.warnings,
-                  "models": self.manifest.get("models"), "accounts": self.status()}
+                  "models": self.manifest.get("models"), "accounts": accounts}
         (state_dir / "intraday_status.json").write_text(json.dumps(status, indent=2, default=str))
 
 
