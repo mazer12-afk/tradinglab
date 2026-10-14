@@ -115,6 +115,7 @@ class FakeExchange:
     def __init__(self, kl):
         self.full = kl
         self.now = None
+        self.latency = pd.Timedelta(0)  # quote time minus cycle start
 
     def klines(self, symbol, interval, start, full=False):
         k = self.full[symbol]
@@ -124,7 +125,7 @@ class FakeExchange:
         out = {}
         for s in symbols:
             px = float(self.full[s]["close"][self.full[s].index + pd.Timedelta(minutes=5) <= self.now].iloc[-1])
-            out[s] = Quote(px * 0.9999, px * 1.0001, self.now, "fake")
+            out[s] = Quote(px * 0.9999, px * 1.0001, self.now + self.latency, "fake")
         return out
 
 
@@ -150,7 +151,7 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
     ex = FakeExchange(kl)
     feed = L.IntradayFeed(md=None, symbols=SYMS, exchange=ex, buffer_days=25)
     monkeypatch.setattr(L, "okx_funding_rates", lambda syms, session=None: {s: (0.0001, None) for s in syms})
-    ex.now = split
+    ex.now, ex.latency = split, pd.Timedelta(seconds=7)
     feed.kl = {s: k[k.index + pd.Timedelta(minutes=5) <= split - pd.Timedelta(days=0)] for s, k in kl.items()}
     store = StateStore(tmp_path / "intraday.sqlite")
     spec = PolicySpec("lgbm_1h", "lgbm", horizon=12, enter=1.0, exit=0.0, min_hold=3, norm_window=288 * 5)
@@ -180,6 +181,9 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
                                                   rel=1e-12)
     orders = store.orders(acct)
     assert (orders["status"] == "filled").all()
+    # Fills are stamped with the time of the quote they executed at, not the cycle start.
+    lag = pd.to_datetime(orders["fill_ts"], utc=True) - pd.to_datetime(orders["submit_ts"], utc=True)
+    assert (lag == pd.Timedelta(seconds=7)).all()
     buys = orders[orders["qty"] > 0]
     assert (buys["fill_price"] > buys["ref_price"] * 0.99).all()
     # Fees are exactly the taker fee on filled notional.

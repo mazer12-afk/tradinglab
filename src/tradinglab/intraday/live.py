@@ -332,7 +332,7 @@ class IntradayEngine:
             for o in self.store.pending_orders(name):
                 q = quotes.get(o["symbol"])
                 if q is not None:
-                    self.broker.fill(o, q.mid, now, quote=q)
+                    self.broker.fill(o, q.mid, q.ts, quote=q)  # stamped when the quote was taken
                 else:
                     self.store.cancel_order(o["id"], "no live quote")
             self.store.record_decision(name, t_last, now, eq, scale, tgt)
