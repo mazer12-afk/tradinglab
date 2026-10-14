@@ -30,7 +30,7 @@ import pandas as pd
 from tradinglab.config import CostConfig, LabConfig, bar_timedelta, utc
 from tradinglab.data.exchanges import BinanceSpot, Quote
 from tradinglab.data.store import MarketData
-from tradinglab.intraday.attribution import attribute
+from tradinglab.intraday.attribution import attribute, bar_costs, basket_returns, held_units, start_exposure
 from tradinglab.intraday.data import IntradayData, assemble_intraday
 from tradinglab.intraday.features import build_features
 from tradinglab.intraday.policy import DEFAULT_POLICIES, PolicySpec, make_policy
@@ -362,28 +362,52 @@ class IntradayEngine:
                 "funding_paid": -self.store.funding_total(name), "positions": self.store.positions(name),
             }
             if close is not None:
-                out[name]["attribution"] = self._attribution(name, filled, close)
+                try:
+                    out[name]["attribution"] = self._attribution(name, filled, close)
+                except Exception as exc:  # noqa: BLE001 - one account's report must not hide the others
+                    log.warning("%s: attribution failed: %s", name, exc)
+                    out[name]["attribution"] = None
         return out
 
     def _attribution(self, name: str, filled: pd.DataFrame, close: pd.DataFrame) -> dict | None:
-        """P&L split (see ``intraday.attribution``) over the marks the price buffer still covers."""
+        """P&L split (see ``intraday.attribution``) over the marks the price buffer covers for every
+        symbol still trading (a halted symbol's stale buffer must not stretch the window)."""
+        last = close.index[-1]
+        lv = {s: close[s].last_valid_index() for s in close.columns}
+        active = [s for s, t in lv.items() if t is not None and last - t <= pd.Timedelta(hours=1)]
+        if not active:
+            return None
+        t0 = max(close[s].first_valid_index() for s in active)
         eq = self.store.equity_curve(name)
         if eq.empty:
             return None
-        eq = eq[eq.index >= close.index[0]]
+        eq = eq[eq.index >= t0]
         if len(eq) < 3:
             return None
-        start = eq.index[0]
-        fees = 0.0
-        if len(filled):
-            ft = pd.to_datetime(filled["fill_ts"], utc=True)
-            fees = float(filled.loc[ft > start, "fee"].sum())
+        fills = self._fills(name, filled, eq.index)
+        units = held_units(fills, eq.index, list(close.columns))
         fund = pd.DataFrame([dict(r) for r in self.store.conn.execute(
-            "SELECT ts, amount FROM funding WHERE account=?", (name,))])
-        funding = 0.0
-        if not fund.empty:
-            funding = -float(fund.loc[pd.to_datetime(fund["ts"], utc=True) > start, "amount"].sum())
-        return attribute(eq, close.reindex(columns=self.feed.symbols), costs=fees + funding)
+            "SELECT ts, amount FROM funding WHERE account=?", (name,))], columns=["ts", "amount"])
+        fund["ts"] = pd.to_datetime(fund["ts"], utc=True, format="ISO8601")
+        return attribute(eq["equity"], start_exposure(units, close), basket_returns(close[active]),
+                         bar_costs(fills, fund, eq.index))
+
+    def _fills(self, name: str, filled: pd.DataFrame, marks: pd.DatetimeIndex) -> pd.DataFrame:
+        """Filled orders with their decision bar (orders carry ``reason = "bar <close time>"``;
+        should one not parse, the last mark at or before its fill time stands in)."""
+        cols = ["bar", "symbol", "qty", "fee", "slippage_cost"]
+        if filled is None or not len(filled):
+            return pd.DataFrame(columns=cols)
+        f = filled.copy()
+        f["bar"] = pd.to_datetime(f["reason"].astype(str).str.removeprefix("bar "), utc=True,
+                                  format="ISO8601", errors="coerce")
+        miss = f["bar"].isna()
+        if miss.any():
+            ft = pd.to_datetime(f.loc[miss, "fill_ts"], utc=True, format="ISO8601")
+            k = np.searchsorted(marks.values, ft.values, side="right") - 1
+            f.loc[miss, "bar"] = [marks[i] if i >= 0 else marks[0] - pd.Timedelta(days=1) for i in k]
+        f["slippage_cost"] = f["slippage_cost"].fillna(0.0)
+        return f[cols]
 
     def _export(self, rep: IntradayCycle, close: pd.DataFrame | None = None) -> None:
         state_dir = Path(self.cfg.paths.state_dir)

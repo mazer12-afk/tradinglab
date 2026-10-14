@@ -174,15 +174,24 @@ def cmd_intraday_status(cfg, args) -> int:
               f"{a['fees_paid']:9,.2f} {a['gross']:6.2f}")
     attr = {k: a["attribution"] for k, a in st["accounts"].items() if a.get("attribution")}
     if attr:
-        w = next(iter(attr.values()))
-        print(f"\nP&L attribution since {w['window_start']} (equal-weight basket {100 * w['market_return']:+.2f}%):")
-        print(f"{'account':26s} {'avg net':>8s} {'beta':>6s} {'passive':>10s} {'timing':>10s} {'selection':>10s} "
-              f"{'costs':>9s}")
+        windows = {(x["window_start"], round(x["market_return"], 10)) for x in attr.values()}
+        if len(windows) == 1:
+            w = next(iter(attr.values()))
+            print(f"\nP&L attribution since {w['window_start']} "
+                  f"(equal-weight basket {100 * w['market_return']:+.2f}%):")
+        else:
+            print("\nP&L attribution (windows differ per account – see the last two columns):")
+        print(f"{'account':26s} {'avg exp':>8s} {'beta':>6s} {'passive':>10s} {'timing':>10s} {'selection':>10s} "
+              f"{'costs':>9s}" + ("" if len(windows) == 1 else f" {'since':>26s} {'basket':>7s}"))
         for name, x in attr.items():
-            print(f"{name:26s} {x['avg_net']:+8.2f} {x['beta']:+6.2f} {x['passive_pnl']:+10,.2f} "
-                  f"{x['timing_pnl']:+10,.2f} {x['selection_pnl']:+10,.2f} {-x['costs']:+9,.2f}")
-        print("passive = average exposure held throughout; timing = exposure changes vs the market; "
-              "selection = asset choice before costs")
+            beta = f"{x['beta']:+6.2f}" if x.get("beta") is not None else f"{'n/a':>6s}"
+            row = (f"{name:26s} {x['avg_exposure']:+8.2f} {beta} {x['passive_pnl']:+10,.2f} "
+                   f"{x['timing_pnl']:+10,.2f} {x['selection_pnl']:+10,.2f} {-x['costs']:+9,.2f}")
+            if len(windows) > 1:
+                row += f" {x['window_start']:>26s} {100 * x['market_return']:+6.2f}%"
+            print(row)
+        print("passive = average start-of-bar exposure held throughout; timing = exposure changes vs the market;\n"
+              "selection = asset choice before costs; costs = fees + spread/impact + funding")
     return 0
 
 

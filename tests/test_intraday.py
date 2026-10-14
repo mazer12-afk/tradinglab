@@ -159,9 +159,11 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
     times = pd.date_range(split + pd.Timedelta(seconds=5), periods=288 * 3, freq="5min")
     traded = 0
     acct = "intraday:lgbm_1h"
+    held = {}  # bar -> units held through it (positions before the cycle that marks it)
     for t in times:
         ex.now = t
         before = (store.account(acct)["cash"], store.positions(acct)) if store.account(acct) else None
+        held[t.floor("5min")] = dict(before[1]) if before else {}
         rep = eng.cycle(t)
         assert rep.new_bars == 1, (t, rep)
         traded += rep.orders
@@ -188,13 +190,10 @@ def test_realtime_engine_trades_and_accounts(tmp_path, kl, icfg, monkeypatch):
     assert (buys["fill_price"] > buys["ref_price"] * 0.99).all()
     # Fees are exactly the taker fee on filled notional.
     np.testing.assert_allclose(orders["fee"], (orders["qty"].abs() * orders["fill_price"]) * ic.fee_bps * 1e-4)
-    # Exported status carries the market/skill attribution, reconciled with the account.
-    st = json.loads((tmp_path / "intraday_status.json").read_text())["accounts"][acct]
-    at = st["attribution"]
-    assert at["window_start"] == str(eq.index[0]) and at["bars"] == len(eq) - 1
-    assert at["pnl"] == pytest.approx(st["pnl"], rel=1e-9)
-    assert at["costs"] == pytest.approx(st["fees_paid"] + st["funding_paid"], rel=1e-9)
-    assert at["passive_pnl"] + at["timing_pnl"] + at["selection_pnl"] - at["costs"] == pytest.approx(at["pnl"])
+    # Exported status carries the market/skill attribution; check it against ground truth recorded
+    # during the run (positions actually held through each bar) rather than the module's own helpers.
+    _check_engine_attribution(json.loads((tmp_path / "intraday_status.json").read_text())["accounts"][acct],
+                              store, acct, eq, d.close, held, eng)
     # Re-running a cycle for the same bar is a no-op (idempotent).
     rep = eng.cycle(times[-1])
     assert rep.new_bars == 0 and rep.orders == 0
@@ -333,43 +332,170 @@ def test_engine_refuses_misaligned_model_symbols(tmp_path, kl, icfg, monkeypatch
 
 
 # ------------------------------------------------------------------ P&L attribution
-def _attr_inputs(seed=4, n=500):
+def _prices(seed=4, n=600):
     rng = np.random.default_rng(seed)
     idx = pd.date_range("2026-01-01", periods=n, freq="5min", tz="UTC")
-    close = pd.DataFrame(100 * np.exp(np.cumsum(rng.normal(0, 0.003, (n, 3)), axis=0)), index=idx, columns=SYMS)
+    return pd.DataFrame(100 * np.exp(np.cumsum(rng.normal(0, 0.003, (n, 3)), axis=0)), index=idx, columns=SYMS)
+
+
+def _book(close, target, fee_bps=0.0):
+    """Engine-style book: mark at close_t BEFORE trading, then trade to ``target(t)`` weights at close_t.
+
+    Returns (equity marks, true start-of-bar exposure, fills)."""
+    P = close.to_numpy()
+    units, cash = np.zeros(P.shape[1]), 100_000.0
+    eq, x, fills = [], [], []
+    for t in range(len(P)):
+        e = cash + units @ P[t]
+        eq.append(e)
+        x.append(units @ P[t - 1] if t else 0.0)        # held through bar t, valued at close_{t-1}
+        new = np.asarray(target(t), float) * e / P[t]
+        q = new - units
+        fee = np.abs(q) * P[t] * fee_bps * 1e-4
+        cash -= q @ P[t] + fee.sum()
+        fills += [{"bar": close.index[t], "symbol": s, "qty": q[i], "fee": fee[i], "slippage_cost": 0.0}
+                  for i, s in enumerate(close.columns) if q[i] != 0]
+        units = new
+    return (pd.Series(eq, index=close.index), pd.Series(x, index=close.index),
+            pd.DataFrame(fills, columns=["bar", "symbol", "qty", "fee", "slippage_cost"]))
+
+
+def _attr(close, eq, fills, funding=None):
+    from tradinglab.intraday.attribution import attribute, bar_costs, basket_returns, held_units, start_exposure
+
+    fund = funding if funding is not None else pd.DataFrame(columns=["ts", "amount"])
+    x = start_exposure(held_units(fills, eq.index, list(close.columns)), close)
+    return attribute(eq, x, basket_returns(close), bar_costs(fills, fund, eq.index)), x
+
+
+@pytest.mark.parametrize("net", [0.4, -1.0, 1.0])
+def test_attribution_passive_basket_is_all_passive(net):
+    # The case the end-of-bar exposure got wrong: at net -1 a passive basket short showed
+    # large fake timing and an equal and opposite fake selection.
+    close = _prices()
+    eq, x_true, fills = _book(close, lambda t: [net / 3] * 3)
+    a, x = _attr(close, eq, fills)
+    np.testing.assert_allclose(x.to_numpy(), x_true.to_numpy(), rtol=1e-12, atol=1e-6)
+    assert a["beta"] == pytest.approx(net, abs=1e-9)
+    assert a["avg_exposure"] == pytest.approx(net, abs=1e-12)
+    assert a["passive_pnl"] == pytest.approx(a["pnl"], abs=1e-6)
+    assert abs(a["timing_pnl"]) < 1e-6 and abs(a["selection_pnl"]) < 1e-6 and a["costs"] == 0.0
+
+
+def test_attribution_timing_selection_and_costs():
     from tradinglab.intraday.attribution import basket_returns
 
-    return close, basket_returns(close).fillna(0.0)
-
-
-def _equity_from(net, m, start=100_000.0, shocks=None):
-    eq = [start]
-    for t in range(1, len(m)):
-        eq.append(eq[-1] * (1 + net[t] * m.iloc[t]) - (shocks or {}).get(t, 0.0))
-    return pd.DataFrame({"equity": eq, "net": net}, index=m.index)
-
-
-def test_attribution_passive_long_basket_is_all_passive():
-    from tradinglab.intraday.attribution import attribute
-
-    close, m = _attr_inputs()
-    a = attribute(_equity_from(np.full(len(m), 0.4), m), close)
-    assert a["beta"] == pytest.approx(0.4, abs=1e-9)
-    assert a["passive_pnl"] == pytest.approx(a["pnl"], abs=1e-6)
-    assert abs(a["timing_pnl"]) < 1e-6 and abs(a["selection_pnl"]) < 1e-6
-    assert a["market_return"] == pytest.approx(np.prod(1 + m.iloc[1:]) - 1)
-
-
-def test_attribution_market_timing_and_costs():
-    from tradinglab.intraday.attribution import attribute
-
-    close, m = _attr_inputs(seed=5)
-    net = np.where(m.to_numpy() > 0, 0.5, -0.5)           # an (impossible) perfect timer
-    eq = _equity_from(net, m, shocks={100: 30.0, 300: 20.0})
-    a = attribute(eq, close, costs=50.0)
-    assert a["timing_pnl"] > 0.9 * (a["pnl"] + 50.0)
+    close = _prices(seed=5)
+    m = basket_returns(close).fillna(0.0).to_numpy()
+    # An (impossible) perfect timer: weights decided at t are held through bar t+1.
+    eq, _, fills = _book(close, lambda t: [0.5 * np.sign(m[t + 1]) / 3] * 3 if t + 1 < len(m) else [0] * 3,
+                         fee_bps=5)
+    a, _ = _attr(close, eq, fills)
+    paid = fills.loc[fills["bar"] < close.index[-1], "fee"].sum()   # last bar's trades are after the last mark
+    assert a["costs"] == pytest.approx(paid) and a["fees"] == pytest.approx(paid)
+    assert a["timing_pnl"] > 0.9 * (a["pnl"] + a["costs"])
     assert abs(a["passive_pnl"]) < 0.1 * a["timing_pnl"]
-    assert abs(a["selection_pnl"]) < 1e-6                   # fees accounted as costs, not selection
+    assert abs(a["selection_pnl"]) < 1e-6
     assert a["passive_pnl"] + a["timing_pnl"] + a["selection_pnl"] - a["costs"] == pytest.approx(a["pnl"])
-    b = attribute(eq, close)                                # costs not given → they land in selection
-    assert b["selection_pnl"] == pytest.approx(-50.0, abs=1e-6)
+    # A one-asset book: what it earns beyond its basket-equivalent exposure is selection.
+    eq1, x1, f1 = _book(close, lambda t: [0.5, 0.0, 0.0])
+    a1, _ = _attr(close, eq1, f1)
+    r = close.pct_change(fill_method=None)
+    direct = (x1 * (r[SYMS[0]] - basket_returns(close))).iloc[1:].sum()
+    assert a1["selection_pnl"] == pytest.approx(direct, rel=1e-9)
+    assert abs(a1["timing_pnl"]) < 1e-6
+
+
+def test_bar_costs_window_and_funding_stamps():
+    from tradinglab.intraday.attribution import bar_costs
+
+    marks = pd.date_range("2026-01-01", periods=4, freq="5min", tz="UTC")
+    fills = pd.DataFrame({"bar": [marks[0], marks[2], marks[3]], "symbol": SYMS[0], "qty": 1.0,
+                          "fee": [1.0, 2.0, 4.0], "slippage_cost": [0.5, 0.25, 8.0]})
+    fund = pd.DataFrame({"ts": [marks[0], marks[1] - pd.Timedelta(minutes=1), marks[3]], "amount": [-3.0, -5.0, 7.0]})
+    c = bar_costs(fills, fund, marks)
+    # trades decided at a bar hit the NEXT mark; the last bar's trades are outside the window
+    assert c["fees"].tolist() == [0.0, 1.0, 0.0, 2.0] and c["spread"].tolist() == [0.0, 0.5, 0.0, 0.25]
+    # funding settled at a stamp is charged at the first mark at or after it (positive = paid)
+    assert c["funding"].tolist() == [3.0, 5.0, 0.0, -7.0]
+
+
+def test_basket_returns_carry_last_price_over_gaps():
+    from tradinglab.intraday.attribution import basket_returns
+
+    close = _prices(n=200)
+    gap = close.copy()
+    gap.iloc[100:110, 0] = np.nan
+    b = basket_returns(gap)
+    r = close.pct_change(fill_method=None)
+    assert b.iloc[105] == pytest.approx((0.0 + r.iloc[105, 1] + r.iloc[105, 2]) / 3)
+    jump = close.iloc[110, 0] / close.iloc[99, 0] - 1
+    assert b.iloc[110] == pytest.approx((jump + r.iloc[110, 1] + r.iloc[110, 2]) / 3)
+
+
+def _check_engine_attribution(st, store, acct, eq, close, held, eng):
+    from tradinglab.intraday.attribution import basket_returns
+
+    at = st["attribution"]
+    assert at is not None and at["window_start"] == str(eq.index[0]) and at["bars"] == len(eq) - 1
+    assert at["pnl"] == pytest.approx(st["pnl"], rel=1e-9)
+    # ground truth: units recorded before each cycle, valued at the previous bar's close
+    prev = close.ffill().shift(1)
+    x_true = pd.Series([sum(u * prev.loc[t, s] for s, u in held.get(t, {}).items()) for t in eq.index],
+                       index=eq.index)
+    m = basket_returns(close).reindex(eq.index)
+    w = (x_true / eq["equity"].shift(1)).iloc[1:]
+    unit = (m * eq["equity"].shift(1)).iloc[1:]
+    assert at["passive_pnl"] == pytest.approx(w.mean() * unit.sum(), rel=1e-9, abs=1e-6)
+    assert at["timing_pnl"] == pytest.approx(((w - w.mean()) * unit).sum(), rel=1e-9, abs=1e-6)
+    assert at["market_return"] == pytest.approx(np.prod(1 + m.iloc[1:]) - 1, rel=1e-12)
+    # costs: trades decided in [first mark, last mark) + funding charged in (first mark, last mark]
+    o = store.orders(acct, limit=100000)
+    o = o[o["status"] == "filled"]
+    bar = pd.to_datetime(o["reason"].str.removeprefix("bar "), utc=True)
+    ok = (bar >= eq.index[0]) & (bar < eq.index[-1])
+    fund = pd.read_sql("select ts, amount from funding where account=?", store.conn, params=(acct,))
+    fts = pd.to_datetime(fund["ts"], utc=True, format="ISO8601")
+    fees, spread = o.loc[ok, "fee"].sum(), o.loc[ok, "slippage_cost"].sum()
+    funding = -fund.loc[(fts > eq.index[0]) & (fts <= eq.index[-1]), "amount"].sum()
+    assert spread > 0 and len(fund) > 0
+    assert at["fees"] == pytest.approx(fees) and at["spread"] == pytest.approx(spread)
+    assert at["funding"] == pytest.approx(funding) and at["costs"] == pytest.approx(fees + spread + funding)
+    assert at["passive_pnl"] + at["timing_pnl"] + at["selection_pnl"] - at["costs"] == pytest.approx(at["pnl"])
+    # A window that starts on a funding stamp (price buffer trimmed): that stamp's funding is
+    # already inside the starting mark, so it is not a cost of the window.
+    s = pd.Timestamp(sorted(fts.unique())[-2])       # funding rows are per symbol: distinct stamps
+    a2 = eng.status(close.loc[s:])[acct]["attribution"]
+    assert a2["window_start"] == str(s)
+    assert a2["pnl"] == pytest.approx(eq["equity"].iloc[-1] - eq["equity"].loc[s])
+    ok2 = (bar >= s) & (bar < eq.index[-1])
+    exp = (o.loc[ok2, "fee"].sum() + o.loc[ok2, "slippage_cost"].sum()
+           - fund.loc[(fts > s) & (fts <= eq.index[-1]), "amount"].sum())
+    assert a2["costs"] == pytest.approx(exp)
+    # A halted symbol with an older, stale buffer must not stretch the window back.
+    stale = pd.DataFrame({SYMS[0]: 50.0}, index=pd.date_range(end=close.index[0] - pd.Timedelta(minutes=5),
+                                                             periods=300, freq="5min", tz="UTC"))
+    c3 = pd.concat([stale, close]).reindex(columns=close.columns)
+    c3.iloc[-48:, 0] = np.nan                         # symbol 0 stopped trading 4 hours ago
+    a3 = eng.status(c3)[acct]["attribution"]
+    assert pd.Timestamp(a3["window_start"]) >= close.index[0]
+    assert a3["market_return"] == pytest.approx(
+        np.prod(1 + basket_returns(close[SYMS[1:]]).reindex(eq.index).loc[pd.Timestamp(a3["window_start"]):].iloc[1:]) - 1)
+
+
+def test_intraday_status_cli_prints_attribution_per_window(tmp_path, capsys, icfg):
+    from tradinglab.cli import cmd_intraday_status
+
+    def acc(start, mret, beta):
+        return {"equity": 1e5, "pnl": 0.0, "return": 0.0, "trades": 1, "fees_paid": 0.0, "gross": 0.0,
+                "attribution": {"window_start": start, "market_return": mret, "avg_exposure": 0.1, "beta": beta,
+                                "passive_pnl": 1.0, "timing_pnl": 2.0, "selection_pnl": 3.0, "costs": 0.5}}
+
+    icfg.paths.state_dir = str(tmp_path)
+    (tmp_path / "intraday_status.json").write_text(json.dumps({
+        "updated_at": "x", "last_bar": "y",
+        "accounts": {"intraday:a": acc("2026-01-01 00:00:00+00:00", 0.01, 0.3),
+                     "intraday:b": acc("2026-01-05 00:00:00+00:00", -0.02, None)}}))
+    assert cmd_intraday_status(icfg, None) == 0
+    out = capsys.readouterr().out
+    assert "windows differ" in out and "2026-01-05 00:00:00+00:00" in out and "-2.00%" in out and "n/a" in out
