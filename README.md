@@ -155,6 +155,18 @@ The split matters. At every decision so far, the deep model has held all 12 coin
 
 These are one day and one market regime: a steady decline. The 4-hour model profited by being net short (average exposure −0.42) and mostly from *when* it was short. The deep model lost what a 0.4× long basket loses. Neither number says anything yet about a repeatable edge; that needs weeks of live data across rising, falling and flat markets.
 
+**End of the in-sandbox run (2026-10-15 18:30 UTC, 45 h live).** The basket was −2.09% since launch, after falling as far as −6% and then rallying about 2.5% in one hour at 14:10–15:05 UTC:
+
+| account | P&L | passive | timing | selection | costs |
+|---|---:|---:|---:|---:|---:|
+| `intraday:lgbm_4h` | +$801 (+0.80%) | +$729 | +$577 | −$294 | −$211 |
+| `intraday:deep_lstm_attn` | −$1,089 (−1.09%) | −$642 | −$528 | +$131 | −$49 |
+| `intraday:lgbm_1h` | −$536 (−0.54%) | +$116 | −$693 | +$176 | −$135 |
+| daily `main` (since 2026-10-13 13:31) | −$773 (−0.77%) | | | | |
+| daily `shadow:basket_long` (benchmark) | −$757 (−0.76%) | | | | |
+
+The 4-hour model's peak of +$3,968 was mostly given back in the rally. That is the signature of a directional bet, not a demonstrated edge. The sandbox caps background processes at 2 hours, so this run ended there. All state is in `state/`, and a restart anywhere resumes from it: missed bars are replayed without trading. For an unattended long-term run, use the deployment options below.
+
 Live endpoint notes: Binance.com and Binance futures APIs geo-block this cloud region
 (HTTP 451), so live features use Binance **spot** 5-minute data (identical source for
 training and live). Positions are accounted as perpetuals (shorting, funding).
