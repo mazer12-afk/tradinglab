@@ -1,0 +1,25 @@
+id,ts,level,account,message
+1,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_1h,"account created: LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip."
+2,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_1h+vault1,"account created: LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +1%"
+3,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_1h+vault2,"account created: LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +2%"
+4,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_1h+vault4,"account created: LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +4%"
+5,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_4h,"account created: LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip."
+6,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_4h+vault1,"account created: LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +1%"
+7,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_4h+vault2,"account created: LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +2%"
+8,2026-10-15T23:12:55.405961+00:00,info,intraday:lgbm_4h+vault4,"account created: LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +4%"
+9,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_lstm_attn,account created: LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.
+10,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_lstm_attn+vault1,account created: LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
+11,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_lstm_attn+vault2,account created: LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
+12,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_lstm_attn+vault4,account created: LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
+13,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_neutral,account created: The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
+14,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_neutral+vault1,account created: The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
+15,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_neutral+vault2,account created: The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
+16,2026-10-15T23:12:55.405961+00:00,info,intraday:deep_neutral+vault4,account created: The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
+17,2026-10-15T23:12:55.405961+00:00,info,intraday:tsmom_4h,"account created: Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held."
+18,2026-10-15T23:12:55.405961+00:00,info,intraday:tsmom_4h+vault1,"account created: Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +1%"
+19,2026-10-15T23:12:55.405961+00:00,info,intraday:tsmom_4h+vault2,"account created: Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +2%"
+20,2026-10-15T23:12:55.405961+00:00,info,intraday:tsmom_4h+vault4,"account created: Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +4%"
+21,2026-10-15T23:12:55.405961+00:00,info,intraday:basket_long,account created: Benchmark: vol-sized long basket of all 12 coins.
+22,2026-10-15T23:12:55.405961+00:00,info,intraday:basket_long+vault1,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
+23,2026-10-15T23:12:55.405961+00:00,info,intraday:basket_long+vault2,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
+24,2026-10-15T23:12:55.405961+00:00,info,intraday:basket_long+vault4,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%

@@ -1,0 +1,606 @@
+2026-10-15 23:12:49,724 INFO tradinglab.live.daemon: engine loaded selection: ['tsmom_lf', 'macd_lf', 'breakout_lf', 'tsmom', 'macd']
+2026-10-15 23:12:51,739 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-15 23:13:47,134 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:13:47,181 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:13:47,183 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:13:47,184 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:13:47,186 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:13:47,187 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:13:47,189 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:13:47,190 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:13:47,192 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:13:47,193 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:13:47,194 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:13:47,196 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:13:47,398 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-15 23:00:00+00:00 fills=0 marks=0 decisions=44 orders=1036 banked=0.00 warnings=["shadow:dl_lstm: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_mom_trans: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_deepm: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'"]
+2026-10-15 23:18:53,319 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-15 23:19:03,076 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:19:03,079 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:19:03,081 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:19:03,082 ERROR tradinglab.live.engine: decision failed for shadow:dl_lstm+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'
+2026-10-15 23:19:03,084 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:19:03,085 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:19:03,087 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:19:03,088 ERROR tradinglab.live.engine: decision failed for shadow:dl_mom_trans+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'
+2026-10-15 23:19:03,090 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:19:03,091 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault1
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:19:03,093 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault2
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:19:03,094 ERROR tradinglab.live.engine: decision failed for shadow:dl_deepm+vault4
+Traceback (most recent call last):
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 297, in cycle
+    self._decide(spec, panel, bar_ts, horizon, now, cache, rep)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 209, in _decide
+    targets = self._target_weights(spec, panel, cache)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 187, in _target_weights
+    strat = self.strategy(name)
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/live/engine.py", line 125, in strategy
+    s.load(Path(path))
+    ~~~~~~^^^^^^^^^^^^
+  File "/home/runner/work/tradinglab/tradinglab/src/tradinglab/strategies/deep/strategy.py", line 96, in load
+    meta = json.loads((path / "meta.json").read_text())
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.13.16/x64/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'
+2026-10-15 23:19:03,301 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-15 23:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=["shadow:dl_lstm: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_lstm+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_lstm/meta.json'", "shadow:dl_mom_trans: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_mom_trans+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_mom_trans/meta.json'", "shadow:dl_deepm: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault1: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault2: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'", "shadow:dl_deepm+vault4: decision failed: [Errno 2] No such file or directory: '/home/user/tradinglab/models/dl_deepm/meta.json'"]
+2026-10-15 23:21:29,205 INFO tradinglab.live.daemon: signal 15 received – stopping after current step
