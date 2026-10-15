@@ -1,0 +1,26 @@
+{
+  "name": "vault-2w",
+  "start": "2026-10-15 23:47:45.211859+00:00",
+  "end": "2026-10-29 23:47:45.211859+00:00",
+  "vault_thresholds": {
+    "intraday": [
+      0.01,
+      0.02,
+      0.04
+    ],
+    "daily": [
+      0.01,
+      0.02,
+      0.04
+    ]
+  },
+  "intraday_policies": [
+    "lgbm_1h",
+    "lgbm_4h",
+    "deep_lstm_attn",
+    "deep_neutral",
+    "tsmom_4h",
+    "basket_long"
+  ],
+  "protocol": "frozen models and rules; no parameter changes and no performance analysis until the end; every account starts with its initial capital; vault twins bank realised profit above the initial capital once equity reaches it\u00b7(1+threshold) and restart from it."
+}
