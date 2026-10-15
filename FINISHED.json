@@ -1,0 +1,535 @@
+{
+  "finished_at": "2026-10-15 23:22:04.851186+00:00",
+  "end": "2026-10-15 23:21:26.343846+00:00",
+  "start": "2026-10-15 23:12:47.943846+00:00",
+  "final": {
+    "intraday:lgbm_1h": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_1h+vault1": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_1h+vault2": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_1h+vault4": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_4h": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_4h+vault1": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_4h+vault2": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:lgbm_4h+vault4": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0,
+      "sweeps": 0,
+      "trades": 0
+    },
+    "intraday:deep_lstm_attn": {
+      "equity": 99911.44476429581,
+      "vault": 0.0,
+      "pnl": -88.55523570418882,
+      "return": -0.0008855523570419077,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:deep_lstm_attn+vault1": {
+      "equity": 99911.44476429581,
+      "vault": 0.0,
+      "pnl": -88.55523570418882,
+      "return": -0.0008855523570419077,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:deep_lstm_attn+vault2": {
+      "equity": 99911.44476429581,
+      "vault": 0.0,
+      "pnl": -88.55523570418882,
+      "return": -0.0008855523570419077,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:deep_lstm_attn+vault4": {
+      "equity": 99911.44476429581,
+      "vault": 0.0,
+      "pnl": -88.55523570418882,
+      "return": -0.0008855523570419077,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:deep_neutral": {
+      "equity": 99806.53509176835,
+      "vault": 0.0,
+      "pnl": -193.4649082316464,
+      "return": -0.001934649082316442,
+      "sweeps": 0,
+      "trades": 42
+    },
+    "intraday:deep_neutral+vault1": {
+      "equity": 99806.53509176835,
+      "vault": 0.0,
+      "pnl": -193.4649082316464,
+      "return": -0.001934649082316442,
+      "sweeps": 0,
+      "trades": 42
+    },
+    "intraday:deep_neutral+vault2": {
+      "equity": 99806.53509176835,
+      "vault": 0.0,
+      "pnl": -193.4649082316464,
+      "return": -0.001934649082316442,
+      "sweeps": 0,
+      "trades": 42
+    },
+    "intraday:deep_neutral+vault4": {
+      "equity": 99806.53509176835,
+      "vault": 0.0,
+      "pnl": -193.4649082316464,
+      "return": -0.001934649082316442,
+      "sweeps": 0,
+      "trades": 42
+    },
+    "intraday:tsmom_4h": {
+      "equity": 99966.85960294532,
+      "vault": 0.0,
+      "pnl": -33.14039705468167,
+      "return": -0.00033140397054676196,
+      "sweeps": 0,
+      "trades": 2
+    },
+    "intraday:tsmom_4h+vault1": {
+      "equity": 99966.85960294532,
+      "vault": 0.0,
+      "pnl": -33.14039705468167,
+      "return": -0.00033140397054676196,
+      "sweeps": 0,
+      "trades": 2
+    },
+    "intraday:tsmom_4h+vault2": {
+      "equity": 99966.85960294532,
+      "vault": 0.0,
+      "pnl": -33.14039705468167,
+      "return": -0.00033140397054676196,
+      "sweeps": 0,
+      "trades": 2
+    },
+    "intraday:tsmom_4h+vault4": {
+      "equity": 99966.85960294532,
+      "vault": 0.0,
+      "pnl": -33.14039705468167,
+      "return": -0.00033140397054676196,
+      "sweeps": 0,
+      "trades": 2
+    },
+    "intraday:basket_long": {
+      "equity": 99911.52129138845,
+      "vault": 0.0,
+      "pnl": -88.47870861155388,
+      "return": -0.0008847870861155016,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:basket_long+vault1": {
+      "equity": 99911.52129138845,
+      "vault": 0.0,
+      "pnl": -88.47870861155388,
+      "return": -0.0008847870861155016,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:basket_long+vault2": {
+      "equity": 99911.52129138845,
+      "vault": 0.0,
+      "pnl": -88.47870861155388,
+      "return": -0.0008847870861155016,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "intraday:basket_long+vault4": {
+      "equity": 99911.52129138845,
+      "vault": 0.0,
+      "pnl": -88.47870861155388,
+      "return": -0.0008847870861155016,
+      "sweeps": 0,
+      "trades": 24
+    },
+    "daily:main": {
+      "equity": 99854.44359442794,
+      "vault": 0.0,
+      "pnl": -145.5564055720606,
+      "return": -0.0014555640557205596
+    },
+    "daily:main+vault1": {
+      "equity": 99854.44359442794,
+      "vault": 0.0,
+      "pnl": -145.5564055720606,
+      "return": -0.0014555640557205596
+    },
+    "daily:main+vault2": {
+      "equity": 99854.44359442794,
+      "vault": 0.0,
+      "pnl": -145.5564055720606,
+      "return": -0.0014555640557205596
+    },
+    "daily:main+vault4": {
+      "equity": 99854.44359442794,
+      "vault": 0.0,
+      "pnl": -145.5564055720606,
+      "return": -0.0014555640557205596
+    },
+    "daily:shadow:hold_btc": {
+      "equity": 99905.63700020197,
+      "vault": 0.0,
+      "pnl": -94.36299979803152,
+      "return": -0.0009436299979803664
+    },
+    "daily:shadow:hold_btc+vault1": {
+      "equity": 99905.63700020197,
+      "vault": 0.0,
+      "pnl": -94.36299979803152,
+      "return": -0.0009436299979803664
+    },
+    "daily:shadow:hold_btc+vault2": {
+      "equity": 99905.63700020197,
+      "vault": 0.0,
+      "pnl": -94.36299979803152,
+      "return": -0.0009436299979803664
+    },
+    "daily:shadow:hold_btc+vault4": {
+      "equity": 99905.63700020197,
+      "vault": 0.0,
+      "pnl": -94.36299979803152,
+      "return": -0.0009436299979803664
+    },
+    "daily:shadow:basket_long": {
+      "equity": 99838.42529989545,
+      "vault": 0.0,
+      "pnl": -161.5747001045529,
+      "return": -0.0016157470010454977
+    },
+    "daily:shadow:basket_long+vault1": {
+      "equity": 99838.42529989545,
+      "vault": 0.0,
+      "pnl": -161.5747001045529,
+      "return": -0.0016157470010454977
+    },
+    "daily:shadow:basket_long+vault2": {
+      "equity": 99838.42529989545,
+      "vault": 0.0,
+      "pnl": -161.5747001045529,
+      "return": -0.0016157470010454977
+    },
+    "daily:shadow:basket_long+vault4": {
+      "equity": 99838.42529989545,
+      "vault": 0.0,
+      "pnl": -161.5747001045529,
+      "return": -0.0016157470010454977
+    },
+    "daily:shadow:tsmom": {
+      "equity": 99858.53340159671,
+      "vault": 0.0,
+      "pnl": -141.46659840329085,
+      "return": -0.0014146659840329479
+    },
+    "daily:shadow:tsmom+vault1": {
+      "equity": 99858.53340159671,
+      "vault": 0.0,
+      "pnl": -141.46659840329085,
+      "return": -0.0014146659840329479
+    },
+    "daily:shadow:tsmom+vault2": {
+      "equity": 99858.53340159671,
+      "vault": 0.0,
+      "pnl": -141.46659840329085,
+      "return": -0.0014146659840329479
+    },
+    "daily:shadow:tsmom+vault4": {
+      "equity": 99858.53340159671,
+      "vault": 0.0,
+      "pnl": -141.46659840329085,
+      "return": -0.0014146659840329479
+    },
+    "daily:shadow:tsmom_lf": {
+      "equity": 99863.75007146831,
+      "vault": 0.0,
+      "pnl": -136.24992853168806,
+      "return": -0.0013624992853168427
+    },
+    "daily:shadow:tsmom_lf+vault1": {
+      "equity": 99863.75007146831,
+      "vault": 0.0,
+      "pnl": -136.24992853168806,
+      "return": -0.0013624992853168427
+    },
+    "daily:shadow:tsmom_lf+vault2": {
+      "equity": 99863.75007146831,
+      "vault": 0.0,
+      "pnl": -136.24992853168806,
+      "return": -0.0013624992853168427
+    },
+    "daily:shadow:tsmom_lf+vault4": {
+      "equity": 99863.75007146831,
+      "vault": 0.0,
+      "pnl": -136.24992853168806,
+      "return": -0.0013624992853168427
+    },
+    "daily:shadow:macd": {
+      "equity": 99848.58602693002,
+      "vault": 0.0,
+      "pnl": -151.4139730699826,
+      "return": -0.001514139730699804
+    },
+    "daily:shadow:macd+vault1": {
+      "equity": 99848.58602693002,
+      "vault": 0.0,
+      "pnl": -151.4139730699826,
+      "return": -0.001514139730699804
+    },
+    "daily:shadow:macd+vault2": {
+      "equity": 99848.58602693002,
+      "vault": 0.0,
+      "pnl": -151.4139730699826,
+      "return": -0.001514139730699804
+    },
+    "daily:shadow:macd+vault4": {
+      "equity": 99848.58602693002,
+      "vault": 0.0,
+      "pnl": -151.4139730699826,
+      "return": -0.001514139730699804
+    },
+    "daily:shadow:macd_lf": {
+      "equity": 99848.58664664268,
+      "vault": 0.0,
+      "pnl": -151.41335335731856,
+      "return": -0.0015141335335732142
+    },
+    "daily:shadow:macd_lf+vault1": {
+      "equity": 99848.58664664268,
+      "vault": 0.0,
+      "pnl": -151.41335335731856,
+      "return": -0.0015141335335732142
+    },
+    "daily:shadow:macd_lf+vault2": {
+      "equity": 99848.58664664268,
+      "vault": 0.0,
+      "pnl": -151.41335335731856,
+      "return": -0.0015141335335732142
+    },
+    "daily:shadow:macd_lf+vault4": {
+      "equity": 99848.58664664268,
+      "vault": 0.0,
+      "pnl": -151.41335335731856,
+      "return": -0.0015141335335732142
+    },
+    "daily:shadow:breakout": {
+      "equity": 99665.25356163124,
+      "vault": 0.0,
+      "pnl": -334.746438368762,
+      "return": -0.003347464383687604
+    },
+    "daily:shadow:breakout+vault1": {
+      "equity": 99665.25356163124,
+      "vault": 0.0,
+      "pnl": -334.746438368762,
+      "return": -0.003347464383687604
+    },
+    "daily:shadow:breakout+vault2": {
+      "equity": 99665.25356163124,
+      "vault": 0.0,
+      "pnl": -334.746438368762,
+      "return": -0.003347464383687604
+    },
+    "daily:shadow:breakout+vault4": {
+      "equity": 99665.25356163124,
+      "vault": 0.0,
+      "pnl": -334.746438368762,
+      "return": -0.003347464383687604
+    },
+    "daily:shadow:breakout_lf": {
+      "equity": 99875.73343864408,
+      "vault": 0.0,
+      "pnl": -124.26656135592202,
+      "return": -0.001242665613559235
+    },
+    "daily:shadow:breakout_lf+vault1": {
+      "equity": 99875.73343864408,
+      "vault": 0.0,
+      "pnl": -124.26656135592202,
+      "return": -0.001242665613559235
+    },
+    "daily:shadow:breakout_lf+vault2": {
+      "equity": 99875.73343864408,
+      "vault": 0.0,
+      "pnl": -124.26656135592202,
+      "return": -0.001242665613559235
+    },
+    "daily:shadow:breakout_lf+vault4": {
+      "equity": 99875.73343864408,
+      "vault": 0.0,
+      "pnl": -124.26656135592202,
+      "return": -0.001242665613559235
+    },
+    "daily:shadow:xsmom_63": {
+      "equity": 99656.55654332729,
+      "vault": 0.0,
+      "pnl": -343.4434566727141,
+      "return": -0.003434434566727096
+    },
+    "daily:shadow:xsmom_63+vault1": {
+      "equity": 99656.55654332729,
+      "vault": 0.0,
+      "pnl": -343.4434566727141,
+      "return": -0.003434434566727096
+    },
+    "daily:shadow:xsmom_63+vault2": {
+      "equity": 99656.55654332729,
+      "vault": 0.0,
+      "pnl": -343.4434566727141,
+      "return": -0.003434434566727096
+    },
+    "daily:shadow:xsmom_63+vault4": {
+      "equity": 99656.55654332729,
+      "vault": 0.0,
+      "pnl": -343.4434566727141,
+      "return": -0.003434434566727096
+    },
+    "daily:shadow:xs_rev_5": {
+      "equity": 99709.25941407579,
+      "vault": 0.0,
+      "pnl": -290.7405859242135,
+      "return": -0.002907405859242096
+    },
+    "daily:shadow:xs_rev_5+vault1": {
+      "equity": 99709.25941407579,
+      "vault": 0.0,
+      "pnl": -290.7405859242135,
+      "return": -0.002907405859242096
+    },
+    "daily:shadow:xs_rev_5+vault2": {
+      "equity": 99709.25941407579,
+      "vault": 0.0,
+      "pnl": -290.7405859242135,
+      "return": -0.002907405859242096
+    },
+    "daily:shadow:xs_rev_5+vault4": {
+      "equity": 99709.25941407579,
+      "vault": 0.0,
+      "pnl": -290.7405859242135,
+      "return": -0.002907405859242096
+    },
+    "daily:shadow:dl_lstm": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_lstm+vault1": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_lstm+vault2": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_lstm+vault4": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_mom_trans": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_mom_trans+vault1": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_mom_trans+vault2": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_mom_trans+vault4": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_deepm": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_deepm+vault1": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_deepm+vault2": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    },
+    "daily:shadow:dl_deepm+vault4": {
+      "equity": 100000.0,
+      "vault": 0.0,
+      "pnl": 0.0,
+      "return": 0.0
+    }
+  }
+}
