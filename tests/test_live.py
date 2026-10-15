@@ -284,3 +284,19 @@ def test_daily_vault_sweep_is_one_transaction(tmp_path, cfg, hourly, monkeypatch
             assert store.positions(vaulted) == {}
             assert len(store.vault_events(vaulted)) == 1
     assert state["failed"] and len(store.vault_events(vaulted)) >= 2
+
+
+def test_deep_model_paths_resolve_on_another_machine():
+    """selection.json written elsewhere (absolute paths): models load from this checkout's models_dir."""
+    from tradinglab.config import load_config
+    from tradinglab.live.engine import load_selection
+
+    cfg = load_config()
+    sel = load_selection(cfg)
+    if not sel.get("deep_models"):
+        pytest.skip("no live deep models in this checkout")
+    sel["deep_models"] = {k: f"/nonexistent/machine/models/{v.rsplit('/', 1)[-1]}" for k, v in sel["deep_models"].items()}
+    eng = LiveEngine.__new__(LiveEngine)
+    eng.cfg, eng.selection, eng._strategies = cfg, sel, {}
+    for name in sel["deep_models"]:
+        assert eng.strategy(name).trainable

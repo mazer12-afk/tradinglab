@@ -122,7 +122,10 @@ class LiveEngine:
                 path = self.selection.get("deep_models", {}).get(name)
                 if not path:
                     raise RuntimeError(f"no trained live model for {name}")
-                s.load(Path(path))
+                path = Path(path)
+                if not path.exists():  # selection written on another machine: same name under models_dir
+                    path = Path(self.cfg.paths.models_dir) / path.name
+                s.load(path)
             self._strategies[name] = s
         return self._strategies[name]
 
