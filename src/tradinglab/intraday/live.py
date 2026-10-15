@@ -398,6 +398,7 @@ class IntradayEngine:
         pos = self.store.positions(name)
         if any(sym not in quotes for sym in pos):
             return None
+        quotes = {s: quotes[s] for s in pos}
         mids = {s: q.mid for s, q in quotes.items()}
         ids = self.broker.rebalance(name, {}, mids, now, now, 0.0, 0.0, reason=f"bar {t_last} ({why})")
         for o in self.store.pending_orders(name):
@@ -418,7 +419,7 @@ class IntradayEngine:
         if n is None:
             rep.warnings.append(f"{acct.name}: vault due but a quote is missing; retry next bar")
             return False
-        amount = bank(self.store, acct.name, now, eq, note=f"threshold {acct.vault.threshold:g}")
+        amount = bank(self.store, acct.name, now, eq, note=f"threshold {acct.vault.threshold:g}", mark_ts=t_last)
         self.store.set_meta(f"guard:{acct.name}", {})       # new high-water mark from the base
         self.store.record_decision(acct.name, t_last, now, eq, 1.0, {})
         rep.orders += n
@@ -452,20 +453,28 @@ class IntradayEngine:
     def liquidate(self, now: pd.Timestamp | None = None, reason: str = "experiment end") -> dict[str, float]:
         """Close every account at live quotes and mark the final equity (= cash)."""
         now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
-        quotes = self.feed.quotes()
+        quotes = dict(self.feed.quotes())
         last = self.store.get_meta("intraday:last_bar")
         t_last = utc(last) if last else now
+        # A coin without a live quote is closed at its last known price (logged) rather than blocking the end.
+        closes = self.feed.data().close.ffill().iloc[-1]
+        for sym in self.feed.symbols:
+            if sym not in quotes and np.isfinite(closes.get(sym, np.nan)):
+                px = float(closes[sym])
+                log.warning("liquidate: no live quote for %s, using last close %.6g", sym, px)
+                quotes[sym] = Quote(px, px, now, "last-close")
         out = {}
         with self.store.transaction():
             for acct in self.accounts:
                 if self.store.account(acct.name) is None:
                     continue
                 if self._close_all(acct.name, quotes, t_last, now, reason) is None:
-                    raise RuntimeError(f"{acct.name}: cannot liquidate, missing quotes")
+                    raise RuntimeError(f"{acct.name}: cannot liquidate, no price for an open position")
                 cash = self.store.account(acct.name)["cash"]
                 self.store.record_equity(acct.name, now, cash, cash, 0.0, 0.0)
                 self.store.log_event(now, "info", f"liquidated ({reason})", acct.name)
                 out[acct.name] = cash
+        self._export(IntradayCycle(now=now, bar=t_last, warnings=[f"liquidated: {reason}"]))
         return out
 
     # -------------------------------------------------------------- status
@@ -480,13 +489,16 @@ class IntradayEngine:
             last = self.store.last_equity(name)
             eq = last["equity"] if last else row["initial_capital"]
             vault = self.store.vault_total(name)
+            # Profit banked after the latest mark is still inside that mark's equity: count it once.
+            vault_in_pnl = self.store.vault_total(name, before_mark=last["ts"]) if last else vault
             orders = self.store.orders(name, limit=10_000_000)
             filled = orders[orders["status"] == "filled"] if not orders.empty else orders
             out[name] = {
                 "strategy": acct.spec.name, "vault_threshold": acct.vault.threshold if acct.vault else None,
                 "model": acct.spec.description, "equity": eq, "vault": vault,
-                "pnl": eq + vault - row["initial_capital"],
-                "return": (eq + vault) / row["initial_capital"] - 1.0, "marked_at": last["ts"] if last else None,
+                "pnl": eq + vault_in_pnl - row["initial_capital"],
+                "return": (eq + vault_in_pnl) / row["initial_capital"] - 1.0,
+                "marked_at": last["ts"] if last else None,
                 "gross": last["gross"] if last else 0.0, "net": last["net"] if last else 0.0,
                 "trades": int(len(filled)), "fees_paid": float(filled["fee"].sum()) if len(filled) else 0.0,
                 "funding_paid": -self.store.funding_total(name), "positions": self.store.positions(name),
@@ -523,8 +535,8 @@ class IntradayEngine:
         vault = self.store.vault_events(name)
         flows = None
         if not vault.empty:
-            vt = pd.to_datetime(vault["ts"], utc=True, format="ISO8601")
-            flows = pd.DataFrame({"ts": vt, "amount": vault["amount"]})
+            vt = pd.to_datetime(vault["mark_ts"].fillna(vault["ts"]), utc=True, format="ISO8601")
+            flows = pd.DataFrame({"ts": vt, "amount": vault["amount"]})  # keyed to the triggering mark
         return attribute(eq["equity"], start_exposure(units, close), basket_returns(close[active]),
                          bar_costs(fills, fund, eq.index), flows=bar_flows(flows, eq.index))
 

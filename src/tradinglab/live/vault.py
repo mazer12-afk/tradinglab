@@ -46,7 +46,7 @@ def vault_accounts(base_names: list[str], thresholds: list[float]) -> list[tuple
     return out
 
 
-def bank(store: StateStore, account: str, ts, equity_marked: float, note: str = "") -> float:
+def bank(store: StateStore, account: str, ts, equity_marked: float, note: str = "", mark_ts=None) -> float:
     """Move the account's cash above its base into the vault (the book must already be flat).
 
     Returns the amount banked (0 if there is nothing above the base)."""
@@ -58,6 +58,6 @@ def bank(store: StateStore, account: str, ts, equity_marked: float, note: str = 
     if amount <= 0:
         return 0.0
     store.set_cash(account, base)
-    store.record_vault(account, ts, amount, equity_marked, acct["cash"], note)
+    store.record_vault(account, ts, amount, equity_marked, acct["cash"], note, mark_ts=mark_ts)
     store.log_event(ts, "info", f"vault: banked {amount:,.2f} (marked equity {equity_marked:,.2f})", account)
     return amount

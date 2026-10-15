@@ -555,6 +555,11 @@ def test_profit_vault_banks_resets_and_never_refills(tmp_path, kl, icfg, monkeyp
             assert store.account(vaulted)["cash"] == pytest.approx(100_000.0)
             st = store.get_meta(f"policy:{vaulted}")
             assert not any(st["pos"]) and not any(st["frozen"])
+            # Until the next mark, the latest mark still holds the banked profit: counted once in P&L.
+            ev = store.vault_events(vaulted)
+            assert pd.Timestamp(ev["mark_ts"].iloc[-1]) == rep.bar
+            mark = store.last_equity(vaulted)["equity"]
+            assert eng.status()[vaulted]["pnl"] == pytest.approx(mark + ev["amount"].iloc[:-1].sum() - 100_000.0)
     v = store.vault_events(vaulted)
     assert len(v) >= 2 and len(banked_bars) == len(v), "test needs several sweeps"
     assert (v["amount"] > 0).all()

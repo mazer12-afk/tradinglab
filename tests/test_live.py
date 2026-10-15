@@ -246,3 +246,41 @@ def test_daily_vault_banks_profit_then_waits_for_next_decision(tmp_path, cfg, ho
     for name in (plain, vaulted):
         assert store.positions(name) == {}
         assert store.last_equity(name)["equity"] == pytest.approx(out[name])
+
+
+def test_daily_vault_sweep_is_one_transaction(tmp_path, cfg, hourly, monkeypatch):
+    """A failure while banking rolls back the closing fills too; the sweep is retried next cycle."""
+    import tradinglab.live.engine as E
+
+    cfg.market.exec_lag_hours = 0
+    cfg.live.shadow_all = False
+    cfg.live.vault_thresholds = [0.002]
+    cfg.portfolio.min_trade_notional = 0.0
+    cfg.paths.state_dir = str(tmp_path)
+    feed = RealtimeReplayFeed(hourly)
+    store = StateStore(tmp_path / "lab.sqlite")
+    engine = LiveEngine(cfg, feed, store, _selection())
+    vaulted = "main+vault0.2"
+    orig = E.bank
+    state = {"failed": False}
+
+    def flaky_bank(*a, **k):
+        if not state["failed"]:
+            state["failed"] = True
+            raise ConnectionError("db hiccup")
+        return orig(*a, **k)
+
+    monkeypatch.setattr(E, "bank", flaky_bank)
+    for now in pd.date_range("2024-09-01 00:05", "2024-10-31 23:05", freq="h", tz="UTC"):
+        feed.now = now
+        before = (dict(store.positions(vaulted)), store.account(vaulted)["cash"]) if store.account(vaulted) else None
+        try:
+            engine.cycle(now)
+        except ConnectionError:
+            # nothing of the sweep was committed: same book, same cash, mark not yet "checked"
+            assert (dict(store.positions(vaulted)), store.account(vaulted)["cash"]) == before
+            assert before[0], "the failure must hit a sweep with open positions"
+            engine.cycle(now)                                  # the daemon's retry banks it
+            assert store.positions(vaulted) == {}
+            assert len(store.vault_events(vaulted)) == 1
+    assert state["failed"] and len(store.vault_events(vaulted)) >= 2

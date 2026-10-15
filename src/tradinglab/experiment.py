@@ -210,27 +210,46 @@ def finish(cfg: LabConfig, records: Path, meta: dict) -> dict:
     end = utc(meta["end"])
     final: dict[str, dict] = {}
     md = MarketData(cfg.paths.data_dir)
-    if (state_dir / "intraday.sqlite").exists():
+
+    def intraday_book():
         store = StateStore(state_dir / "intraday.sqlite")
-        feed = IntradayFeed(md, cfg.intraday.symbols)
-        feed.load()
-        eng = IntradayEngine(cfg, feed, store, Path(cfg.paths.models_dir) / "intraday" / "live",
-                             policies=policies_by_name(cfg.intraday.live_policies))
-        eng.cycle()               # mark the last bars before closing out
-        eng.liquidate(reason="experiment end")
-        for name, st in eng.status().items():
-            final[name] = {k: st[k] for k in ("equity", "vault", "pnl", "return", "sweeps", "trades")}
-        store.close()
-    if (state_dir / "lab.sqlite").exists():
+        try:
+            feed = IntradayFeed(md, cfg.intraday.symbols)
+            feed.load()
+            eng = IntradayEngine(cfg, feed, store, Path(cfg.paths.models_dir) / "intraday" / "live",
+                                 policies=policies_by_name(cfg.intraday.live_policies))
+            eng.cycle()               # mark the last bars before closing out
+            eng.liquidate(reason="experiment end")
+            for name, st in eng.status().items():
+                final[name] = {k: st[k] for k in ("equity", "vault", "pnl", "return", "sweeps", "trades")}
+        finally:
+            store.close()
+
+    def daily_book():
         store = StateStore(state_dir / "lab.sqlite")
-        feed = LiveFeed(md, cfg.universe.symbols, cfg.walkforward.data_start, cfg.live.feed,
-                        default_funding_8h=cfg.market.default_funding_8h)
-        eng = LiveEngine(cfg, feed, store, load_selection(cfg))
-        eng.cycle()
-        eng.liquidate(reason="experiment end")
-        for name, st in eng.status()["accounts"].items():
-            final[f"daily:{name}"] = {k: st[k] for k in ("equity", "vault", "pnl", "return")}
-        store.close()
+        try:
+            feed = LiveFeed(md, cfg.universe.symbols, cfg.walkforward.data_start, cfg.live.feed,
+                            default_funding_8h=cfg.market.default_funding_8h)
+            eng = LiveEngine(cfg, feed, store, load_selection(cfg))
+            eng.cycle()
+            eng.liquidate(reason="experiment end")
+            for name, st in eng.status()["accounts"].items():
+                final[f"daily:{name}"] = {k: st[k] for k in ("equity", "vault", "pnl", "return")}
+        finally:
+            store.close()
+
+    for db, book in (("intraday.sqlite", intraday_book), ("lab.sqlite", daily_book)):
+        if not (state_dir / db).exists():
+            continue
+        for attempt in range(4):   # each attempt is atomic per account; a retry re-closes what is left
+            try:
+                book()
+                break
+            except Exception as exc:  # noqa: BLE001
+                if attempt == 3:
+                    raise
+                log.warning("finish %s failed (attempt %d): %s; retrying", db, attempt + 1, exc)
+                time.sleep(30 * (attempt + 1))
     out = {"finished_at": str(now_utc()), "end": str(end), "start": meta["start"], "final": final}
     (records / "FINISHED.json").write_text(json.dumps(out, indent=2, default=str))
     return out
@@ -247,6 +266,7 @@ def run(cfg: LabConfig, cfg_path: str | None, records: Path, minutes: float, com
     end = utc(meta["end"])
     started = now_utc()
     deadline = min(started + pd.Timedelta(minutes=minutes), end)
+    over = started >= end
     state_dir = Path(cfg.paths.state_dir)
     restored = restore(state_dir, records)
     run_id = f"{started:%Y%m%dT%H%M}"
@@ -259,12 +279,13 @@ def run(cfg: LabConfig, cfg_path: str | None, records: Path, minutes: float, com
     log.info("shift %s: until %s (experiment end %s); restored %s", run_id, deadline, end, restored or "nothing")
 
     sup = Supervisor(cfg_path, deadline, logs_dir)
-    sup.start("intraday")
-    sup.start("daily")
+    if not over:
+        sup.start("intraday")
+        sup.start("daily")
     named_logs = {f"{run_id}_{k}": p for k, p in sup.logs.items()}
     last_commit = time.time()
     try:
-        while now_utc() < deadline:
+        while not over and now_utc() < deadline:
             time.sleep(20)
             sup.check()
             if time.time() - last_commit >= commit_every * 60:
@@ -276,9 +297,17 @@ def run(cfg: LabConfig, cfg_path: str | None, records: Path, minutes: float, com
     snapshot(state_dir, records, named_logs)
     status = "shift-done"
     if now_utc() >= end:
-        finish(cfg, records, meta)
+        # Records first: if closing out fails, the next shift restores exactly this state and retries.
+        git_push(records, branch, f"experiment {meta['name']}: shift {run_id} – final snapshot before close-out")
+        try:
+            finish(cfg, records, meta)
+            status = "finished"
+            (records / "FINISH_ERROR.txt").unlink(missing_ok=True)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("close-out failed; the next shift retries")
+            (records / "FINISH_ERROR.txt").write_text(f"{now_utc()}: {exc!r}\n")
+            status = "finish-failed"
         snapshot(state_dir, records, named_logs)
-        status = "finished"
     git_push(records, branch, f"experiment {meta['name']}: shift {run_id} {status} "
                               f"(restarts intraday={sup.restarts['intraday']} daily={sup.restarts['daily']})")
     return status

@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS vault (
     amount REAL NOT NULL,            -- realised profit moved out of the trading account
     equity_marked REAL NOT NULL,     -- equity at the mark that triggered the sweep
     equity_realised REAL NOT NULL,   -- cash after every position was closed
+    mark_ts TEXT,                    -- the equity mark that triggered it (its equity still holds the amount)
     note TEXT
 );
 CREATE TABLE IF NOT EXISTS events (
@@ -248,12 +249,21 @@ class StateStore:
 
     # ---------------------------------------------------------------- vault
     def record_vault(self, account: str, ts, amount: float, equity_marked: float, equity_realised: float,
-                     note: str = "") -> None:
-        self.conn.execute("INSERT INTO vault(account, ts, amount, equity_marked, equity_realised, note) "
-                          "VALUES (?,?,?,?,?,?)", (account, ts_str(ts), amount, equity_marked, equity_realised, note))
+                     note: str = "", mark_ts=None) -> None:
+        self.conn.execute(
+            "INSERT INTO vault(account, ts, amount, equity_marked, equity_realised, mark_ts, note) "
+            "VALUES (?,?,?,?,?,?,?)", (account, ts_str(ts), amount, equity_marked, equity_realised,
+                                       ts_str(mark_ts if mark_ts is not None else ts), note))
 
-    def vault_total(self, account: str) -> float:
-        r = self.conn.execute("SELECT COALESCE(SUM(amount), 0) AS s FROM vault WHERE account=?", (account,)).fetchone()
+    def vault_total(self, account: str, before_mark=None) -> float:
+        """Total banked; with ``before_mark`` only transfers already out of the equity marked then
+        (i.e. triggered by an earlier mark) – the right figure to add to that mark's equity."""
+        if before_mark is None:
+            r = self.conn.execute("SELECT COALESCE(SUM(amount), 0) AS s FROM vault WHERE account=?",
+                                  (account,)).fetchone()
+        else:
+            r = self.conn.execute("SELECT COALESCE(SUM(amount), 0) AS s FROM vault WHERE account=? AND mark_ts < ?",
+                                  (account, ts_str(before_mark))).fetchone()
         return float(r["s"])
 
     def vault_events(self, account: str | None = None) -> pd.DataFrame:

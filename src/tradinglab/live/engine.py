@@ -304,22 +304,36 @@ class LiveEngine:
         return rep
 
     # --------------------------------------------------------------- vault
-    def _close_all(self, account: str, now: pd.Timestamp, reason: str) -> int | None:
-        """Close every position at the live touch now; None (nothing done) if a quote is missing."""
-        pos = self.store.positions(account)
-        quotes = {s: self.feed.quote(s) for s in pos}
-        if any(q is None for q in quotes.values()):
-            return None
-        with self.store.transaction():
-            ids = self.broker.rebalance(account, {}, {s: q.mid for s, q in quotes.items()}, now, now, 0.0, 0.0,
-                                        reason=reason)
-            for o in self.store.pending_orders(account):
-                q = quotes[o["symbol"]]
-                self.broker.fill(o, q.mid, now, quote=q)
+    def _quotes_for(self, account: str, fallback_ts: pd.Timestamp | None = None) -> dict | None:
+        """Live quotes for every open position (None if one is missing); with ``fallback_ts`` a missing
+        quote is replaced by the last known price at that time (used only to close out at the end)."""
+        from tradinglab.data.exchanges import Quote
+
+        out = {}
+        for s in self.store.positions(account):
+            q = self.feed.quote(s)
+            if q is None and fallback_ts is not None:
+                px = self.feed.price_at(s, fallback_ts)
+                if px is not None:
+                    log.warning("%s: no live quote for %s, using last price %.6g", account, s, px)
+                    q = Quote(px, px, fallback_ts, "last-price")
+            if q is None:
+                return None
+            out[s] = q
+        return out
+
+    def _close_all(self, account: str, quotes: dict, now: pd.Timestamp, reason: str) -> int:
+        """Close every position at ``quotes`` (caller holds the transaction)."""
+        ids = self.broker.rebalance(account, {}, {s: q.mid for s, q in quotes.items()}, now, now, 0.0, 0.0,
+                                    reason=reason)
+        for o in self.store.pending_orders(account):
+            q = quotes[o["symbol"]]
+            self.broker.fill(o, q.mid, now, quote=q)
         return len(ids)
 
     def _maybe_bank(self, spec: AccountSpec, now: pd.Timestamp, rep: CycleReport) -> None:
-        """Vault rule, evaluated once per hourly mark: realise everything, bank the excess over the base."""
+        """Vault rule, evaluated once per hourly mark: realise everything, bank the excess over the base.
+        Closing fills, the transfer and the bookkeeping commit together (one transaction)."""
         account = spec.name
         last = self.store.last_equity(account)
         if last is None or self.store.get_meta(f"vault_checked:{account}") == last["ts"]:
@@ -327,37 +341,44 @@ class LiveEngine:
         if self.store.pending_orders(account):
             return  # wait until the book is settled
         base = self.store.account(account)["initial_capital"]
-        if spec.vault.due(last["equity"], base):
-            n = self._close_all(account, now, f"vault: realise profit (mark {last['ts']})")
-            if n is None:
-                rep.warnings.append(f"{account}: vault due but a quote is missing; retry next cycle")
-                return
-            with self.store.transaction():
-                amount = bank(self.store, account, now, last["equity"], note=f"threshold {spec.vault.threshold:g}")
-                self.store.set_meta(f"guard:{account}", {})
-            rep.orders += n
-            rep.banked += amount
+        due = spec.vault.due(last["equity"], base)
+        quotes = self._quotes_for(account) if due else {}
+        if quotes is None:
+            rep.warnings.append(f"{account}: vault due but a quote is missing; retry next cycle")
+            return
         with self.store.transaction():
+            if due:
+                n = self._close_all(account, quotes, now, f"vault: realise profit (mark {last['ts']})")
+                amount = bank(self.store, account, now, last["equity"],
+                              note=f"threshold {spec.vault.threshold:g}", mark_ts=last["ts"])
+                self.store.set_meta(f"guard:{account}", {})
+                rep.orders += n
+                rep.banked += amount
             self.store.set_meta(f"vault_checked:{account}", last["ts"])
 
     def liquidate(self, now: pd.Timestamp | None = None, reason: str = "experiment end") -> dict[str, float]:
-        """Close every account at live quotes and mark the final equity (= cash)."""
+        """Close every account at live quotes (last known price if a coin has none) and mark the final
+        equity (= cash)."""
         now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
         self.feed.refresh()
+        horizon = self.feed.horizon(self.cfg.universe.symbols)
         out = {}
         for spec in self.specs:
             if self.store.account(spec.name) is None:
                 continue
+            quotes = self._quotes_for(spec.name, fallback_ts=horizon)
+            if quotes is None:
+                raise RuntimeError(f"{spec.name}: cannot liquidate, no price for an open position")
             with self.store.transaction():
                 for o in self.store.pending_orders(spec.name):
                     self.store.cancel_order(o["id"], reason)
-            if self._close_all(spec.name, now, reason) is None:
-                raise RuntimeError(f"{spec.name}: cannot liquidate, missing quotes")
-            with self.store.transaction():
+                self._close_all(spec.name, quotes, now, reason)
                 cash = self.store.account(spec.name)["cash"]
                 self.store.record_equity(spec.name, now, cash, cash, 0.0, 0.0)
                 self.store.log_event(now, "info", f"liquidated ({reason})", spec.name)
             out[spec.name] = cash
+        self._export(CycleReport(now=now, mode=self.feed.mode, horizon=horizon,
+                                 warnings=[f"liquidated: {reason}"]))
         return out
 
     # -------------------------------------------------------------- export
@@ -377,14 +398,16 @@ class LiveEngine:
                     if px is not None:
                         weights[sym] = units * px / eq
             vault = self.store.vault_total(spec.name)
+            # Profit banked after the latest mark is still inside that mark's equity: count it once.
+            vault_in_pnl = self.store.vault_total(spec.name, before_mark=last["ts"]) if last else vault
             out["accounts"][spec.name] = {
                 "strategy": spec.label,
                 "vault_threshold": spec.vault.threshold if spec.vault else None,
                 "initial_capital": acct["initial_capital"],
                 "equity": eq,
                 "vault": vault,
-                "pnl": eq + vault - acct["initial_capital"],
-                "return": (eq + vault) / acct["initial_capital"] - 1.0,
+                "pnl": eq + vault_in_pnl - acct["initial_capital"],
+                "return": (eq + vault_in_pnl) / acct["initial_capital"] - 1.0,
                 "marked_at": last["ts"] if last else None,
                 "gross": last["gross"] if last else 0.0,
                 "net": last["net"] if last else 0.0,
