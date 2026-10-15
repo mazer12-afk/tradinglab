@@ -1,9 +1,10 @@
 # Unattended live experiment (src/tradinglab/experiment.py, config/experiment.yaml).
 #
-# Each run is one shift of ~5.5 h (GitHub-hosted jobs last at most 6 h). The half-hourly
-# schedule plus the concurrency group chain shifts back to back: a trigger that fires during
-# a shift waits as the single pending run and starts the moment the shift ends. Bars missed in
-# the hand-over are replayed on restart (marked, never traded).
+# Each run is one shift of ~5.5 h (GitHub-hosted jobs last at most 6 h). Shifts chain back to
+# back two ways: a successful shift queues the next one itself (workflow_dispatch, which the
+# GITHUB_TOKEN may trigger), and the half-hourly schedule queues one too (recovery after a failed
+# shift). Within the concurrency group only one run waits; it starts the moment the shift ends.
+# Bars missed in the hand-over are replayed on restart (marked, never traded).
 #
 # State and records live on the records branch (config: experiment.records_branch), pushed
 # hourly. Scheduled runs only work while the repository is public (free Actions minutes);
@@ -33,6 +34,7 @@ concurrency:
   cancel-in-progress: false
 permissions:
   contents: write
+  actions: write
 jobs:
   shift:
     runs-on: ubuntu-latest
@@ -85,6 +87,13 @@ jobs:
                 --records-branch "${{ steps.records.outputs.branch }}")
           if [ -n "${{ inputs.duration_days }}" ]; then args+=(--duration-days "${{ inputs.duration_days }}"); fi
           tradinglab --config "$CONFIG" experiment-run "${args[@]}"
+      - name: Queue the next shift
+        # Only the default experiment chains itself, and only after a clean shift (a broken setup must
+        # not loop; the schedule retries it). Once FINISHED.json exists the shift step is skipped.
+        if: success() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true' && inputs.records_branch == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run experiment.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
       - name: Save market-data cache
         if: always() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
         uses: actions/cache/save@v4
