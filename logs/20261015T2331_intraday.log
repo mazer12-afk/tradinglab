@@ -1,0 +1,7 @@
+2026-10-15 23:31:50,118 INFO tradinglab.intraday.live: lgbm|12|8640 scorer warmed up on 8652 bars
+2026-10-15 23:32:00,809 INFO tradinglab.intraday.live: lgbm|48|8640 scorer warmed up on 8688 bars
+2026-10-15 23:32:11,064 INFO tradinglab.intraday.live: rule:tsmom48|1|8640 scorer warmed up on 8641 bars
+2026-10-15 23:32:11,872 INFO tradinglab.intraday.live: bar 2026-10-15 23:30:00+00:00: new=1 orders=144 banked=0.00 warnings=[]
+2026-10-15 23:35:08,465 INFO tradinglab.intraday.live: bar 2026-10-15 23:35:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
+2026-10-15 23:40:09,427 INFO tradinglab.intraday.live: bar 2026-10-15 23:40:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
+2026-10-15 23:40:10,861 INFO tradinglab.intraday.live: signal 15 received – stopping after current step
