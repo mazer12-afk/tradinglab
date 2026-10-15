@@ -105,7 +105,8 @@ An account's result is its vault plus its trading equity.
 - **Final liquidation:** at the end every account is liquidated at live prices.
 
 **Where it runs.** `.github/workflows/experiment.yml` on GitHub-hosted runners. Each run is a shift of
-about 5.5 hours. A half-hourly schedule plus a concurrency group chains the shifts back to back.
+about 5.5 hours. Each clean shift queues the next one, and a half-hourly schedule recovers a failed
+shift; a concurrency group keeps exactly one shift waiting, so shifts run back to back.
 During the few minutes between shifts, bars are marked on restart but not traded.
 
 **Records:** branch `experiment/vault-2w`, pushed hourly.
