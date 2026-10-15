@@ -31,6 +31,7 @@ from tradinglab.config import LabConfig, bars_per_year, utc
 from tradinglab.live.broker import PaperBroker
 from tradinglab.live.feed import LiveFeed, latest_bar
 from tradinglab.live.state import StateStore
+from tradinglab.live.vault import VaultRule, bank
 from tradinglab.portfolio.allocator import combine_weights
 from tradinglab.portfolio.risk import DrawdownGuard
 from tradinglab.portfolio.sizing import strategy_weights
@@ -47,6 +48,7 @@ class AccountSpec:
     name: str
     strategies: list[str]
     alphas: dict[str, float]
+    vault: VaultRule | None = None
 
     @property
     def label(self) -> str:
@@ -64,6 +66,7 @@ class CycleReport:
     marks: int = 0
     decisions: list[str] = field(default_factory=list)
     orders: int = 0
+    banked: float = 0.0
     warnings: list[str] = field(default_factory=list)
 
 
@@ -94,13 +97,21 @@ class LiveEngine:
                 if name.startswith("dl_") and name not in sel.get("deep_models", {}):
                     continue
                 specs.append(AccountSpec(f"shadow:{name}", [name], {name: 1.0}))
-        return specs
+        twins = []
+        for spec in specs:
+            twins.append(spec)
+            for t in self.cfg.live.vault_thresholds:
+                rule = VaultRule(float(t))
+                twins.append(AccountSpec(spec.name + rule.suffix, spec.strategies, spec.alphas, rule))
+        return twins
 
     def ensure_accounts(self, now: pd.Timestamp) -> None:
         with self.store.transaction():
             for spec in self.specs:
                 if self.store.account(spec.name) is None:
-                    self.store.ensure_account(spec.name, spec.label, self.cfg.portfolio.initial_capital, now)
+                    label = spec.label + (f" | vault: bank profit at +{100 * spec.vault.threshold:g}%"
+                                          if spec.vault else "")
+                    self.store.ensure_account(spec.name, label, self.cfg.portfolio.initial_capital, now)
                     self.store.set_meta(f"last_mark:{spec.name}", str(now.floor("h")))
                     self.store.log_event(now, "info", f"account created ({spec.label})", spec.name)
 
@@ -243,6 +254,10 @@ class LiveEngine:
         with self.store.transaction():
             for spec in self.specs:
                 self._advance(spec.name, horizon, rep)
+        if self.feed.mode == "realtime":
+            for spec in self.specs:
+                if spec.vault is not None:
+                    self._maybe_bank(spec, now, rep)
 
         staleness = (now - horizon) / pd.Timedelta(hours=1)
         bar_ts = latest_bar(horizon, self.cfg.market.bar)
@@ -288,6 +303,63 @@ class LiveEngine:
         self._export(rep)
         return rep
 
+    # --------------------------------------------------------------- vault
+    def _close_all(self, account: str, now: pd.Timestamp, reason: str) -> int | None:
+        """Close every position at the live touch now; None (nothing done) if a quote is missing."""
+        pos = self.store.positions(account)
+        quotes = {s: self.feed.quote(s) for s in pos}
+        if any(q is None for q in quotes.values()):
+            return None
+        with self.store.transaction():
+            ids = self.broker.rebalance(account, {}, {s: q.mid for s, q in quotes.items()}, now, now, 0.0, 0.0,
+                                        reason=reason)
+            for o in self.store.pending_orders(account):
+                q = quotes[o["symbol"]]
+                self.broker.fill(o, q.mid, now, quote=q)
+        return len(ids)
+
+    def _maybe_bank(self, spec: AccountSpec, now: pd.Timestamp, rep: CycleReport) -> None:
+        """Vault rule, evaluated once per hourly mark: realise everything, bank the excess over the base."""
+        account = spec.name
+        last = self.store.last_equity(account)
+        if last is None or self.store.get_meta(f"vault_checked:{account}") == last["ts"]:
+            return
+        if self.store.pending_orders(account):
+            return  # wait until the book is settled
+        base = self.store.account(account)["initial_capital"]
+        if spec.vault.due(last["equity"], base):
+            n = self._close_all(account, now, f"vault: realise profit (mark {last['ts']})")
+            if n is None:
+                rep.warnings.append(f"{account}: vault due but a quote is missing; retry next cycle")
+                return
+            with self.store.transaction():
+                amount = bank(self.store, account, now, last["equity"], note=f"threshold {spec.vault.threshold:g}")
+                self.store.set_meta(f"guard:{account}", {})
+            rep.orders += n
+            rep.banked += amount
+        with self.store.transaction():
+            self.store.set_meta(f"vault_checked:{account}", last["ts"])
+
+    def liquidate(self, now: pd.Timestamp | None = None, reason: str = "experiment end") -> dict[str, float]:
+        """Close every account at live quotes and mark the final equity (= cash)."""
+        now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
+        self.feed.refresh()
+        out = {}
+        for spec in self.specs:
+            if self.store.account(spec.name) is None:
+                continue
+            with self.store.transaction():
+                for o in self.store.pending_orders(spec.name):
+                    self.store.cancel_order(o["id"], reason)
+            if self._close_all(spec.name, now, reason) is None:
+                raise RuntimeError(f"{spec.name}: cannot liquidate, missing quotes")
+            with self.store.transaction():
+                cash = self.store.account(spec.name)["cash"]
+                self.store.record_equity(spec.name, now, cash, cash, 0.0, 0.0)
+                self.store.log_event(now, "info", f"liquidated ({reason})", spec.name)
+            out[spec.name] = cash
+        return out
+
     # -------------------------------------------------------------- export
     def status(self, horizon: pd.Timestamp | None = None) -> dict:
         out = {"accounts": {}}
@@ -304,12 +376,15 @@ class LiveEngine:
                     px = self.feed.price_at(sym, horizon)
                     if px is not None:
                         weights[sym] = units * px / eq
+            vault = self.store.vault_total(spec.name)
             out["accounts"][spec.name] = {
                 "strategy": spec.label,
+                "vault_threshold": spec.vault.threshold if spec.vault else None,
                 "initial_capital": acct["initial_capital"],
                 "equity": eq,
-                "pnl": eq - acct["initial_capital"],
-                "return": eq / acct["initial_capital"] - 1.0,
+                "vault": vault,
+                "pnl": eq + vault - acct["initial_capital"],
+                "return": (eq + vault) / acct["initial_capital"] - 1.0,
                 "marked_at": last["ts"] if last else None,
                 "gross": last["gross"] if last else 0.0,
                 "net": last["net"] if last else 0.0,

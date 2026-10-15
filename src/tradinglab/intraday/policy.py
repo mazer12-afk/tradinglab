@@ -24,17 +24,23 @@ from tradinglab.intraday.research import signal_to_weights
 
 @dataclass
 class PolicySpec:
-    """One live paper-trading account = one model + one trading rule."""
+    """One intraday strategy = one signal source + one trading rule (traded by one or more accounts)."""
 
     name: str                  # account suffix, e.g. "lgbm_1h"
-    model: str                 # "lgbm" or "deep"
+    model: str                 # "lgbm" | "deep" | "rule:basket" | "rule:tsmom<bars>"
     horizon: int = 12          # forecast horizon in bars (lgbm)
-    rule: str = "selective"    # "selective" (hysteresis) | "continuous" (deep positions)
+    rule: str = "selective"    # "selective" (hysteresis) | "continuous" (positions every bar)
     enter: float = 3.0
     exit: float = 0.0
     min_hold: int = 12
     norm_window: int = 288 * 30
+    transform: str = ""        # "" | "demean" (remove the cross-sectional mean → ~market-neutral)
     description: str = ""
+
+    @property
+    def signal_key(self) -> str:
+        """Specs sharing a key share their model outputs (and selective scores)."""
+        return f"{self.model}|{self.horizon}|{self.norm_window}" if self.rule == "selective" else self.model
 
 
 def candidate_weights(signal_t: pd.Series, d: IntradayData, cfg: IntradayConfig) -> pd.Series:
@@ -44,37 +50,28 @@ def candidate_weights(signal_t: pd.Series, d: IntradayData, cfg: IntradayConfig)
     return signal_to_weights(frame, d, cfg).iloc[-1]
 
 
-class SelectivePolicy:
-    """Hysteresis entries on a normalised, horizon-averaged forecast; size frozen while held.
+class SelectiveScorer:
+    """Forecast history → normalised score (shared by every account trading the same forecasts).
 
-    Mirrors ``research.selective_weights``:
       s_t     = mean of the last H forecasts (per asset)
       score_t = s_t / mean(|s|) over the trailing ``norm_window`` bars (min 288)
-      pos_t   = hysteresis(score_t; enter, exit, min_hold)
-      w_t     = weight sized at entry, kept until the position changes.
     """
 
-    def __init__(self, spec: PolicySpec, symbols: list[str], state: dict | None = None):
-        self.spec = spec
-        self.symbols = list(symbols)
-        n = len(symbols)
+    def __init__(self, horizon: int, norm_window: int, state: dict | None = None):
         st = state or {}
-        self.preds = deque(st.get("preds", []), maxlen=spec.horizon)               # list of [n] lists
-        self.abs_s = deque(st.get("abs_s", []), maxlen=spec.norm_window)
-        self.pos = np.array(st.get("pos", [0.0] * n), dtype=float)
-        self.held = np.array(st.get("held", [0] * n), dtype=int)
-        self.frozen = np.array(st.get("frozen", [0.0] * n), dtype=float)
+        self.preds = deque(st.get("preds", []), maxlen=horizon)                # list of [n] lists
+        self.abs_s = deque(st.get("abs_s", []), maxlen=norm_window)
         self.last_bar = st.get("last_bar")
 
     def state(self) -> dict:
         return {"preds": [list(map(float, p)) for p in self.preds],
-                "abs_s": [list(map(float, a)) for a in self.abs_s],
-                "pos": self.pos.tolist(), "held": self.held.tolist(), "frozen": self.frozen.tolist(),
-                "last_bar": self.last_bar}
+                "abs_s": [list(map(float, a)) for a in self.abs_s], "last_bar": self.last_bar}
 
-    def score(self, pred: np.ndarray) -> np.ndarray:
+    def score(self, pred: np.ndarray, bar=None) -> np.ndarray:
         """Update forecast history with bar t's prediction and return score_t."""
         self.preds.append(np.asarray(pred, dtype=float))
+        if bar is not None:
+            self.last_bar = str(bar)
         P = np.array(self.preds)                                 # [≤H, n]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)       # all-NaN column → NaN (no view)
@@ -87,6 +84,30 @@ class SelectivePolicy:
             scale = np.nansum(np.where(np.isfinite(A), A, 0.0), axis=0) / cnt
         scale = np.where(cnt >= 288, scale, np.nan)
         return s / scale
+
+
+class HysteresisBook:
+    """Discrete positions from scores (enter/exit/min-hold hysteresis); size frozen while held."""
+
+    def __init__(self, spec: PolicySpec, symbols: list[str], state: dict | None = None):
+        self.spec = spec
+        self.symbols = list(symbols)
+        n = len(symbols)
+        st = state or {}
+        self.pos = np.array(st.get("pos", [0.0] * n), dtype=float)
+        self.held = np.array(st.get("held", [0] * n), dtype=int)
+        self.frozen = np.array(st.get("frozen", [0.0] * n), dtype=float)
+        self.last_bar = st.get("last_bar")
+
+    def state(self) -> dict:
+        return {"pos": self.pos.tolist(), "held": self.held.tolist(), "frozen": self.frozen.tolist(),
+                "last_bar": self.last_bar}
+
+    def reset(self) -> None:
+        """Flat start (after the account's profit was banked)."""
+        self.pos[:] = 0.0
+        self.held[:] = 0
+        self.frozen[:] = 0.0
 
     def step_positions(self, score: np.ndarray) -> np.ndarray:
         sp = self.spec
@@ -110,10 +131,10 @@ class SelectivePolicy:
             self.pos[i], self.held[i] = p, held
         return old
 
-    def update(self, pred: np.ndarray, bar: pd.Timestamp, d: IntradayData | None = None,
+    def update(self, score: np.ndarray, bar: pd.Timestamp, d: IntradayData | None = None,
                cfg: IntradayConfig | None = None, size: bool = True) -> pd.Series | None:
         """Advance one bar. With ``size`` (and data), return target weights for bar t."""
-        old = self.step_positions(self.score(pred))
+        old = self.step_positions(score)
         self.last_bar = str(bar)
         if not size:
             # Bars replayed without trading (warm-up / gaps): positions change, sizes are re-taken
@@ -130,8 +151,54 @@ class SelectivePolicy:
         return pd.Series(self.frozen.copy(), index=self.symbols)
 
 
+class SelectivePolicy:
+    """Scorer + book for one account (mirrors ``research.selective_weights``)."""
+
+    def __init__(self, spec: PolicySpec, symbols: list[str], state: dict | None = None):
+        st = state or {}
+        self.spec = spec
+        self.symbols = list(symbols)
+        self.scorer = SelectiveScorer(spec.horizon, spec.norm_window, st)
+        self.book = HysteresisBook(spec, symbols, st)
+
+    @property
+    def preds(self):
+        return self.scorer.preds
+
+    @property
+    def pos(self):
+        return self.book.pos
+
+    @property
+    def held(self):
+        return self.book.held
+
+    @property
+    def last_bar(self):
+        return self.book.last_bar
+
+    def state(self) -> dict:
+        return {**self.scorer.state(), **self.book.state()}
+
+    def score(self, pred: np.ndarray) -> np.ndarray:
+        return self.scorer.score(pred)
+
+    def update(self, pred: np.ndarray, bar: pd.Timestamp, d: IntradayData | None = None,
+               cfg: IntradayConfig | None = None, size: bool = True) -> pd.Series | None:
+        return self.book.update(self.scorer.score(pred, bar), bar, d, cfg, size)
+
+
+def transform_positions(spec: PolicySpec, positions: np.ndarray) -> np.ndarray:
+    x = np.asarray(positions, dtype=float)
+    if spec.transform == "demean":
+        ok = np.isfinite(x)
+        if ok.any():
+            x = np.where(ok, x - x[ok].mean(), np.nan)
+    return x
+
+
 class ContinuousPolicy:
-    """Positions straight from an end-to-end trained network, sized like research."""
+    """Positions every bar (network output or a rule), sized like research."""
 
     def __init__(self, spec: PolicySpec, symbols: list[str], state: dict | None = None):
         self.spec = spec
@@ -141,12 +208,16 @@ class ContinuousPolicy:
     def state(self) -> dict:
         return {"last_bar": self.last_bar}
 
+    def reset(self) -> None:
+        pass
+
     def update(self, positions: np.ndarray, bar: pd.Timestamp, d: IntradayData | None = None,
                cfg: IntradayConfig | None = None, size: bool = True) -> pd.Series | None:
         self.last_bar = str(bar)
         if not size:
             return None
-        return candidate_weights(pd.Series(positions, index=self.symbols), d, cfg)
+        x = transform_positions(self.spec, positions)
+        return candidate_weights(pd.Series(x, index=self.symbols), d, cfg)
 
 
 def make_policy(spec: PolicySpec, symbols: list[str], state: dict | None = None):
@@ -161,3 +232,22 @@ DEFAULT_POLICIES = [
     PolicySpec("deep_lstm_attn", "deep", rule="continuous",
                description="LSTM + causal attention network trained end-to-end on net-of-cost Sharpe."),
 ]
+
+EXTRA_POLICIES = [
+    PolicySpec("deep_neutral", "deep", rule="continuous", transform="demean",
+               description="The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral)."),
+    PolicySpec("tsmom_4h", "rule:tsmom48", horizon=1, rule="selective", enter=1.5, exit=0.0, min_hold=12,
+               description="Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that "
+                           "direction; holds ≥1h, exits when the move reverses; size frozen while held."),
+    PolicySpec("basket_long", "rule:basket", rule="continuous",
+               description="Benchmark: vol-sized long basket of all 12 coins."),
+]
+
+POLICIES = {p.name: p for p in DEFAULT_POLICIES + EXTRA_POLICIES}
+
+
+def policies_by_name(names: list[str]) -> list[PolicySpec]:
+    unknown = [n for n in names if n not in POLICIES]
+    if unknown:
+        raise ValueError(f"unknown intraday policies {unknown}; known: {sorted(POLICIES)}")
+    return [POLICIES[n] for n in names]

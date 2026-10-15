@@ -126,6 +126,9 @@ class LiveConfig:
     retrain_days: int = 7            # retrain deep models / re-run selection cadence
     fill_latency_seconds: int = 60   # order → fill delay used to price fills
     shadow_all: bool = True          # paper-trade every candidate in shadow books
+    # Profit vault: for each threshold θ every account gets a twin ("<name>+vault<θ%>") that banks
+    # realised profit once equity ≥ initial capital·(1+θ) and restarts from the initial capital.
+    vault_thresholds: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -155,9 +158,21 @@ class IntradayConfig:
     rebalance_band: float = 0.005
     min_trade_notional: float = 10.0
     initial_capital: float = 100_000.0
+    live_policies: list[str] = field(default_factory=lambda: ["lgbm_1h", "lgbm_4h", "deep_lstm_attn"])
+    vault_thresholds: list[float] = field(default_factory=list)   # see LiveConfig.vault_thresholds
 
     def cost_bps(self, symbols: list[str]) -> list[float]:
         return [self.fee_bps + self.slippage_bps.get(s, self.default_slippage_bps) for s in symbols]
+
+
+@dataclass
+class ExperimentConfig:
+    """A fixed-length, unattended live experiment (see ``tradinglab.experiment``)."""
+
+    name: str = ""
+    duration_days: float = 14.0       # counted from the first run (recorded in the records' experiment.json)
+    end: str = ""                     # optional fixed ISO UTC end; overrides duration_days
+    records_branch: str = ""          # git branch the records are pushed to
 
 
 @dataclass
@@ -173,6 +188,7 @@ class LabConfig:
     deep: DeepConfig = field(default_factory=DeepConfig)
     live: LiveConfig = field(default_factory=LiveConfig)
     intraday: IntradayConfig = field(default_factory=IntradayConfig)
+    experiment: ExperimentConfig = field(default_factory=ExperimentConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self)

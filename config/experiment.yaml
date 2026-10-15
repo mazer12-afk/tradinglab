@@ -1,0 +1,15 @@
+# Two-week unattended live experiment: every strategy, with and without a profit vault.
+# Runs on GitHub Actions (.github/workflows/experiment.yml); records go to the branch below.
+paths:
+  state_dir: run/state            # runtime state (restored from / snapshotted to the records branch)
+live:
+  poll_seconds: 300
+  retrain_days: 36500             # models are frozen for the whole experiment
+  vault_thresholds: [0.01, 0.02, 0.04]
+intraday:
+  live_policies: [lgbm_1h, lgbm_4h, deep_lstm_attn, deep_neutral, tsmom_4h, basket_long]
+  vault_thresholds: [0.01, 0.02, 0.04]
+experiment:
+  name: vault-2w
+  duration_days: 14
+  records_branch: experiment/vault-2w

@@ -45,6 +45,8 @@ class LiveFeed:
         self.rates: dict[str, pd.Series] = {}
         self._closes: pd.DataFrame | None = None
         self._minute_cache: dict[tuple[str, str], pd.DataFrame] = {}
+        self._quotes: dict[str, tuple[float, Quote]] = {}
+        self.quote_ttl = 10.0  # seconds: every account trading in the same instant sees the same touch
 
     # ------------------------------------------------------------ refresh
     def resolve_mode(self) -> str:
@@ -164,6 +166,17 @@ class LiveFeed:
         return None
 
     def quote(self, symbol: str) -> Quote | None:
+        import time
+
+        hit = self._quotes.get(symbol)
+        if hit is not None and time.monotonic() - hit[0] < self.quote_ttl:
+            return hit[1]
+        q = self._fetch_quote(symbol)
+        if q is not None:
+            self._quotes[symbol] = (time.monotonic(), q)
+        return q
+
+    def _fetch_quote(self, symbol: str) -> Quote | None:
         for ex in self.live_exchanges:
             try:
                 q = ex.quote(symbol)

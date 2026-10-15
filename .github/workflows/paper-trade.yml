@@ -1,13 +1,11 @@
-# Runs one live paper-trading cycle every hour on GitHub's runners (which can
+# Runs one live paper-trading cycle on GitHub's runners (which can
 # reach exchange APIs → realtime mode) and commits the updated state/ journal.
 # Scheduled workflows only run from the default branch. Uses Actions minutes
 # (free for public repos; metered for private ones), so it is opt-in: set the
 # repository variable PAPER_TRADING_ENABLED=true to activate it.
 name: paper-trade
 on:
-  schedule:
-    - cron: "7 * * * *"
-  workflow_dispatch:
+  workflow_dispatch:   # superseded by the experiment workflow; kept for manual one-off cycles
 concurrency:
   group: paper-trade
   cancel-in-progress: false

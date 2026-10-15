@@ -189,3 +189,60 @@ def test_halt_file_flattens_book(tmp_path, cfg, hourly):
     _run_days(engine, feed, pd.date_range("2024-09-21", "2024-09-22", freq="D", tz="UTC"), 0)
     assert store.positions("main") == {}
     assert store.last_decision("main")["targets"] == {}
+
+
+class RealtimeReplayFeed(ReplayFeed):
+    """Replay in realtime mode: quotes and fills at the last known price ± 1 bp."""
+
+    def refresh(self) -> None:
+        super().refresh()
+        self.mode = "realtime"
+
+    def quote(self, symbol):
+        from tradinglab.data.exchanges import Quote
+
+        px = self.price_at(symbol, self.now)
+        return None if px is None else Quote(px * 0.9999, px * 1.0001, self.now, "replay")
+
+    def fill_price(self, symbol, ts):
+        return self.price_at(symbol, ts)
+
+
+def test_daily_vault_banks_profit_then_waits_for_next_decision(tmp_path, cfg, hourly):
+    cfg.market.exec_lag_hours = 0
+    cfg.live.shadow_all = False
+    cfg.live.vault_thresholds = [0.002]
+    cfg.portfolio.min_trade_notional = 0.0
+    cfg.paths.state_dir = str(tmp_path)
+    feed = RealtimeReplayFeed(hourly)
+    store = StateStore(tmp_path / "lab.sqlite")
+    engine = LiveEngine(cfg, feed, store, _selection())
+    assert [s.name for s in engine.specs] == ["main", "main+vault0.2"]
+    plain, vaulted = "main", "main+vault0.2"
+    sweeps = []
+    for now in pd.date_range("2024-09-01 00:05", "2024-10-31 23:05", freq="h", tz="UTC"):
+        feed.now = now
+        rep = engine.cycle(now)
+        if rep.banked:
+            sweeps.append(now)
+            assert store.positions(vaulted) == {}
+            assert store.account(vaulted)["cash"] == pytest.approx(cfg.portfolio.initial_capital)
+        elif sweeps and now.date() == sweeps[-1].date() and now.hour > sweeps[-1].hour and now.hour != 0:
+            assert store.positions(vaulted) == {}, "flat until the strategy's next daily decision"
+    v = store.vault_events(vaulted)
+    assert len(v) >= 2 and len(v) == len(sweeps)
+    assert (v["amount"] > 0).all()
+    np.testing.assert_allclose(v["amount"], v["equity_realised"] - cfg.portfolio.initial_capital)
+    assert (v["equity_marked"] >= cfg.portfolio.initial_capital * 1.002).all()
+    assert store.vault_events(plain).empty
+    first = pd.Timestamp(v["ts"].iloc[0])
+    e1, e2 = store.equity_curve(plain)["equity"], store.equity_curve(vaulted)["equity"]
+    pd.testing.assert_series_equal(e1[e1.index < first], e2[e2.index < first], check_names=False, rtol=1e-12)
+    st = engine.status()["accounts"][vaulted]
+    assert st["vault"] == pytest.approx(v["amount"].sum())
+    assert st["pnl"] == pytest.approx(st["equity"] + st["vault"] - cfg.portfolio.initial_capital)
+    # End of experiment: everything is liquidated at live quotes, final equity = cash.
+    out = engine.liquidate(feed.now + pd.Timedelta(minutes=1))
+    for name in (plain, vaulted):
+        assert store.positions(name) == {}
+        assert store.last_equity(name)["equity"] == pytest.approx(out[name])

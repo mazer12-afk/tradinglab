@@ -17,6 +17,7 @@ the decision — there is no path for future information to leak in.
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import time
@@ -30,12 +31,15 @@ import pandas as pd
 from tradinglab.config import CostConfig, LabConfig, bar_timedelta, utc
 from tradinglab.data.exchanges import BinanceSpot, Quote
 from tradinglab.data.store import MarketData
-from tradinglab.intraday.attribution import attribute, bar_costs, basket_returns, held_units, start_exposure
+from tradinglab.intraday.attribution import (attribute, bar_costs, bar_flows, basket_returns, held_units,
+                                             start_exposure)
 from tradinglab.intraday.data import IntradayData, assemble_intraday
 from tradinglab.intraday.features import build_features
-from tradinglab.intraday.policy import DEFAULT_POLICIES, PolicySpec, make_policy
+from tradinglab.intraday.policy import (DEFAULT_POLICIES, ContinuousPolicy, HysteresisBook, PolicySpec,
+                                       SelectiveScorer, policies_by_name)
 from tradinglab.live.broker import PaperBroker
 from tradinglab.live.state import StateStore
+from tradinglab.live.vault import VaultRule, bank, vault_accounts
 from tradinglab.portfolio.risk import DrawdownGuard
 
 log = logging.getLogger(__name__)
@@ -130,18 +134,43 @@ class IntradayCycle:
     traded: bool = False
     orders: int = 0
     funding_events: int = 0
+    banked: float = 0.0
     warnings: list[str] = field(default_factory=list)
+
+
+@dataclass
+class IntradayAccount:
+    """A paper account: one strategy, optionally with a profit vault."""
+
+    name: str                    # "intraday:lgbm_4h" or "intraday:lgbm_4h+vault2"
+    spec: PolicySpec
+    vault: VaultRule | None = None
+
+
+def build_accounts(specs: list[PolicySpec], thresholds: list[float] | None = None) -> list[IntradayAccount]:
+    """Every strategy gets a plain account plus one vault twin per threshold."""
+    out = []
+    for spec in specs:
+        for name, _, rule in vault_accounts([f"intraday:{spec.name}"], list(thresholds or [])):
+            out.append(IntradayAccount(name, spec, rule))
+    return out
+
+
+_BAR_RE = r"^bar (\d{4}-\d\d-\d\d[ T][0-9:.]+(?:[+-]\d\d:\d\d|Z)?)"
 
 
 class IntradayEngine:
     def __init__(self, cfg: LabConfig, feed: IntradayFeed, store: StateStore, models_dir: Path,
-                 policies: list[PolicySpec] = DEFAULT_POLICIES, stale_minutes: float = 12.0):
+                 policies: list[PolicySpec] = DEFAULT_POLICIES, stale_minutes: float = 12.0,
+                 vault_thresholds: list[float] | None = None):
         self.cfg = cfg
         self.ic = cfg.intraday
         self.feed = feed
         self.store = store
         self.models_dir = Path(models_dir)
-        self.specs = policies
+        self.specs = list(policies)
+        thresholds = self.ic.vault_thresholds if vault_thresholds is None else vault_thresholds
+        self.accounts = build_accounts(self.specs, thresholds)
         self.stale = pd.Timedelta(minutes=stale_minutes)
         self.broker = PaperBroker(store, CostConfig(fee_bps=self.ic.fee_bps, slippage_bps=1.0), "perp")
         self.models: dict[str, object] = {}
@@ -152,6 +181,10 @@ class IntradayEngine:
                                "(asset ids and embeddings would be misaligned)")
         self.funding: dict[str, tuple[float, pd.Timestamp | None]] = {}
         self.funding_fetched: pd.Timestamp | None = None
+        # Selective scores are a pure function of the model's forecast history, shared by every account
+        # trading that forecast. They live in memory only and are rebuilt from the price buffer after a
+        # restart (warm-up), which keeps the persisted state small; accounts persist just their book.
+        self.scorers: dict[str, SelectiveScorer] = {}
 
     # ------------------------------------------------------------- models
     def _model(self, spec: PolicySpec):
@@ -169,12 +202,14 @@ class IntradayEngine:
         return self.models[key]
 
     def _outputs(self, spec: PolicySpec, fs, d: IntradayData, rows: np.ndarray) -> np.ndarray:
-        """Model output for each bar index in ``rows`` → [len(rows), N]."""
+        """Model (or rule) output for each bar index in ``rows`` → [len(rows), N]."""
+        N = len(fs.symbols)
+        if spec.model.startswith("rule:"):
+            return rule_outputs(spec.model[5:], d, rows)
         names = self.manifest["features"]
         if names != fs.names:
             raise RuntimeError(f"feature mismatch: model {names} vs live {fs.names}")
         model = self._model(spec)
-        N = len(fs.symbols)
         if spec.model == "deep":
             from tradinglab.intraday.deep import prepare
 
@@ -190,28 +225,34 @@ class IntradayEngine:
 
     # ----------------------------------------------------------- accounts
     def account(self, spec: PolicySpec) -> str:
+        """The plain (no-vault) account of a strategy."""
         return f"intraday:{spec.name}"
 
     def ensure_accounts(self, now: pd.Timestamp) -> None:
         with self.store.transaction():
-            for spec in self.specs:
-                name = self.account(spec)
-                if self.store.account(name) is None:
-                    self.store.ensure_account(name, spec.description or spec.name, self.ic.initial_capital, now)
-                    self.store.log_event(now, "info", f"account created: {spec.description}", name)
+            for acct in self.accounts:
+                if self.store.account(acct.name) is None:
+                    label = acct.spec.description or acct.spec.name
+                    if acct.vault is not None:
+                        label += f" | vault: bank profit at +{100 * acct.vault.threshold:g}%"
+                    self.store.ensure_account(acct.name, label, self.ic.initial_capital, now)
+                    self.store.log_event(now, "info", f"account created: {label}", acct.name)
 
-    def _policy(self, spec: PolicySpec):
-        return make_policy(spec, self.feed.symbols, self.store.get_meta(f"policy:{self.account(spec)}"))
+    def _book(self, acct: IntradayAccount):
+        state = self.store.get_meta(f"policy:{acct.name}")
+        if acct.spec.rule == "selective":
+            return HysteresisBook(acct.spec, self.feed.symbols, state)
+        return ContinuousPolicy(acct.spec, self.feed.symbols, state)
 
-    # --------------------------------------------------------------- cycle
     def cycle(self, now: pd.Timestamp | None = None) -> IntradayCycle:
         """Process every bar that closed since the last cycle – atomically.
 
-        Policy steps, targets and quotes are computed in memory first; marks,
-        funding, policy state, executions, decisions and the ``last_bar`` marker
-        are then committed in ONE transaction. Any failure (model, quotes, DB)
-        rolls everything back and the next cycle redoes the same bars from the
-        same persisted state – a bar is never applied twice and never skipped.
+        Signals, policy steps, targets and quotes are computed in memory first;
+        marks, funding, profit banking, policy state, executions, decisions and
+        the ``last_bar`` marker are then committed in ONE transaction. Any failure
+        (model, quotes, DB) rolls everything back – including the in-memory
+        scorers – and the next cycle redoes the same bars from the same persisted
+        state: a bar is never applied twice and never skipped.
         """
         now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
         rep = IntradayCycle(now=now)
@@ -236,43 +277,80 @@ class IntradayEngine:
         rows = np.searchsorted(idx, new)
         self._refresh_funding(now)
 
-        targets: dict[str, pd.Series] = {}
-        states: dict[str, dict] = {}
+        # 1. signals, once per signal source
+        outputs: dict[str, np.ndarray] = {}
+        scores: dict[str, list[np.ndarray | None]] = {}
+        scorers: dict[str, SelectiveScorer] = {}
         for spec in self.specs:
-            pol = self._policy(spec)
-            if spec.rule == "selective" and not pol.preds:
-                self._warm_up(spec, pol, fs, d, rows[0])
-            done_until = utc(pol.last_bar) if pol.last_bar else None
-            out = self._outputs(spec, fs, d, rows)
+            key = spec.signal_key
+            if key in outputs:
+                continue
+            outputs[key] = self._outputs(spec, fs, d, rows)
+            if spec.rule == "selective":
+                sc = copy.deepcopy(self.scorers.get(key)) if key in self.scorers else None
+                if sc is None:
+                    sc = SelectiveScorer(spec.horizon, spec.norm_window)
+                    self._warm_up(spec, sc, fs, d, rows[0])
+                done = utc(sc.last_bar) if sc.last_bar else None
+                scores[key] = [None if done is not None and idx[r] <= done else sc.score(outputs[key][k], idx[r])
+                               for k, r in enumerate(rows)]
+                scorers[key] = sc
+
+        # 2. each account advances its own book; continuous targets are shared per strategy
+        targets: dict[str, pd.Series] = {}
+        books: dict[str, object] = {}
+        shared: dict[str, pd.Series | None] = {}
+        for acct in self.accounts:
+            spec, key = acct.spec, acct.spec.signal_key
+            book = self._book(acct)
+            done_until = utc(book.last_bar) if book.last_bar else None
             for k, r in enumerate(rows):
                 if done_until is not None and idx[r] <= done_until:
-                    log.warning("%s: bar %s already applied to policy state; skipping", spec.name, idx[r])
+                    log.warning("%s: bar %s already applied to policy state; skipping", acct.name, idx[r])
                     continue
-                last = k == len(rows) - 1
-                w = pol.update(out[k], idx[r], d, self.ic, size=last and not stale)
+                size = k == len(rows) - 1 and not stale
+                if spec.rule == "selective":
+                    if scores[key][k] is None:
+                        continue
+                    w = book.update(scores[key][k], idx[r], d, self.ic, size=size)
+                else:
+                    if size and spec.name not in shared:
+                        shared[spec.name] = book.update(outputs[key][k], idx[r], d, self.ic, size=True)
+                    book.last_bar = str(idx[r])
+                    w = shared.get(spec.name) if size else None
                 if w is not None:
-                    targets[spec.name] = w
-            states[spec.name] = pol.state()
-        quotes = self.feed.quotes() if targets else {}
+                    targets[acct.name] = w
+            books[acct.name] = book
+        quotes = self.feed.quotes() if not stale else {}
 
         with self.store.transaction():
-            for spec in self.specs:
-                self._mark_and_fund(spec, d, new, last_done, rep)
-                self.store.set_meta(f"policy:{self.account(spec)}", states[spec.name])
-            if targets:
-                self._execute(targets, quotes, t_last, now, rep)
+            for acct in self.accounts:
+                self._mark_and_fund(acct.name, d, new, last_done, rep)
+            banked = set()
+            if not stale:
+                for acct in self.accounts:
+                    if acct.vault is not None and self._maybe_bank(acct, quotes, t_last, now, rep):
+                        banked.add(acct.name)
+                        books[acct.name].reset()
+            for acct in self.accounts:
+                self.store.set_meta(f"policy:{acct.name}", books[acct.name].state())
+            todo = {n: w for n, w in targets.items() if n not in banked}
+            if todo:
+                self._execute(todo, quotes, t_last, now, rep)
             self.store.set_meta("intraday:last_bar", str(t_last))
+        self.scorers.update(scorers)
         self._export(rep, d.close)
         return rep
 
-    def _warm_up(self, spec: PolicySpec, pol, fs, d: IntradayData, upto: int) -> None:
-        """Rebuild forecast history over the buffer (no trading) so scores are normalised from bar one."""
+    def _warm_up(self, spec: PolicySpec, sc: SelectiveScorer, fs, d: IntradayData, upto: int) -> None:
+        """Rebuild the forecast history over the buffer (no trading) so scores are normalised from bar one."""
         lo = max(0, upto - spec.norm_window - spec.horizon)
         rows = np.arange(lo, upto)
-        out = self._outputs(spec, fs, d, rows)
-        for k, r in enumerate(rows):
-            pol.update(out[k], d.index[r], size=False)
-        log.info("%s warmed up on %d bars", spec.name, len(rows))
+        if len(rows):
+            out = self._outputs(spec, fs, d, rows)
+            for k, r in enumerate(rows):
+                sc.score(out[k], d.index[r])
+        log.info("%s scorer warmed up on %d bars", spec.signal_key, len(rows))
 
     def _refresh_funding(self, now: pd.Timestamp) -> None:
         """Refresh live funding rates at most every 30 min (also after failures – no per-bar retries)."""
@@ -294,9 +372,8 @@ class IntradayEngine:
         rate, settle = cached
         return rate, not (settle is not None and settle == stamp)
 
-    def _mark_and_fund(self, spec: PolicySpec, d: IntradayData, new: pd.DatetimeIndex,
+    def _mark_and_fund(self, name: str, d: IntradayData, new: pd.DatetimeIndex,
                        last_done: pd.Timestamp | None, rep: IntradayCycle) -> None:
-        name = self.account(spec)
         closes = d.close.ffill()  # last known price for symbols missing a bar (gaps, lagging feeds)
         prev = last_done
         for t in new:
@@ -315,19 +392,49 @@ class IntradayEngine:
             self.store.record_equity(name, t, eq, cash, gross / eq if eq else 0.0, net / eq if eq else 0.0)
             prev = t
 
+    def _close_all(self, name: str, quotes: dict[str, Quote], t_last: pd.Timestamp, now: pd.Timestamp,
+                   why: str) -> int | None:
+        """Close every position at the live quotes; None (nothing done) if a quote is missing."""
+        pos = self.store.positions(name)
+        if any(sym not in quotes for sym in pos):
+            return None
+        mids = {s: q.mid for s, q in quotes.items()}
+        ids = self.broker.rebalance(name, {}, mids, now, now, 0.0, 0.0, reason=f"bar {t_last} ({why})")
+        for o in self.store.pending_orders(name):
+            q = quotes[o["symbol"]]
+            self.broker.fill(o, q.mid, q.ts, quote=q)
+        return len(ids)
+
+    def _maybe_bank(self, acct: IntradayAccount, quotes: dict[str, Quote], t_last: pd.Timestamp,
+                    now: pd.Timestamp, rep: IntradayCycle) -> bool:
+        """Vault rule at the bar-t mark: realise everything and bank the excess over the base."""
+        last = self.store.last_equity(acct.name)
+        if last is None or utc(last["ts"]) != t_last:
+            return False
+        eq, base = last["equity"], self.store.account(acct.name)["initial_capital"]
+        if not acct.vault.due(eq, base):
+            return False
+        n = self._close_all(acct.name, quotes, t_last, now, "vault: realise profit")
+        if n is None:
+            rep.warnings.append(f"{acct.name}: vault due but a quote is missing; retry next bar")
+            return False
+        amount = bank(self.store, acct.name, now, eq, note=f"threshold {acct.vault.threshold:g}")
+        self.store.set_meta(f"guard:{acct.name}", {})       # new high-water mark from the base
+        self.store.record_decision(acct.name, t_last, now, eq, 1.0, {})
+        rep.orders += n
+        rep.banked += amount
+        return True
+
     def _execute(self, targets: dict[str, pd.Series], quotes: dict[str, Quote], t_last: pd.Timestamp,
                  now: pd.Timestamp, rep: IntradayCycle) -> None:
-        """Rebalance every account at the live quotes (caller holds the transaction)."""
+        """Rebalance accounts at the live quotes (caller holds the transaction)."""
         mids = {s: q.mid for s, q in quotes.items()}
-        for spec in self.specs:
-            if spec.name not in targets:
-                continue
-            name = self.account(spec)
+        for name, w in targets.items():
             eq, _, _ = self.broker.equity(name, mids)
             guard = DrawdownGuard(self.cfg.risk)
             guard.restore(self.store.get_meta(f"guard:{name}", {}))
             scale = guard.update(eq)
-            tgt = {s: float(w) * scale for s, w in targets[spec.name].items() if abs(w) > 1e-12}
+            tgt = {s: float(x) * scale for s, x in w.items() if abs(x) > 1e-12}
             ids = self.broker.rebalance(name, tgt, mids, now, now, self.ic.rebalance_band,
                                         self.ic.min_trade_notional, reason=f"bar {t_last}")
             for o in self.store.pending_orders(name):
@@ -336,30 +443,54 @@ class IntradayEngine:
                     self.broker.fill(o, q.mid, q.ts, quote=q)  # stamped when the quote was taken
                 else:
                     self.store.cancel_order(o["id"], "no live quote")
-            self.store.record_decision(name, t_last, now, eq, scale, tgt)
+            if ids:  # decisions are journaled when they trade (targets are recomputable from the data)
+                self.store.record_decision(name, t_last, now, eq, scale, tgt)
             self.store.set_meta(f"guard:{name}", guard.state())
             rep.orders += len(ids)
         rep.traded = True
+
+    def liquidate(self, now: pd.Timestamp | None = None, reason: str = "experiment end") -> dict[str, float]:
+        """Close every account at live quotes and mark the final equity (= cash)."""
+        now = utc(now) if now is not None else pd.Timestamp.now(tz="UTC")
+        quotes = self.feed.quotes()
+        last = self.store.get_meta("intraday:last_bar")
+        t_last = utc(last) if last else now
+        out = {}
+        with self.store.transaction():
+            for acct in self.accounts:
+                if self.store.account(acct.name) is None:
+                    continue
+                if self._close_all(acct.name, quotes, t_last, now, reason) is None:
+                    raise RuntimeError(f"{acct.name}: cannot liquidate, missing quotes")
+                cash = self.store.account(acct.name)["cash"]
+                self.store.record_equity(acct.name, now, cash, cash, 0.0, 0.0)
+                self.store.log_event(now, "info", f"liquidated ({reason})", acct.name)
+                out[acct.name] = cash
+        return out
 
     # -------------------------------------------------------------- status
     def status(self, close: pd.DataFrame | None = None) -> dict:
         """Account summaries; with bar ``close`` prices also the market/skill P&L attribution."""
         out = {}
-        for spec in self.specs:
-            name = self.account(spec)
-            acct = self.store.account(name)
-            if acct is None:
+        for acct in self.accounts:
+            name = acct.name
+            row = self.store.account(name)
+            if row is None:
                 continue
             last = self.store.last_equity(name)
-            eq = last["equity"] if last else acct["initial_capital"]
-            orders = self.store.orders(name, limit=100000)
+            eq = last["equity"] if last else row["initial_capital"]
+            vault = self.store.vault_total(name)
+            orders = self.store.orders(name, limit=10_000_000)
             filled = orders[orders["status"] == "filled"] if not orders.empty else orders
             out[name] = {
-                "model": spec.description, "equity": eq, "pnl": eq - acct["initial_capital"],
-                "return": eq / acct["initial_capital"] - 1.0, "marked_at": last["ts"] if last else None,
+                "strategy": acct.spec.name, "vault_threshold": acct.vault.threshold if acct.vault else None,
+                "model": acct.spec.description, "equity": eq, "vault": vault,
+                "pnl": eq + vault - row["initial_capital"],
+                "return": (eq + vault) / row["initial_capital"] - 1.0, "marked_at": last["ts"] if last else None,
                 "gross": last["gross"] if last else 0.0, "net": last["net"] if last else 0.0,
                 "trades": int(len(filled)), "fees_paid": float(filled["fee"].sum()) if len(filled) else 0.0,
                 "funding_paid": -self.store.funding_total(name), "positions": self.store.positions(name),
+                "sweeps": int(len(self.store.vault_events(name))),
             }
             if close is not None:
                 try:
@@ -381,7 +512,7 @@ class IntradayEngine:
         eq = self.store.equity_curve(name)
         if eq.empty:
             return None
-        eq = eq[eq.index >= t0]
+        eq = eq[(eq.index >= t0) & (eq.index <= last)]
         if len(eq) < 3:
             return None
         fills = self._fills(name, filled, eq.index)
@@ -389,17 +520,22 @@ class IntradayEngine:
         fund = pd.DataFrame([dict(r) for r in self.store.conn.execute(
             "SELECT ts, amount FROM funding WHERE account=?", (name,))], columns=["ts", "amount"])
         fund["ts"] = pd.to_datetime(fund["ts"], utc=True, format="ISO8601")
+        vault = self.store.vault_events(name)
+        flows = None
+        if not vault.empty:
+            vt = pd.to_datetime(vault["ts"], utc=True, format="ISO8601")
+            flows = pd.DataFrame({"ts": vt, "amount": vault["amount"]})
         return attribute(eq["equity"], start_exposure(units, close), basket_returns(close[active]),
-                         bar_costs(fills, fund, eq.index))
+                         bar_costs(fills, fund, eq.index), flows=bar_flows(flows, eq.index))
 
     def _fills(self, name: str, filled: pd.DataFrame, marks: pd.DatetimeIndex) -> pd.DataFrame:
-        """Filled orders with their decision bar (orders carry ``reason = "bar <close time>"``;
+        """Filled orders with their decision bar (orders carry ``reason = "bar <close time> ..."``;
         should one not parse, the last mark at or before its fill time stands in)."""
         cols = ["bar", "symbol", "qty", "fee", "slippage_cost"]
         if filled is None or not len(filled):
             return pd.DataFrame(columns=cols)
         f = filled.copy()
-        f["bar"] = pd.to_datetime(f["reason"].astype(str).str.removeprefix("bar "), utc=True,
+        f["bar"] = pd.to_datetime(f["reason"].astype(str).str.extract(_BAR_RE)[0], utc=True,
                                   format="ISO8601", errors="coerce")
         miss = f["bar"].isna()
         if miss.any():
@@ -417,29 +553,60 @@ class IntradayEngine:
             log.warning("attribution failed: %s", exc)
             accounts = self.status()
         status = {"updated_at": str(rep.now), "last_bar": str(rep.bar), "new_bars": rep.new_bars,
-                  "traded": rep.traded, "orders": rep.orders, "warnings": rep.warnings,
+                  "traded": rep.traded, "orders": rep.orders, "banked": rep.banked, "warnings": rep.warnings,
                   "models": self.manifest.get("models"), "accounts": accounts}
         (state_dir / "intraday_status.json").write_text(json.dumps(status, indent=2, default=str))
 
 
+def rule_outputs(rule: str, d: IntradayData, rows: np.ndarray) -> np.ndarray:
+    """Outputs of the rule-based strategies at bar indices ``rows`` (causal: bars ≤ t only).
+
+    ``basket`` → constant long positions; ``tsmom<n>`` → the n-bar log return (a forecast that the
+    selective rule normalises and trades with hysteresis)."""
+    n = len(d.symbols)
+    if rule == "basket":
+        return np.ones((len(rows), n))
+    if rule.startswith("tsmom"):
+        lb = int(rule[5:])
+        logc = np.log(d.close.ffill().to_numpy())
+        out = np.full((len(rows), n), np.nan)
+        ok = rows >= lb
+        out[ok] = logc[rows[ok]] - logc[rows[ok] - lb]
+        return out
+    raise ValueError(f"unknown rule {rule!r}")
+
+
 def run_intraday(cfg: LabConfig, poll_seconds: float = 10.0, max_cycles: int | None = None,
-                 commit_every_minutes: float | None = None) -> None:
-    """Daemon loop: process each new 5-minute bar as soon as it closes; never die."""
+                 commit_every_minutes: float | None = None, until: pd.Timestamp | None = None) -> None:
+    """Daemon loop: process each new 5-minute bar as soon as it closes; never die.
+
+    Stops at ``until`` (or on SIGTERM/SIGINT) after the current step."""
+    import signal as _signal
+
     from tradinglab.live.daemon import commit_state
 
+    stop = {"flag": False}
+
+    def _handle(signum, _frame):
+        log.info("signal %s received – stopping after current step", signum)
+        stop["flag"] = True
+
+    _signal.signal(_signal.SIGTERM, _handle)
+    _signal.signal(_signal.SIGINT, _handle)
     state_dir = Path(cfg.paths.state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
     store = StateStore(state_dir / "intraday.sqlite")
     feed = IntradayFeed(MarketData(cfg.paths.data_dir), cfg.intraday.symbols)
     feed.load()
-    engine = IntradayEngine(cfg, feed, store, Path(cfg.paths.models_dir) / "intraday" / "live")
+    engine = IntradayEngine(cfg, feed, store, Path(cfg.paths.models_dir) / "intraday" / "live",
+                            policies=policies_by_name(cfg.intraday.live_policies))
     cycles, backoff, last_commit = 0, 5.0, time.time()
-    while True:
+    while not stop["flag"] and (until is None or pd.Timestamp.now(tz="UTC") < until):
         try:
             rep = engine.cycle()
             if rep.new_bars:
-                st = engine.status()
-                log.info("bar %s: orders=%d warnings=%s | %s", rep.bar, rep.orders, rep.warnings,
-                         " ".join(f"{k.split(':')[1]}={v['pnl']:+.2f}" for k, v in st.items()))
+                log.info("bar %s: new=%d orders=%d banked=%.2f warnings=%s", rep.bar, rep.new_bars, rep.orders,
+                         rep.banked, rep.warnings)
             (state_dir / "intraday_heartbeat.json").write_text(json.dumps({"ts": str(pd.Timestamp.now(tz='UTC')),
                                                                           "last_bar": str(rep.bar)}))
             backoff = 5.0
@@ -454,4 +621,8 @@ def run_intraday(cfg: LabConfig, poll_seconds: float = 10.0, max_cycles: int | N
         if commit_every_minutes and time.time() - last_commit > commit_every_minutes * 60:
             commit_state(state_dir, f"intraday: live state {pd.Timestamp.now(tz='UTC'):%Y-%m-%d %H:%M}")
             last_commit = time.time()
-        time.sleep(poll_seconds)
+        for _ in range(int(max(poll_seconds, 1))):
+            if stop["flag"]:
+                break
+            time.sleep(1)
+    store.close()

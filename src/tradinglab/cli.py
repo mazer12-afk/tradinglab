@@ -9,6 +9,8 @@
     run          autonomous daemon: trade + periodic retraining/research, forever
     status       print the live accounts
     report       write the HTML dashboard (live + research)
+    intraday-train / intraday-run / intraday-status   5-minute AI day-trading accounts
+    experiment-run   one shift of the unattended live experiment (see tradinglab.experiment)
 """
 
 from __future__ import annotations
@@ -116,8 +118,11 @@ def cmd_cycle(cfg, args) -> int:
 def cmd_run(cfg, args) -> int:
     from tradinglab.live.daemon import Daemon
 
+    import pandas as pd
+
     Daemon(cfg, args.config, research_days=args.research_days, max_cycles=args.max_cycles,
-           git_commit=args.git_commit).run()
+           git_commit=args.git_commit, maintenance=not args.no_maintenance,
+           until=pd.Timestamp(args.until) if args.until else None).run()
     return 0
 
 
@@ -128,10 +133,11 @@ def cmd_status(cfg, args) -> int:
         return 1
     st = json.loads(path.read_text())
     print(f"updated {st['updated_at']}  feed={st['feed_mode']}  data horizon={st['data_horizon']}")
-    print(f"{'account':28s} {'equity':>12s} {'P&L':>11s} {'return':>8s} {'gross':>6s} {'marked at':>26s}")
+    print(f"{'account':30s} {'equity':>12s} {'vault':>10s} {'P&L':>11s} {'return':>8s} {'gross':>6s} "
+          f"{'marked at':>26s}")
     for name, a in sorted(st["accounts"].items(), key=lambda kv: (kv[0] != "main", -kv[1]["return"])):
-        print(f"{name:28s} {a['equity']:12,.2f} {a['pnl']:+11,.2f} {100 * a['return']:+7.2f}% "
-              f"{a['gross']:6.2f} {str(a['marked_at']):>26s}")
+        print(f"{name:30s} {a['equity']:12,.2f} {a.get('vault', 0.0):10,.2f} {a['pnl']:+11,.2f} "
+              f"{100 * a['return']:+7.2f}% {a['gross']:6.2f} {str(a['marked_at']):>26s}")
     return 0
 
 
@@ -156,8 +162,10 @@ def cmd_intraday_train(cfg, args) -> int:
 def cmd_intraday_run(cfg, args) -> int:
     from tradinglab.intraday.live import run_intraday
 
+    import pandas as pd
+
     run_intraday(cfg, poll_seconds=args.poll, max_cycles=args.max_cycles,
-                 commit_every_minutes=args.commit_every)
+                 commit_every_minutes=args.commit_every, until=pd.Timestamp(args.until) if args.until else None)
     return 0
 
 
@@ -168,10 +176,11 @@ def cmd_intraday_status(cfg, args) -> int:
         return 1
     st = json.loads(path.read_text())
     print(f"updated {st['updated_at']}  last bar {st['last_bar']}")
-    print(f"{'account':26s} {'equity':>12s} {'P&L':>10s} {'return':>8s} {'trades':>7s} {'fees':>9s} {'gross':>6s}")
+    print(f"{'account':34s} {'equity':>12s} {'vault':>10s} {'P&L':>10s} {'return':>8s} {'trades':>7s} "
+          f"{'fees':>9s} {'gross':>6s}")
     for name, a in st["accounts"].items():
-        print(f"{name:26s} {a['equity']:12,.2f} {a['pnl']:+10,.2f} {100 * a['return']:+7.2f}% {a['trades']:7d} "
-              f"{a['fees_paid']:9,.2f} {a['gross']:6.2f}")
+        print(f"{name:34s} {a['equity']:12,.2f} {a.get('vault', 0.0):10,.2f} {a['pnl']:+10,.2f} "
+              f"{100 * a['return']:+7.2f}% {a['trades']:7d} {a['fees_paid']:9,.2f} {a['gross']:6.2f}")
     attr = {k: a["attribution"] for k, a in st["accounts"].items() if a.get("attribution")}
     if attr:
         windows = {(x["window_start"], round(x["market_return"], 10)) for x in attr.values()}
@@ -192,6 +201,18 @@ def cmd_intraday_status(cfg, args) -> int:
             print(row)
         print("passive = average start-of-bar exposure held throughout; timing = exposure changes vs the market;\n"
               "selection = asset choice before costs; costs = fees + spread/impact + funding")
+    return 0
+
+
+def cmd_experiment_run(cfg, args) -> int:
+    from tradinglab.experiment import run
+
+    if args.records_branch:
+        cfg.experiment.records_branch = args.records_branch
+    if args.duration_days is not None:
+        cfg.experiment.duration_days = args.duration_days
+    status = run(cfg, args.config, args.records, minutes=args.minutes, commit_every=args.commit_every)
+    print(status)
     return 0
 
 
@@ -217,6 +238,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--research-days", type=int, default=30)
     p.add_argument("--max-cycles", type=int, default=None)
     p.add_argument("--git-commit", action="store_true", help="commit + push state/ after trading events")
+    p.add_argument("--no-maintenance", action="store_true", help="never retrain / re-run research (frozen models)")
+    p.add_argument("--until", default=None, help="stop at this ISO UTC time")
     sub.add_parser("status")
     sub.add_parser("report")
     p = sub.add_parser("intraday-train", help="train + freeze the live intraday AI models")
@@ -226,14 +249,22 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--poll", type=float, default=10.0)
     p.add_argument("--max-cycles", type=int, default=None)
     p.add_argument("--commit-every", type=float, default=None, help="commit state/ every N minutes")
+    p.add_argument("--until", default=None, help="stop at this ISO UTC time")
     sub.add_parser("intraday-status")
+    p = sub.add_parser("experiment-run", help="one shift of the unattended live experiment")
+    p.add_argument("--records", required=True, help="git checkout of the records branch")
+    p.add_argument("--minutes", type=float, default=330.0, help="length of this shift")
+    p.add_argument("--commit-every", type=float, default=60.0, help="push a snapshot every N minutes")
+    p.add_argument("--records-branch", default=None, help="override experiment.records_branch")
+    p.add_argument("--duration-days", type=float, default=None, help="override experiment.duration_days")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)
     handler = {"fetch": cmd_fetch, "research": cmd_research, "train-live": cmd_train_live,
                "backtest": cmd_backtest, "probe": cmd_probe, "cycle": cmd_cycle, "run": cmd_run,
                "status": cmd_status, "report": cmd_report, "intraday-train": cmd_intraday_train,
-               "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status}[args.cmd]
+               "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status,
+               "experiment-run": cmd_experiment_run}[args.cmd]
     return handler(cfg, args)
 
 

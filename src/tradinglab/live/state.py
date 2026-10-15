@@ -76,6 +76,15 @@ CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS vault (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account TEXT NOT NULL,
+    ts TEXT NOT NULL,
+    amount REAL NOT NULL,            -- realised profit moved out of the trading account
+    equity_marked REAL NOT NULL,     -- equity at the mark that triggered the sweep
+    equity_realised REAL NOT NULL,   -- cash after every position was closed
+    note TEXT
+);
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -236,6 +245,20 @@ class StateStore:
         d = dict(r)
         d["targets"] = json.loads(d["targets"])
         return d
+
+    # ---------------------------------------------------------------- vault
+    def record_vault(self, account: str, ts, amount: float, equity_marked: float, equity_realised: float,
+                     note: str = "") -> None:
+        self.conn.execute("INSERT INTO vault(account, ts, amount, equity_marked, equity_realised, note) "
+                          "VALUES (?,?,?,?,?,?)", (account, ts_str(ts), amount, equity_marked, equity_realised, note))
+
+    def vault_total(self, account: str) -> float:
+        r = self.conn.execute("SELECT COALESCE(SUM(amount), 0) AS s FROM vault WHERE account=?", (account,)).fetchone()
+        return float(r["s"])
+
+    def vault_events(self, account: str | None = None) -> pd.DataFrame:
+        q = "SELECT * FROM vault" + (" WHERE account=?" if account else "") + " ORDER BY id"
+        return pd.DataFrame([dict(r) for r in self.conn.execute(q, (account,) if account else ())])
 
     def events(self, limit: int = 50) -> list[dict]:
         return [dict(r) for r in self.conn.execute("SELECT * FROM events ORDER BY id DESC LIMIT ?", (limit,))]

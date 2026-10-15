@@ -13,6 +13,9 @@ valued at close_{t-1}, as a fraction of equity_{t-1}:
     selection = the rest, before costs                       which assets, and how much of each
     costs     = fees + spread/impact + funding that hit the window's marks
 
+Profit moved to a vault between two marks is a transfer, not a loss: it is
+added back (``flows``) so the window's P&L and per-bar returns stay continuous.
+
 The exposure must be the start-of-bar one: exposure valued at close_t already
 moves with m_t, which books part of every bar's market move as fake timing
 (and the same amount, negated, as fake selection). ``beta`` is the OLS slope
@@ -69,16 +72,30 @@ def bar_costs(fills: pd.DataFrame, funding: pd.DataFrame, marks: pd.DatetimeInde
     return pd.DataFrame(vals, index=marks, columns=out.columns)
 
 
+def bar_flows(flows: pd.DataFrame | None, marks: pd.DatetimeIndex) -> pd.Series | None:
+    """Vault transfers (columns ts, amount) per mark: a transfer after mark t shows up at the next mark."""
+    if flows is None or flows.empty:
+        return None
+    out = np.zeros(len(marks))
+    k = np.searchsorted(marks.values, flows["ts"].values, side="right")
+    ok = k < len(marks)
+    np.add.at(out, k[ok], flows["amount"].to_numpy(float)[ok])
+    return pd.Series(out, index=marks)
+
+
 def attribute(equity: pd.Series, exposure: pd.Series, market: pd.Series,
-              costs: pd.DataFrame | None = None) -> dict | None:
+              costs: pd.DataFrame | None = None, flows: pd.Series | None = None) -> dict | None:
     """Attribute the P&L between the first usable mark of ``equity`` and its last mark.
 
     ``exposure`` is the start-of-bar signed notional per mark (see ``start_exposure``),
     ``market`` the basket return per mark and ``costs`` the per-mark cost frame
-    (``bar_costs``). Returns None while fewer than two bars are usable.
+    (``bar_costs``) and ``flows`` the per-mark vault transfers (``bar_flows``). Returns None
+    while fewer than two bars are usable.
     """
     df = pd.DataFrame({"eq": equity.astype(float), "x": exposure.reindex(equity.index),
                        "m": market.reindex(equity.index)})
+    flow = (flows.reindex(equity.index).fillna(0.0) if flows is not None
+            else pd.Series(0.0, index=equity.index))
     df["eq_prev"] = df["eq"].shift(1)
     usable = np.isfinite(df.to_numpy()).all(axis=1)
     if usable.sum() < 2:
@@ -94,12 +111,14 @@ def attribute(equity: pd.Series, exposure: pd.Series, market: pd.Series,
     avg = float(w.mean())
     passive = avg * float(unit.sum())
     timing = float(((w - avg) * unit).sum())
-    total = float(df["eq"].iloc[-1] - equity.loc[start])
+    banked = float(flow.loc[df.index].sum())
+    total = float(df["eq"].iloc[-1] - equity.loc[start]) + banked
     cost = float(c.sum())
-    r = df["eq"] / df["eq_prev"] - 1.0
+    r = (df["eq"] + flow.loc[df.index]) / df["eq_prev"] - 1.0
     var = float(df["m"].var())
     beta = float(np.cov(r, df["m"])[0, 1] / var) if var > 0 else None
     return {"window_start": str(start), "bars": int(len(df)), "pnl": total,
             "market_return": float(np.prod(1.0 + df["m"]) - 1.0), "avg_exposure": avg, "beta": beta,
             "passive_pnl": passive, "timing_pnl": timing, "selection_pnl": total - passive - timing + cost,
-            "costs": cost, "fees": float(c["fees"]), "spread": float(c["spread"]), "funding": float(c["funding"])}
+            "costs": cost, "fees": float(c["fees"]), "spread": float(c["spread"]), "funding": float(c["funding"]),
+            "banked": banked}

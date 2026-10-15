@@ -232,8 +232,9 @@ def _engine(tmp_path, kl, icfg, monkeypatch, specs, sub="e"):
     return eng, ex, store, times
 
 
+# Different normalisation windows → separate signal sources (b fails after a's scorer advanced).
 SPECS = [PolicySpec("a", "lgbm", horizon=12, enter=1.0, exit=0.0, min_hold=3, norm_window=288 * 5),
-         PolicySpec("b", "lgbm", horizon=12, enter=1.5, exit=0.0, min_hold=6, norm_window=288 * 5)]
+         PolicySpec("b", "lgbm", horizon=12, enter=1.5, exit=0.0, min_hold=6, norm_window=288 * 4)]
 
 
 def _run(eng, ex, times, fail_at=None, fail_what=None):
@@ -272,7 +273,7 @@ def test_failed_cycle_is_retried_atomically(tmp_path, kl, icfg, monkeypatch, fai
                                        rtol=1e-12)
         n1 = s1.conn.execute("select count(*) from decisions where account=?", (acct,)).fetchone()[0]
         n2 = s2.conn.execute("select count(*) from decisions where account=?", (acct,)).fetchone()[0]
-        assert n1 == n2 == len(times)
+        assert n1 == n2 > 0   # decisions are journaled when an account trades
 
 
 def test_gap_bars_marked_at_last_price(tmp_path, kl, icfg, monkeypatch):
@@ -499,3 +500,160 @@ def test_intraday_status_cli_prints_attribution_per_window(tmp_path, capsys, icf
     assert cmd_intraday_status(icfg, None) == 0
     out = capsys.readouterr().out
     assert "windows differ" in out and "2026-01-05 00:00:00+00:00" in out and "-2.00%" in out and "n/a" in out
+
+
+# ------------------------------------------------------------------ restart + profit vault
+def _restart(eng, ex, store, icfg, monkeypatch, specs, thresholds=None):
+    """A fresh engine on the same database (what a new GitHub runner does): no in-memory state."""
+    from tradinglab.intraday import live as L
+
+    feed = L.IntradayFeed(md=None, symbols=SYMS, exchange=ex, buffer_days=25)
+    feed.kl = {s: k.copy() for s, k in eng.feed.kl.items()}
+    return L.IntradayEngine(icfg, feed, store, eng.models_dir, policies=specs, vault_thresholds=thresholds)
+
+
+def test_restart_rebuilds_scores_and_matches_uninterrupted_run(tmp_path, kl, icfg, monkeypatch):
+    """Selective scores are not persisted: a restarted engine must warm them up to the same values."""
+    a, ex1, s1, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "a")
+    _run(a, ex1, times)
+    b, ex2, s2, _ = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "b")
+    _run(b, ex2, times[:140])
+    b2 = _restart(b, ex2, s2, icfg, monkeypatch, SPECS)
+    _run(b2, ex2, times[140:])
+    for acct in ("intraday:a", "intraday:b"):
+        assert s1.get_meta(f"policy:{acct}") == s2.get_meta(f"policy:{acct}")
+        pd.testing.assert_series_equal(s1.equity_curve(acct)["equity"], s2.equity_curve(acct)["equity"],
+                                       rtol=1e-12)
+    # Downtime (missed bars) is replayed without trading, then trading resumes.
+    c, ex3, s3, _ = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "c")
+    _run(c, ex3, times[:140])
+    c2 = _restart(c, ex3, s3, icfg, monkeypatch, SPECS)
+    rep = None
+    for t in times[146:150]:
+        ex3.now = t
+        rep = c2.cycle(t) if rep is None else c2.cycle(t)
+    assert len(s3.equity_curve("intraday:a")) == 150      # every bar marked, none skipped
+
+
+def test_profit_vault_banks_resets_and_never_refills(tmp_path, kl, icfg, monkeypatch):
+    from tradinglab.intraday.policy import PolicySpec as PS
+
+    specs = [PS("v", "lgbm", horizon=12, enter=0.8, exit=0.0, min_hold=3, norm_window=288 * 5)]
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, specs, "vault")
+    eng = _restart(eng, ex, store, icfg, monkeypatch, specs, thresholds=[0.0005])
+    names = [a.name for a in eng.accounts]
+    assert names == ["intraday:v", "intraday:v+vault0.05"]
+    plain, vaulted = names
+    banked_bars = []
+    for t in times:
+        ex.now = t
+        rep = eng.cycle(t)
+        if rep.banked:
+            banked_bars.append(rep.bar)
+            # the book was realised: flat, cash back at the base, policy book reset
+            assert store.positions(vaulted) == {}
+            assert store.account(vaulted)["cash"] == pytest.approx(100_000.0)
+            st = store.get_meta(f"policy:{vaulted}")
+            assert not any(st["pos"]) and not any(st["frozen"])
+    v = store.vault_events(vaulted)
+    assert len(v) >= 2 and len(banked_bars) == len(v), "test needs several sweeps"
+    assert (v["amount"] > 0).all()
+    np.testing.assert_allclose(v["amount"], v["equity_realised"] - 100_000.0)
+    # realised ≤ marked (closing costs), and each sweep was due at its mark
+    assert (v["equity_realised"] <= v["equity_marked"] + 1e-6).all()
+    assert (v["equity_marked"] >= 100_000.0 * 1.0005).all()
+    # Until the first sweep the vault twin trades exactly like the plain account.
+    first = pd.Timestamp(v["ts"].iloc[0])
+    e_plain, e_vault = store.equity_curve(plain)["equity"], store.equity_curve(vaulted)["equity"]
+    pd.testing.assert_series_equal(e_plain[e_plain.index <= first], e_vault[e_vault.index <= first],
+                                   check_names=False, rtol=1e-12)
+    # Status: result = trading equity + vault; the vault never pays back into a losing account.
+    st = eng.status()[vaulted]
+    assert st["vault"] == pytest.approx(v["amount"].sum())
+    assert st["pnl"] == pytest.approx(st["equity"] + st["vault"] - 100_000.0)
+    assert st["sweeps"] == len(v)
+    cash_moves = store.conn.execute("select count(*) from vault where amount <= 0").fetchone()[0]
+    assert cash_moves == 0
+
+
+def test_vault_sweep_is_atomic_under_retry(tmp_path, kl, icfg, monkeypatch):
+    """A failure on the bar that banks must not bank twice (or lose the sweep) when retried."""
+    from tradinglab.intraday.policy import PolicySpec as PS
+
+    specs = [PS("v", "lgbm", horizon=12, enter=0.8, exit=0.0, min_hold=3, norm_window=288 * 5)]
+    clean, ex1, s1, times = _engine(tmp_path, kl, icfg, monkeypatch, specs, "clean")
+    clean = _restart(clean, ex1, s1, icfg, monkeypatch, specs, thresholds=[0.0005])
+    _run(clean, ex1, times)
+    first = pd.Timestamp(s1.vault_events("intraday:v+vault0.05")["ts"].iloc[0])
+    fail_at = int(np.searchsorted(times, first))
+    faulty, ex2, s2, _ = _engine(tmp_path, kl, icfg, monkeypatch, specs, "faulty")
+    faulty = _restart(faulty, ex2, s2, icfg, monkeypatch, specs, thresholds=[0.0005])
+    orig = faulty.broker.fill
+    calls = {"n": 0}
+
+    def flaky_fill(o, *a, **k):          # dies while realising the vault sweep
+        if "vault" in (o.get("reason") or "") and calls["n"] == 0:
+            calls["n"] += 1
+            raise ConnectionError("exchange hiccup")
+        return orig(o, *a, **k)
+
+    faulty.broker.fill = flaky_fill
+    for i, t in enumerate(times):
+        ex2.now = t
+        if i == fail_at:
+            with pytest.raises(ConnectionError):
+                faulty.cycle(t)
+        faulty.cycle(t)
+    assert calls["n"] == 1
+    for acct in ("intraday:v", "intraday:v+vault0.05"):
+        pd.testing.assert_frame_equal(s1.vault_events(acct).drop(columns=["id"], errors="ignore"),
+                                      s2.vault_events(acct).drop(columns=["id"], errors="ignore"))
+        pd.testing.assert_series_equal(s1.equity_curve(acct)["equity"], s2.equity_curve(acct)["equity"],
+                                       rtol=1e-12)
+
+
+def test_vault_attribution_treats_banking_as_transfer(tmp_path, kl, icfg, monkeypatch):
+    from tradinglab.intraday.policy import PolicySpec as PS
+
+    specs = [PS("v", "lgbm", horizon=12, enter=0.8, exit=0.0, min_hold=3, norm_window=288 * 5)]
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, specs, "attr")
+    eng = _restart(eng, ex, store, icfg, monkeypatch, specs, thresholds=[0.0005])
+    _run(eng, ex, times)
+    acct = "intraday:v+vault0.05"
+    st = eng.status(eng.feed.data().close)[acct]
+    at = st["attribution"]
+    assert at["banked"] == pytest.approx(st["vault"])
+    assert at["pnl"] == pytest.approx(st["pnl"], rel=1e-9)
+    assert at["passive_pnl"] + at["timing_pnl"] + at["selection_pnl"] - at["costs"] == pytest.approx(at["pnl"])
+
+
+def test_rule_strategies_and_neutral_transform(kl):
+    from tradinglab.intraday import live as L
+    from tradinglab.intraday.policy import POLICIES, transform_positions
+
+    d = assemble_intraday(kl, {}, {}, "5m", 0.0)
+    rows = np.array([10, 47, 48, 500, len(d.index) - 1])
+    np.testing.assert_array_equal(L.rule_outputs("basket", d, rows), np.ones((5, 3)))
+    ts = L.rule_outputs("tsmom48", d, rows)
+    assert np.isnan(ts[:2]).all()                                     # not enough history yet
+    c = d.close.to_numpy()
+    np.testing.assert_allclose(ts[2:], np.log(c[rows[2:]]) - np.log(c[rows[2:] - 48]))
+    # causal: changing the future leaves the signal at t unchanged
+    kl2 = {s: k.copy() for s, k in kl.items()}
+    for k in kl2.values():
+        k.iloc[501:, k.columns.get_loc("close")] *= 1.5
+    d2 = assemble_intraday(kl2, {}, {}, "5m", 0.0)
+    np.testing.assert_array_equal(L.rule_outputs("tsmom48", d2, rows[:4]), ts[:4])
+    x = transform_positions(POLICIES["deep_neutral"], np.array([0.9, 0.5, np.nan, 0.1]))
+    assert np.nansum(x) == pytest.approx(0.0) and np.isnan(x[2])
+
+
+def test_liquidate_closes_every_account(tmp_path, kl, icfg, monkeypatch):
+    eng, ex, store, times = _engine(tmp_path, kl, icfg, monkeypatch, SPECS, "liq")
+    _run(eng, ex, times[:150])
+    assert any(store.positions(a.name) for a in eng.accounts), "test needs open positions"
+    out = eng.liquidate(times[149] + pd.Timedelta(seconds=30))
+    for a in eng.accounts:
+        assert store.positions(a.name) == {}
+        assert out[a.name] == pytest.approx(store.account(a.name)["cash"])
+        assert store.last_equity(a.name)["equity"] == pytest.approx(out[a.name])

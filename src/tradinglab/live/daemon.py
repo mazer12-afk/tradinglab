@@ -27,8 +27,11 @@ log = logging.getLogger(__name__)
 
 class Daemon:
     def __init__(self, cfg: LabConfig, config_path: str | None = None, research_days: int = 30,
-                 max_cycles: int | None = None, git_commit: bool = False):
+                 max_cycles: int | None = None, git_commit: bool = False, maintenance: bool = True,
+                 until: pd.Timestamp | None = None):
         self.cfg = cfg
+        self.maintenance = maintenance
+        self.until = until
         self.config_path = config_path
         self.research_days = research_days
         self.max_cycles = max_cycles
@@ -115,10 +118,11 @@ class Daemon:
         cycles = 0
         selection_mtime = None
         engine = None
-        while not self.stop:
+        while not self.stop and (self.until is None or pd.Timestamp.now(tz="UTC") < self.until):
             now = pd.Timestamp.now(tz="UTC")
             try:
-                self.maybe_maintain(now)
+                if self.maintenance:
+                    self.maybe_maintain(now)
                 sel_path = Path(self.cfg.paths.models_dir) / "selection.json"
                 mtime = sel_path.stat().st_mtime if sel_path.exists() else None
                 if engine is None or mtime != selection_mtime:
@@ -126,8 +130,9 @@ class Daemon:
                     selection_mtime = mtime
                     log.info("engine loaded selection: %s", engine.selection.get("strategies"))
                 rep = engine.cycle(now)
-                log.info("cycle: mode=%s horizon=%s fills=%d marks=%d decisions=%s orders=%d warnings=%s",
-                         rep.mode, rep.horizon, rep.fills, rep.marks, rep.decisions, rep.orders, rep.warnings)
+                log.info("cycle: mode=%s horizon=%s fills=%d marks=%d decisions=%d orders=%d banked=%.2f warnings=%s",
+                         rep.mode, rep.horizon, rep.fills, rep.marks, len(rep.decisions), rep.orders, rep.banked,
+                         rep.warnings)
                 self.heartbeat("ok", mode=rep.mode, horizon=str(rep.horizon))
                 if self.git_commit and (rep.decisions or rep.fills):
                     commit_state(self.state_dir, f"live: {rep.now:%Y-%m-%d %H:%M} decisions={len(rep.decisions)} "

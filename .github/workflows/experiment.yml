@@ -1,0 +1,93 @@
+# Unattended live experiment (src/tradinglab/experiment.py, config/experiment.yaml).
+#
+# Each run is one shift of ~5.5 h (GitHub-hosted jobs last at most 6 h). The half-hourly
+# schedule plus the concurrency group chain shifts back to back: a trigger that fires during
+# a shift waits as the single pending run and starts the moment the shift ends. Bars missed in
+# the hand-over are replayed on restart (marked, never traded).
+#
+# State and records live on the records branch (config: experiment.records_branch), pushed
+# hourly. Scheduled runs only work while the repository is public (free Actions minutes);
+# while it is private the gate skips everything. Once FINISHED.json exists on the records
+# branch every run exits immediately.
+name: experiment
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: shift length in minutes
+        default: "330"
+      records_branch:
+        description: records branch (blank = config/experiment.yaml)
+        default: ""
+      duration_days:
+        description: experiment length override in days (blank = config)
+        default: ""
+      allow_private:
+        description: run even while the repository is private (uses paid minutes)
+        type: boolean
+        default: false
+concurrency:
+  group: experiment-${{ inputs.records_branch || 'default' }}
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  shift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      CONFIG: config/experiment.yaml
+    steps:
+      - name: Gate (public repository, or manual override)
+        id: gate
+        run: |
+          private=$(curl -fsS -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r .private)
+          if [ "$private" = "true" ] && [ "${{ inputs.allow_private }}" != "true" ]; then
+            echo "Repository is private – skipping (scheduled shifts run only on a public repository)."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+      - name: Records branch
+        id: records
+        if: steps.gate.outputs.go == 'true'
+        run: scripts/experiment_records.sh "${{ inputs.records_branch }}"
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            deploy/experiment-constraints.txt
+      - name: Restore market-data cache
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: data/cache
+          key: mdcache-${{ github.run_id }}
+          restore-keys: mdcache-
+      - name: Install
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu -c deploy/experiment-constraints.txt torch
+          pip install -c deploy/experiment-constraints.txt -e ".[intraday,fast]"
+      - name: Shift
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        run: |
+          args=(--records records --minutes "${{ inputs.minutes || '330' }}"
+                --records-branch "${{ steps.records.outputs.branch }}")
+          if [ -n "${{ inputs.duration_days }}" ]; then args+=(--duration-days "${{ inputs.duration_days }}"); fi
+          tradinglab --config "$CONFIG" experiment-run "${args[@]}"
+      - name: Save market-data cache
+        if: always() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: data/cache
+          key: mdcache-${{ github.run_id }}

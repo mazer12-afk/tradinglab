@@ -76,6 +76,54 @@ Turnover controls (EMA-5 signal smoothing, 0.5% rebalance band) were chosen on
 Full tables: `reports/research/` (`index.html`, `candidates_oos.csv`,
 `selection_window.csv`, `holdout_window.csv`, `equity_curves.csv`).
 
+## Live experiment: profit vault (2 weeks, unattended)
+
+**Question:** which strategies make money on live markets, and does banking profit as it appears help?
+
+**The vault rule.** Every account starts with $100,000. A *vault twin* of an account trades the same
+strategy, but as soon as its marked equity reaches $100,000 × (1 + θ) it:
+1. closes every position at live prices, paying fees and spread;
+2. moves the realised profit (cash − $100,000) into its **vault**;
+3. restarts from $100,000 with a flat book.
+
+The vault is never traded and never refills a losing account. An account below $100,000 keeps
+trading what it has and banks again only once it is θ above $100,000.
+An account's result is its vault plus its trading equity.
+
+**Accounts (80):** every strategy runs four times: once without a vault (the control) and with
+θ = 1%, 2% and 4%. Account names: `<strategy>` and `<strategy>+vault1|2|4`.
+
+| book | strategies |
+|---|---|
+| intraday (5-min bars, 12 coins) | `lgbm_1h`, `lgbm_4h`, `deep_lstm_attn` (the AI models from below), `deep_neutral` (the deep model with its market exposure removed), `tsmom_4h` (rule baseline: trade unusually large 4-hour moves), `basket_long` (benchmark) |
+| daily (30 coins) | the selected portfolio `main` and all 13 shadow strategies (trend, MACD, breakout, cross-sectional, three deep models, BTC and basket benchmarks) |
+
+**Protocol:**
+- **Frozen:** models and rules do not change.
+- **No interim analysis:** no tuning and no performance analysis until the experiment closes.
+- **Fixed length:** 14 days from the first shift.
+- **Final liquidation:** at the end every account is liquidated at live prices.
+
+**Where it runs.** `.github/workflows/experiment.yml` on GitHub-hosted runners. Each run is a shift of
+about 5.5 hours. A half-hourly schedule plus a concurrency group chains the shifts back to back.
+During the few minutes between shifts, bars are marked on restart but not traded.
+
+**Records:** branch `experiment/vault-2w`, pushed hourly.
+
+| path | contents |
+|---|---|
+| `state/*.sqlite` | full state |
+| `csv/` | equity marks, orders, vault transfers, funding, decisions |
+| `status/` | latest status |
+| `logs/` | daemon logs |
+| `runs.csv` | one row per shift |
+| `experiment.json` | start, end, protocol |
+| `FINISHED.json` | written at the end |
+
+**Run it locally:** `tradinglab --config config/experiment.yaml experiment-run --records <checkout of the records branch>`
+
+Scheduled shifts only run while the repository is public (GitHub Actions minutes are free for public repositories).
+
 ## Live paper trading
 
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The
