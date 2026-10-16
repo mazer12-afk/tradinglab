@@ -7,10 +7,10 @@ intraday:deep_lstm_attn,62999.78358520175,100000.0,2026-10-15T23:47:49.892810+00
 intraday:deep_lstm_attn+vault1,62999.78358520175,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
 intraday:deep_lstm_attn+vault2,62999.78358520175,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
 intraday:deep_lstm_attn+vault4,62999.78358520175,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
-intraday:deep_neutral,65318.97412853305,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
-intraday:deep_neutral+vault1,65318.97412853305,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
-intraday:deep_neutral+vault2,65318.97412853305,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
-intraday:deep_neutral+vault4,65318.97412853305,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
+intraday:deep_neutral,91933.95675677994,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
+intraday:deep_neutral+vault1,91933.95675677994,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
+intraday:deep_neutral+vault2,91933.95675677994,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
+intraday:deep_neutral+vault4,91933.95675677994,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
 intraday:lgbm_1h,100000.0,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip."
 intraday:lgbm_1h+vault1,100000.0,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +1%"
 intraday:lgbm_1h+vault2,100000.0,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +2%"
