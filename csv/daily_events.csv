@@ -57,3 +57,4 @@ id,ts,level,account,message
 56,2026-10-15T23:47:46.919688+00:00,info,shadow:dl_deepm+vault4,account created (dl_deepm)
 57,2026-10-17T16:04:24.793911+00:00,info,shadow:dl_lstm+vault1,"vault: banked 940.03 (marked equity 101,063.87)"
 58,2026-10-17T16:04:24.793911+00:00,info,shadow:dl_deepm+vault1,"vault: banked 1,163.37 (marked equity 101,300.29)"
+59,2026-10-18T15:01:52.576155+00:00,info,shadow:dl_deepm+vault2,"vault: banked 1,948.46 (marked equity 102,122.16)"
