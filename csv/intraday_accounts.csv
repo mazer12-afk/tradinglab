@@ -1,16 +1,16 @@
 name,cash,initial_capital,created_at,strategy
-intraday:basket_long,49684.73367128451,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins.
-intraday:basket_long+vault1,49684.73367128451,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
-intraday:basket_long+vault2,49684.73367128451,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
-intraday:basket_long+vault4,49684.73367128451,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%
-intraday:deep_lstm_attn,49432.03457287282,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.
-intraday:deep_lstm_attn+vault1,49432.03457287282,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
-intraday:deep_lstm_attn+vault2,49432.03457287282,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
-intraday:deep_lstm_attn+vault4,49432.03457287282,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
-intraday:deep_neutral,123336.32915412962,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
-intraday:deep_neutral+vault1,123336.32915412962,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
-intraday:deep_neutral+vault2,123336.32915412962,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
-intraday:deep_neutral+vault4,123336.32915412962,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
+intraday:basket_long,48680.078124221815,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins.
+intraday:basket_long+vault1,48680.078124221815,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
+intraday:basket_long+vault2,48680.078124221815,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
+intraday:basket_long+vault4,48680.078124221815,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%
+intraday:deep_lstm_attn,48933.50805296694,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.
+intraday:deep_lstm_attn+vault1,48933.50805296694,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
+intraday:deep_lstm_attn+vault2,48933.50805296694,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
+intraday:deep_lstm_attn+vault4,48933.50805296694,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
+intraday:deep_neutral,106376.97870915916,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
+intraday:deep_neutral+vault1,106376.97870915916,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
+intraday:deep_neutral+vault2,106376.97870915916,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
+intraday:deep_neutral+vault4,106376.97870915916,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
 intraday:lgbm_1h,100180.4070166434,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip."
 intraday:lgbm_1h+vault1,100180.4070166434,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +1%"
 intraday:lgbm_1h+vault2,100180.4070166434,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +2%"
