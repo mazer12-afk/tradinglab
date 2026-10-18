@@ -3891,14 +3891,14 @@
       "funding_paid": -1.600163579989229
     }
   },
-  "updated_at": "2026-10-18 12:00:19.804675+00:00",
+  "updated_at": "2026-10-18 12:31:34.434630+00:00",
   "feed_mode": "realtime",
   "data_horizon": "2026-10-18 12:00:00+00:00",
   "signal_bar": "2026-10-18 00:00:00+00:00",
   "last_cycle": {
     "fills": 0,
     "funding_events": 0,
-    "marks": 56,
+    "marks": 0,
     "decisions": [],
     "orders": 0,
     "warnings": []
