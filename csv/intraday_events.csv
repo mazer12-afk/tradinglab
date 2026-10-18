@@ -23,3 +23,5 @@ id,ts,level,account,message
 22,2026-10-15T23:47:49.892810+00:00,info,intraday:basket_long+vault1,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
 23,2026-10-15T23:47:49.892810+00:00,info,intraday:basket_long+vault2,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
 24,2026-10-15T23:47:49.892810+00:00,info,intraday:basket_long+vault4,account created: Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%
+25,2026-10-18T21:55:03.636412+00:00,info,intraday:lgbm_4h+vault1,"vault: banked 1,080.85 (marked equity 101,154.99)"
+26,2026-10-18T22:05:09.094993+00:00,info,intraday:lgbm_4h+vault2,"vault: banked 2,323.04 (marked equity 102,358.24)"
