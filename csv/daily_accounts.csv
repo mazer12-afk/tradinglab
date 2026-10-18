@@ -1,57 +1,57 @@
 name,cash,initial_capital,created_at,strategy
-main,54409.809065868474,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd
-main+vault1,54409.809065868474,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +1%
-main+vault2,54409.809065868474,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +2%
-main+vault4,54409.809065868474,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +4%
-shadow:basket_long,51359.34035669001,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long
-shadow:basket_long+vault1,51359.34035669001,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +1%
-shadow:basket_long+vault2,51359.34035669001,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +2%
-shadow:basket_long+vault4,51359.34035669001,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +4%
-shadow:breakout,146768.9790175489,100000.0,2026-10-15T23:47:46.919688+00:00,breakout
-shadow:breakout+vault1,146768.9790175489,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +1%
-shadow:breakout+vault2,146768.9790175489,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +2%
-shadow:breakout+vault4,146768.9790175489,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +4%
-shadow:breakout_lf,59599.58615802185,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf
-shadow:breakout_lf+vault1,59599.58615802185,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +1%
-shadow:breakout_lf+vault2,59599.58615802185,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +2%
-shadow:breakout_lf+vault4,59599.58615802185,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +4%
-shadow:dl_deepm,160066.6705241506,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm
-shadow:dl_deepm+vault1,156695.18654522707,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +1%
-shadow:dl_deepm+vault2,160066.6705241506,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +2%
-shadow:dl_deepm+vault4,160066.6705241506,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +4%
-shadow:dl_lstm,150668.11970655067,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm
-shadow:dl_lstm+vault1,150919.9699870146,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +1%
-shadow:dl_lstm+vault2,150668.11970655067,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +2%
-shadow:dl_lstm+vault4,150668.11970655067,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +4%
-shadow:dl_mom_trans,126184.56464005893,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans
-shadow:dl_mom_trans+vault1,126178.02750145456,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +1%
-shadow:dl_mom_trans+vault2,126178.02750145456,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +2%
-shadow:dl_mom_trans+vault4,126178.02750145456,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +4%
-shadow:hold_btc,65052.49336905471,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc
-shadow:hold_btc+vault1,65052.49336905471,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +1%
-shadow:hold_btc+vault2,65052.49336905471,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +2%
-shadow:hold_btc+vault4,65052.49336905471,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +4%
-shadow:macd,53883.404978340506,100000.0,2026-10-15T23:47:46.919688+00:00,macd
-shadow:macd+vault1,53883.404978340506,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +1%
-shadow:macd+vault2,53883.404978340506,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +2%
-shadow:macd+vault4,53883.404978340506,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +4%
-shadow:macd_lf,53904.68891667449,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf
-shadow:macd_lf+vault1,53904.68891667449,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +1%
-shadow:macd_lf+vault2,53904.68891667449,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +2%
-shadow:macd_lf+vault4,53904.68891667449,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +4%
-shadow:tsmom,51149.4035087458,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom
-shadow:tsmom+vault1,51149.4035087458,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +1%
-shadow:tsmom+vault2,51149.4035087458,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +2%
-shadow:tsmom+vault4,51149.4035087458,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +4%
-shadow:tsmom_lf,51031.13457384071,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf
-shadow:tsmom_lf+vault1,51031.13457384071,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +1%
-shadow:tsmom_lf+vault2,51031.13457384071,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +2%
-shadow:tsmom_lf+vault4,51031.13457384071,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +4%
-shadow:xs_rev_5,100679.55753370804,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5
-shadow:xs_rev_5+vault1,100679.55753370804,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +1%
-shadow:xs_rev_5+vault2,100679.55753370804,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +2%
-shadow:xs_rev_5+vault4,100679.55753370804,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +4%
-shadow:xsmom_63,115018.1782429694,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63
-shadow:xsmom_63+vault1,115018.1782429694,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +1%
-shadow:xsmom_63+vault2,115018.1782429694,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +2%
-shadow:xsmom_63+vault4,115018.1782429694,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +4%
+main,54408.89189293709,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd
+main+vault1,54408.89189293709,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +1%
+main+vault2,54408.89189293709,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +2%
+main+vault4,54408.89189293709,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf+macd_lf+breakout_lf+tsmom+macd | vault: bank profit at +4%
+shadow:basket_long,51358.762744557345,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long
+shadow:basket_long+vault1,51358.762744557345,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +1%
+shadow:basket_long+vault2,51358.762744557345,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +2%
+shadow:basket_long+vault4,51358.762744557345,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +4%
+shadow:breakout,146771.67813494208,100000.0,2026-10-15T23:47:46.919688+00:00,breakout
+shadow:breakout+vault1,146771.67813494208,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +1%
+shadow:breakout+vault2,146771.67813494208,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +2%
+shadow:breakout+vault4,146771.67813494208,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +4%
+shadow:breakout_lf,59599.50263410664,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf
+shadow:breakout_lf+vault1,59599.50263410664,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +1%
+shadow:breakout_lf+vault2,59599.50263410664,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +2%
+shadow:breakout_lf+vault4,59599.50263410664,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +4%
+shadow:dl_deepm,160064.565120311,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm
+shadow:dl_deepm+vault1,156693.0148564856,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +1%
+shadow:dl_deepm+vault2,160064.565120311,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +2%
+shadow:dl_deepm+vault4,160064.565120311,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +4%
+shadow:dl_lstm,150668.65117146538,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm
+shadow:dl_lstm+vault1,150920.62836808397,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +1%
+shadow:dl_lstm+vault2,150668.65117146538,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +2%
+shadow:dl_lstm+vault4,150668.65117146538,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +4%
+shadow:dl_mom_trans,126186.38698436922,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans
+shadow:dl_mom_trans+vault1,126179.84974922556,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +1%
+shadow:dl_mom_trans+vault2,126179.84974922556,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +2%
+shadow:dl_mom_trans+vault4,126179.84974922556,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +4%
+shadow:hold_btc,65050.74927815591,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc
+shadow:hold_btc+vault1,65050.74927815591,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +1%
+shadow:hold_btc+vault2,65050.74927815591,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +2%
+shadow:hold_btc+vault4,65050.74927815591,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +4%
+shadow:macd,53882.01915736787,100000.0,2026-10-15T23:47:46.919688+00:00,macd
+shadow:macd+vault1,53882.01915736787,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +1%
+shadow:macd+vault2,53882.01915736787,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +2%
+shadow:macd+vault4,53882.01915736787,100000.0,2026-10-15T23:47:46.919688+00:00,macd | vault: bank profit at +4%
+shadow:macd_lf,53903.30415947427,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf
+shadow:macd_lf+vault1,53903.30415947427,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +1%
+shadow:macd_lf+vault2,53903.30415947427,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +2%
+shadow:macd_lf+vault4,53903.30415947427,100000.0,2026-10-15T23:47:46.919688+00:00,macd_lf | vault: bank profit at +4%
+shadow:tsmom,51148.66375138637,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom
+shadow:tsmom+vault1,51148.66375138637,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +1%
+shadow:tsmom+vault2,51148.66375138637,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +2%
+shadow:tsmom+vault4,51148.66375138637,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom | vault: bank profit at +4%
+shadow:tsmom_lf,51030.301916809214,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf
+shadow:tsmom_lf+vault1,51030.301916809214,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +1%
+shadow:tsmom_lf+vault2,51030.301916809214,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +2%
+shadow:tsmom_lf+vault4,51030.301916809214,100000.0,2026-10-15T23:47:46.919688+00:00,tsmom_lf | vault: bank profit at +4%
+shadow:xs_rev_5,100671.62403956222,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5
+shadow:xs_rev_5+vault1,100671.62403956222,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +1%
+shadow:xs_rev_5+vault2,100671.62403956222,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +2%
+shadow:xs_rev_5+vault4,100671.62403956222,100000.0,2026-10-15T23:47:46.919688+00:00,xs_rev_5 | vault: bank profit at +4%
+shadow:xsmom_63,115012.7615605589,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63
+shadow:xsmom_63+vault1,115012.7615605589,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +1%
+shadow:xsmom_63+vault2,115012.7615605589,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +2%
+shadow:xsmom_63+vault4,115012.7615605589,100000.0,2026-10-15T23:47:46.919688+00:00,xsmom_63 | vault: bank profit at +4%
