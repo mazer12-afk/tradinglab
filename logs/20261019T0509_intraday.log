@@ -1,0 +1,15 @@
+2026-10-19 05:10:18,652 INFO tradinglab.intraday.live: lgbm|12|8640 scorer warmed up on 8652 bars
+2026-10-19 05:10:23,780 INFO tradinglab.intraday.live: lgbm|48|8640 scorer warmed up on 8688 bars
+2026-10-19 05:10:30,621 INFO tradinglab.intraday.live: rule:tsmom48|1|8640 scorer warmed up on 8641 bars
+2026-10-19 05:10:32,079 INFO tradinglab.intraday.live: bar 2026-10-19 05:10:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-19 05:15:10,229 INFO tradinglab.intraday.live: bar 2026-10-19 05:15:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-19 05:20:08,929 INFO tradinglab.intraday.live: bar 2026-10-19 05:20:00+00:00: new=1 orders=32 banked=0.00 warnings=[]
+2026-10-19 05:25:07,563 INFO tradinglab.intraday.live: bar 2026-10-19 05:25:00+00:00: new=1 orders=24 banked=0.00 warnings=[]
+2026-10-19 05:30:06,550 INFO tradinglab.intraday.live: bar 2026-10-19 05:30:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-19 05:35:05,336 INFO tradinglab.intraday.live: bar 2026-10-19 05:35:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
+2026-10-19 05:40:04,421 INFO tradinglab.intraday.live: bar 2026-10-19 05:40:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-19 05:45:07,109 INFO tradinglab.intraday.live: bar 2026-10-19 05:45:00+00:00: new=1 orders=36 banked=0.00 warnings=[]
+2026-10-19 05:50:05,846 INFO tradinglab.intraday.live: bar 2026-10-19 05:50:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
+2026-10-19 05:55:04,657 INFO tradinglab.intraday.live: bar 2026-10-19 05:55:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
+2026-10-19 06:00:07,045 INFO tradinglab.intraday.live: bar 2026-10-19 06:00:00+00:00: new=1 orders=28 banked=0.00 warnings=[]
+2026-10-19 06:05:05,683 INFO tradinglab.intraday.live: bar 2026-10-19 06:05:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
