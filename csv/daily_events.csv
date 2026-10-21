@@ -62,3 +62,4 @@ id,ts,level,account,message
 61,2026-10-18T20:00:38.830258+00:00,info,shadow:dl_lstm+vault2,"vault: banked 2,300.38 (marked equity 102,444.95)"
 62,2026-10-18T20:00:38.830258+00:00,info,shadow:dl_deepm+vault1,"vault: banked 1,170.88 (marked equity 101,350.58)"
 63,2026-10-20T15:04:23.770266+00:00,info,shadow:xs_rev_5+vault1,"vault: banked 866.36 (marked equity 101,249.88)"
+64,2026-10-21T22:03:46.904656+00:00,info,shadow:hold_btc+vault1,"vault: banked 954.44 (marked equity 101,044.89)"

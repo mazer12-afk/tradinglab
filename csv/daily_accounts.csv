@@ -28,7 +28,7 @@ shadow:dl_mom_trans+vault1,92747.52219318895,100000.0,2026-10-15T23:47:46.919688
 shadow:dl_mom_trans+vault2,92747.52219318895,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +2%
 shadow:dl_mom_trans+vault4,92747.52219318895,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans | vault: bank profit at +4%
 shadow:hold_btc,65033.137820682925,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc
-shadow:hold_btc+vault1,65033.137820682925,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +1%
+shadow:hold_btc+vault1,100000.0,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +1%
 shadow:hold_btc+vault2,65033.137820682925,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +2%
 shadow:hold_btc+vault4,65033.137820682925,100000.0,2026-10-15T23:47:46.919688+00:00,hold_btc | vault: bank profit at +4%
 shadow:macd,52540.41851891688,100000.0,2026-10-15T23:47:46.919688+00:00,macd
