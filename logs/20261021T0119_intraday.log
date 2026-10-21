@@ -62,3 +62,8 @@
 2026-10-21 06:10:04,494 INFO tradinglab.intraday.live: bar 2026-10-21 06:10:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
 2026-10-21 06:15:10,741 INFO tradinglab.intraday.live: bar 2026-10-21 06:15:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
 2026-10-21 06:20:14,598 INFO tradinglab.intraday.live: bar 2026-10-21 06:20:00+00:00: new=1 orders=60 banked=0.00 warnings=[]
+2026-10-21 06:25:06,912 INFO tradinglab.intraday.live: bar 2026-10-21 06:25:00+00:00: new=1 orders=52 banked=0.00 warnings=[]
+2026-10-21 06:30:09,301 INFO tradinglab.intraday.live: bar 2026-10-21 06:30:00+00:00: new=1 orders=20 banked=0.00 warnings=[]
+2026-10-21 06:35:11,794 INFO tradinglab.intraday.live: bar 2026-10-21 06:35:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-21 06:40:04,646 INFO tradinglab.intraday.live: bar 2026-10-21 06:40:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
+2026-10-21 06:45:10,900 INFO tradinglab.intraday.live: bar 2026-10-21 06:45:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
