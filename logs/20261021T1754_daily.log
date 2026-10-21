@@ -115,3 +115,16 @@
 2026-10-21 22:45:33,466 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 22:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
 2026-10-21 22:50:35,210 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
 2026-10-21 22:50:44,950 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 22:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 22:55:46,354 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 22:55:56,100 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 22:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:00:57,552 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 23:01:12,491 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 23:00:00+00:00 fills=0 marks=56 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:06:14,106 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 23:06:23,899 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 23:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:11:25,523 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 23:11:35,688 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 23:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:16:37,186 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 23:16:46,984 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 23:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:21:48,307 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-21 23:21:57,873 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-21 23:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-21 23:24:29,986 INFO tradinglab.live.daemon: signal 15 received – stopping after current step
