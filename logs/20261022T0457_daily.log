@@ -42,3 +42,24 @@
 2026-10-22 06:51:35,390 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
 2026-10-22 06:51:48,966 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 06:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
 2026-10-22 06:57:22,473 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 06:57:36,268 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 06:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:03:10,010 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:03:29,965 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=56 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:09:03,793 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:09:17,538 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:14:51,118 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:15:07,043 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:20:40,697 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:20:54,315 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:26:27,947 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:26:41,146 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:32:14,580 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:32:27,490 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:38:01,205 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:38:13,914 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:43:47,673 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:44:00,206 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:49:34,077 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:49:47,309 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-22 07:55:20,982 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-22 07:55:33,874 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-22 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
