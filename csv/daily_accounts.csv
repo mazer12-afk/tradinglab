@@ -16,11 +16,11 @@ shadow:breakout_lf+vault1,59103.68781604577,100000.0,2026-10-15T23:47:46.919688+
 shadow:breakout_lf+vault2,59103.68781604577,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +2%
 shadow:breakout_lf+vault4,59103.68781604577,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf | vault: bank profit at +4%
 shadow:dl_deepm,153482.81853351035,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm
-shadow:dl_deepm+vault1,152787.15311751928,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +1%
+shadow:dl_deepm+vault1,100000.0,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +1%
 shadow:dl_deepm+vault2,152553.20200179657,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +2%
 shadow:dl_deepm+vault4,153482.81853351035,100000.0,2026-10-15T23:47:46.919688+00:00,dl_deepm | vault: bank profit at +4%
 shadow:dl_lstm,153809.03914557397,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm
-shadow:dl_lstm+vault1,153827.2156428282,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +1%
+shadow:dl_lstm+vault1,100000.0,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +1%
 shadow:dl_lstm+vault2,154713.3879217889,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +2%
 shadow:dl_lstm+vault4,153809.03914557397,100000.0,2026-10-15T23:47:46.919688+00:00,dl_lstm | vault: bank profit at +4%
 shadow:dl_mom_trans,147771.10979748346,100000.0,2026-10-15T23:47:46.919688+00:00,dl_mom_trans
