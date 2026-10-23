@@ -3925,14 +3925,14 @@
       "funding_paid": 16.011303606126578
     }
   },
-  "updated_at": "2026-10-23 08:02:33.713965+00:00",
+  "updated_at": "2026-10-23 08:28:49.528980+00:00",
   "feed_mode": "realtime",
   "data_horizon": "2026-10-23 08:00:00+00:00",
   "signal_bar": "2026-10-23 00:00:00+00:00",
   "last_cycle": {
     "fills": 0,
-    "funding_events": 1458,
-    "marks": 56,
+    "funding_events": 0,
+    "marks": 0,
     "decisions": [],
     "orders": 0,
     "warnings": []
