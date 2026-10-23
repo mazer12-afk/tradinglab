@@ -62,3 +62,9 @@
 2026-10-23 13:25:07,233 INFO tradinglab.intraday.live: bar 2026-10-23 13:25:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
 2026-10-23 13:30:12,157 INFO tradinglab.intraday.live: bar 2026-10-23 13:30:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
 2026-10-23 13:35:14,657 INFO tradinglab.intraday.live: bar 2026-10-23 13:35:00+00:00: new=1 orders=48 banked=0.00 warnings=[]
+2026-10-23 13:40:05,898 INFO tradinglab.intraday.live: bar 2026-10-23 13:40:00+00:00: new=1 orders=16 banked=0.00 warnings=[]
+2026-10-23 13:45:07,300 INFO tradinglab.intraday.live: bar 2026-10-23 13:45:00+00:00: new=1 orders=56 banked=0.00 warnings=[]
+2026-10-23 13:50:08,810 INFO tradinglab.intraday.live: bar 2026-10-23 13:50:00+00:00: new=1 orders=44 banked=0.00 warnings=[]
+2026-10-23 13:55:10,212 INFO tradinglab.intraday.live: bar 2026-10-23 13:55:00+00:00: new=1 orders=40 banked=0.00 warnings=[]
+2026-10-23 14:00:15,386 INFO tradinglab.intraday.live: bar 2026-10-23 14:00:00+00:00: new=1 orders=36 banked=0.00 warnings=[]
+2026-10-23 14:04:41,190 INFO tradinglab.intraday.live: signal 15 received – stopping after current step
