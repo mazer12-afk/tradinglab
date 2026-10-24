@@ -68,3 +68,6 @@ id,ts,level,account,message
 67,2026-10-23T23:00:08.383645+00:00,info,shadow:dl_lstm+vault1,"vault: banked 1,172.57 (marked equity 101,273.05)"
 68,2026-10-23T23:00:08.383645+00:00,info,shadow:dl_deepm+vault1,"vault: banked 962.04 (marked equity 101,081.82)"
 69,2026-10-24T10:04:33.916219+00:00,info,shadow:dl_lstm+vault2,"vault: banked 1,925.08 (marked equity 102,022.55)"
+70,2026-10-24T15:04:20.158741+00:00,info,shadow:dl_lstm+vault1,"vault: banked 1,392.10 (marked equity 101,316.49)"
+71,2026-10-24T15:04:20.158741+00:00,info,shadow:dl_deepm+vault1,"vault: banked 1,279.69 (marked equity 101,252.03)"
+72,2026-10-24T15:04:20.158741+00:00,info,shadow:dl_deepm+vault2,"vault: banked 2,366.10 (marked equity 102,338.47)"
