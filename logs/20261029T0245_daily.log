@@ -115,3 +115,14 @@
 2026-10-29 07:39:58,007 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
 2026-10-29 07:44:59,879 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
 2026-10-29 07:45:12,427 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-29 07:50:14,467 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-29 07:50:27,024 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-29 07:55:28,710 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-29 07:55:41,438 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 07:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-29 08:00:43,105 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-29 08:01:06,575 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 08:00:00+00:00 fills=0 marks=56 decisions=0 orders=29 banked=944.22 warnings=[]
+2026-10-29 08:06:08,508 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-29 08:06:21,233 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 08:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-29 08:11:23,061 INFO tradinglab.live.feed: feed mode: realtime (binance-data, binance-us, okx, coinbase, kraken)
+2026-10-29 08:11:35,521 INFO tradinglab.live.daemon: cycle: mode=realtime horizon=2026-10-29 08:00:00+00:00 fills=0 marks=0 decisions=0 orders=0 banked=0.00 warnings=[]
+2026-10-29 08:15:31,934 INFO tradinglab.live.daemon: signal 15 received – stopping after current step
