@@ -1,25 +1,25 @@
 name,cash,initial_capital,created_at,strategy
-intraday:basket_long,63368.03200136766,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins.
-intraday:basket_long+vault1,63368.03200136766,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
-intraday:basket_long+vault2,63368.03200136766,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
-intraday:basket_long+vault4,63368.03200136766,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%
-intraday:deep_lstm_attn,62961.44365324117,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.
-intraday:deep_lstm_attn+vault1,62961.44365324117,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
-intraday:deep_lstm_attn+vault2,62961.44365324117,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
-intraday:deep_lstm_attn+vault4,62961.44365324117,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
-intraday:deep_neutral,44763.85873972345,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
-intraday:deep_neutral+vault1,44763.85873972345,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
-intraday:deep_neutral+vault2,44763.85873972345,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
-intraday:deep_neutral+vault4,44763.85873972345,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
+intraday:basket_long,74386.97248534502,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins.
+intraday:basket_long+vault1,74386.97248534502,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +1%
+intraday:basket_long+vault2,74386.97248534502,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +2%
+intraday:basket_long+vault4,74386.97248534502,100000.0,2026-10-15T23:47:49.892810+00:00,Benchmark: vol-sized long basket of all 12 coins. | vault: bank profit at +4%
+intraday:deep_lstm_attn,74367.53456399395,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe.
+intraday:deep_lstm_attn+vault1,74367.53456399395,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +1%
+intraday:deep_lstm_attn+vault2,74367.53456399395,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +2%
+intraday:deep_lstm_attn+vault4,74367.53456399395,100000.0,2026-10-15T23:47:49.892810+00:00,LSTM + causal attention network trained end-to-end on net-of-cost Sharpe. | vault: bank profit at +4%
+intraday:deep_neutral,29362.939144636286,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral).
+intraday:deep_neutral+vault1,29362.939144636286,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +1%
+intraday:deep_neutral+vault2,29362.939144636286,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +2%
+intraday:deep_neutral+vault4,29362.939144636286,100000.0,2026-10-15T23:47:49.892810+00:00,The LSTM + attention network with its cross-sectional mean removed (≈ market-neutral). | vault: bank profit at +4%
 intraday:lgbm_1h,99130.82316444427,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip."
 intraday:lgbm_1h+vault1,98177.09811133902,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +1%"
 intraday:lgbm_1h+vault2,99130.82316444427,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +2%"
 intraday:lgbm_1h+vault4,99130.82316444427,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 1-hour forecast; trades only extreme forecasts (|z|>3), exits on sign flip. | vault: bank profit at +4%"
-intraday:lgbm_4h,225124.61206070398,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip."
-intraday:lgbm_4h+vault1,198871.79572998,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +1%"
-intraday:lgbm_4h+vault2,198871.79572998,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +2%"
-intraday:lgbm_4h+vault4,215832.74783232567,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +4%"
-intraday:tsmom_4h,169743.8275216998,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held."
-intraday:tsmom_4h+vault1,169743.8275216998,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +1%"
-intraday:tsmom_4h+vault2,169743.8275216998,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +2%"
-intraday:tsmom_4h+vault4,169743.8275216998,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +4%"
+intraday:lgbm_4h,107687.3913114832,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip."
+intraday:lgbm_4h+vault1,100000.0,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +1%"
+intraday:lgbm_4h+vault2,100000.0,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +2%"
+intraday:lgbm_4h+vault4,103242.6679646431,100000.0,2026-10-15T23:47:49.892810+00:00,"LightGBM 4-hour forecast; enters at |z|>2.5, holds ≥2h, exits on sign flip. | vault: bank profit at +4%"
+intraday:tsmom_4h,171573.97149502777,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held."
+intraday:tsmom_4h+vault1,171573.97149502777,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +1%"
+intraday:tsmom_4h+vault2,171573.97149502777,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +2%"
+intraday:tsmom_4h+vault4,171573.97149502777,100000.0,2026-10-15T23:47:49.892810+00:00,"Rule baseline: enters a coin when its last-4h move is 1.5x its usual size, in that direction; holds ≥1h, exits when the move reverses; size frozen while held. | vault: bank profit at +4%"

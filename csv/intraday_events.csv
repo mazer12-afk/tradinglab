@@ -30,3 +30,5 @@ id,ts,level,account,message
 29,2026-10-19T14:05:08.315932+00:00,info,intraday:lgbm_1h+vault1,"vault: banked 1,047.83 (marked equity 101,109.99)"
 30,2026-10-29T02:00:11.619813+00:00,info,intraday:lgbm_4h+vault1,"vault: banked 1,379.04 (marked equity 101,094.77)"
 31,2026-10-29T02:10:08.336550+00:00,info,intraday:lgbm_4h+vault2,"vault: banked 2,025.11 (marked equity 102,005.03)"
+32,2026-10-29T20:45:07.370175+00:00,info,intraday:lgbm_4h+vault1,"vault: banked 2,021.79 (marked equity 102,105.90)"
+33,2026-10-29T20:45:07.370175+00:00,info,intraday:lgbm_4h+vault2,"vault: banked 2,021.79 (marked equity 102,105.90)"
