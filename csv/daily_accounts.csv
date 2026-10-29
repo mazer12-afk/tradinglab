@@ -8,7 +8,7 @@ shadow:basket_long+vault1,50793.87069061385,100000.0,2026-10-15T23:47:46.919688+
 shadow:basket_long+vault2,50793.87069061385,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +2%
 shadow:basket_long+vault4,50793.87069061385,100000.0,2026-10-15T23:47:46.919688+00:00,basket_long | vault: bank profit at +4%
 shadow:breakout,152563.094179659,100000.0,2026-10-15T23:47:46.919688+00:00,breakout
-shadow:breakout+vault1,152563.094179659,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +1%
+shadow:breakout+vault1,100000.0,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +1%
 shadow:breakout+vault2,152563.094179659,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +2%
 shadow:breakout+vault4,152563.094179659,100000.0,2026-10-15T23:47:46.919688+00:00,breakout | vault: bank profit at +4%
 shadow:breakout_lf,42127.640115641276,100000.0,2026-10-15T23:47:46.919688+00:00,breakout_lf
