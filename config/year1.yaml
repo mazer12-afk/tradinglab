@@ -1,0 +1,15 @@
+# One-year simulated experiment, 2025-10-29 → 2026-10-29 (tradinglab simulate --books daily).
+# Roster frozen before the test year: every choice below used data before 2025-10-29 only.
+#  * kept (out-of-sample Sharpe ≥ 0.5 over 2021–2025 and the last two years, last year profitable):
+#    tsmom, tsmom_lf, macd_lf, breakout_lf; benchmarks hold_btc, basket_long
+#  * improved / new (Sharpe ≥ 0.5 and better than their parent in 2021–23 and in 2023–25):
+#    trend_ens_lf, breakout_slow_lf, xs_top_lf
+#  * main: the research selection (clusters, inverse-vol) on 2021-01-01 → 2025-10-29
+#  * pruned: macd, breakout, xsmom_63, xs_rev_5, the three daily deep models and the whole 5-minute book
+#    (no 5-minute variant was profitable after costs in 2023–25); see reports/simulations/year1/
+paths:
+  models_dir: models/year1        # selection.json (no trained models: every remaining strategy is a rule)
+live:
+  vault_thresholds: [0.01, 0.02, 0.04]
+experiment:
+  name: year1-sim

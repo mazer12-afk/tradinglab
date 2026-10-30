@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from tradinglab.config import LabConfig, bars_per_year
 from tradinglab.strategies.base import Strategy
 from tradinglab.strategies.classic import classic_candidates
@@ -39,4 +41,9 @@ def by_name(cfg: LabConfig, name: str) -> Strategy:
             return s
     if name.startswith("dl_"):
         return make_deep(name[3:], cfg)
+    m = re.fullmatch(r"ml_gbm(\d+)(_lf)?", name)
+    if m:
+        from tradinglab.strategies.ml import GBMForecast
+
+        return GBMForecast(int(m.group(1)), long_only=bool(m.group(2)), min_history_bars=cfg.universe.min_history_bars)
     raise KeyError(f"unknown strategy {name!r}")

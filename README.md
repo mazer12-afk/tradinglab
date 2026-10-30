@@ -193,6 +193,73 @@ them. The deep models take about 30 minutes each per step; they are retrained on
 and left out otherwise. The production blend `main` was chosen by the research tournament on data up to
 13 Oct 2026, so walk-forward runs before that leave it out.
 
+## 1-year experiment: only the profitable strategies (simulated, 29 Oct 2025 → 29 Oct 2026)
+
+**Question:** keep only the strategies that made money, improve them, add new ones, and run them for a year.
+Do they make money?
+
+**Protocol (no look-ahead).** Every choice used data before 29 Oct 2025 only. That covers pruning,
+improvements, new strategies, the `main` blend and model retraining intervals. The roster was then frozen
+(`config/year1.yaml`, `models/year1/selection.json`) and the year was simulated once (35 minutes, 40 accounts).
+The losses seen live in Oct 2026 and in the Jul–Sep 2026 simulation fall inside this year, so they were not
+used for pruning.
+
+**Development (2021 → Oct 2025, walk-forward out of sample, net of costs; `reports/simulations/year1/dev_*.csv`):**
+* *Kept* (Sharpe ≥ 0.5 over 2021–25 and over the last two years, last year profitable): long/short trend
+  `tsmom`, the long/flat trend rules `tsmom_lf`, `macd_lf`, `breakout_lf`; benchmarks `hold_btc`, `basket_long`.
+* *Pruned:* `macd`, `breakout` (weak in the last two years, losing in the last), `xsmom_63`, `xs_rev_5`,
+  the three daily deep models (Sharpe −0.3 to 0.4), and **the whole 5-minute book**. No 5-minute variant was
+  profitable after fees and spread in 2023–25. That covers the existing models, long-only versions, stricter
+  entries, a new 12-hour model and the momentum rules: none made money (Sharpe −4.7 to 0.0). Weekly, monthly or quarterly
+  retraining made no difference (−1.2 to −1.5).
+* *Improved / new*, accepted only if better than their parent in 2021–23 and again in 2023–25:
+  `trend_ens_lf` (mean of the three long/flat trend rules), `breakout_slow_lf` (55/100/200-day channels) and
+  `xs_top_lf` (new: long the strongest third of coins, among those in an uptrend).
+* *Rejected:*
+  * market-regime filters (Sharpe 0.24 in 2021–23);
+  * a filter on crowded funding (it helped only with same-day funding data, which the live engine does not
+    have);
+  * a new daily LightGBM forecaster (`ml_gbm5_lf`: Sharpe 0.2 in 2021–23 at the best of four retraining
+    intervals; the class stays in `strategies/ml.py`).
+* `main` = the research selection on 2021–25: half the long/flat trend group, half `tsmom`.
+
+No trained model passed, so the final roster is all rules and needs no retraining.
+
+**Result.** It was a bear market: the 30-coin basket fell 38 % (−60 % at the July low), then rallied and fell
+again.
+
+| account (no vault) | year | max drawdown |
+|---|---|---|
+| `tsmom` (long/short trend) | **+2.2 %** | −22.5 % |
+| `basket_long` (vol-targeted benchmark) | −4.2 % | −26.0 % |
+| `breakout_slow_lf` (improved) | −7.8 % | −25.6 % |
+| `hold_btc` (benchmark) | −10.3 % | −20.0 % |
+| `main` (blend) | −11.2 % | −22.9 % |
+| `tsmom_lf` / `xs_top_lf` (new) | −12.2 % | −25.7 / −25.4 % |
+| `trend_ens_lf` (improved) | −13.5 % | −28.2 % |
+| `breakout_lf` | −15.0 % | −33.5 % |
+| `macd_lf` | −18.8 % | −26.0 % |
+
+All lost far less than holding coins, but only `tsmom` made money. The simulator and the research backtester
+agree within about 2 points per strategy. Of the 13 vault twins that banked, 5 beat their control, and the net
+was −$3.8k. The best was `tsmom` at 1 % (+$3.3k after 20 sweeps).
+
+**Did pruning help?** Partly. In the test year the pruned 5-minute strategies lost 23–82 % (backtest) and the
+pruned cross-sectional ones about 35 %, so cutting them was right. But the pruned long/short `macd` (+11 %) and
+`breakout` (+5 %) beat every strategy that was kept. Applied every 1 January since 2020 and at the start of
+this year, the same rule's kept
+strategies beat its pruned ones in only 4 of 7 years (`pruning_rule_by_year.csv`). The strategies that pass
+are long/flat trend followers that did well in the 2021–25 bull years. Their past profit says more about the
+market they ran in than about skill.
+
+**Conclusion.** Nothing in this lab shows an edge that holds across market regimes. Long/flat trend earns in
+bull years and gives it back in choppy bear years; long/short trend did the reverse. No 5-minute or machine-
+learning strategy covers its costs. Do not trade real money on these results.
+
+Reproduce: `tradinglab --config config/year1.yaml simulate --books daily --start 2025-10-29 --end 2026-10-29
+--out runs/year1`. The development scripts are in `scripts/year1/` and the results in
+`reports/simulations/year1/`.
+
 ## Live paper trading
 
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The

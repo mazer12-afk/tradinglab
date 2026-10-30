@@ -1,0 +1,8 @@
+origin,kept,pruned,kept_avg,pruned_avg,all_avg,kept_beat_pruned,basket,kept_names
+2020-01-01,7,4,0.712689117668921,0.2717230247709026,0.5523378111605506,True,0.5552635437973255,"macd,macd_lf,breakout,breakout_lf,xsmom_63,trend_ens_lf,breakout_slow_lf"
+2021-01-01,10,1,0.6083084211597971,-0.31828481996163416,0.5240726719669397,True,0.6150201440785965,"tsmom,tsmom_lf,macd,macd_lf,breakout,breakout_lf,xsmom_63,trend_ens_lf,breakout_slow_lf,xs_top_lf"
+2022-01-01,9,2,-0.10208118336494883,-0.1967096223516943,-0.11928635408981166,True,-0.28988086345882846,"tsmom,tsmom_lf,macd,macd_lf,breakout,breakout_lf,trend_ens_lf,breakout_slow_lf,xs_top_lf"
+2023-01-01,3,8,0.05899961955126513,0.5964140780965752,0.4498464984933088,False,0.5715392878348629,"tsmom,macd,breakout"
+2024-01-01,7,4,0.33084194447831133,-0.04894822201192936,0.19273642939095106,True,0.2890543779451822,"tsmom_lf,macd_lf,breakout,breakout_lf,trend_ens_lf,breakout_slow_lf,xs_top_lf"
+2025-01-01,7,4,-0.08333714996228768,-0.0506811966482735,-0.0714622578481007,False,-0.1262482024798628,"tsmom_lf,macd_lf,breakout,breakout_lf,trend_ens_lf,breakout_slow_lf,xs_top_lf"
+2025-10-29,8,3,-0.14709080270150104,-0.06741422292836567,-0.12536082639973684,False,-0.03571148194051177,"tsmom,tsmom_lf,macd_lf,breakout_lf,xsmom_63,trend_ens_lf,breakout_slow_lf,xs_top_lf"

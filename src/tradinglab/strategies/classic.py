@@ -122,6 +122,39 @@ class CrossSectionalMomentum(Strategy):
         return sig.clip(-1, 1).where(_available(panel))
 
 
+class TrendEnsemble(Strategy):
+    """Long/flat trend ensemble: the mean of the long-only TSMOM, MACD and breakout signals."""
+
+    name = "trend_ens_lf"
+
+    def __init__(self):
+        self.parts = (TSMOM(long_only=True), MACDTrend(long_only=True), Breakout(long_only=True))
+
+    def signals(self, panel: Panel) -> pd.DataFrame:
+        sig = sum(s.signals(panel).fillna(0.0) for s in self.parts) / len(self.parts)
+        return sig.where(_available(panel))
+
+
+class TrendRotation(Strategy):
+    """Long-only rotation: equal positions in the top third of coins by vol-adjusted momentum, among the
+    coins whose own trend (long-only TSMOM) is up; flat otherwise."""
+
+    def __init__(self, lookback: int = 63, top_fraction: float = 1 / 3, name: str = "xs_top_lf"):
+        self.lookback = lookback
+        self.top_fraction = top_fraction
+        self.name = name
+
+    def signals(self, panel: Panel) -> pd.DataFrame:
+        close = panel.close
+        vol = ewm_vol(close.pct_change(fill_method=None))
+        score = close.pct_change(self.lookback, fill_method=None) / (vol * np.sqrt(self.lookback))
+        score = score.where(TSMOM(long_only=True).signals(panel) > 0)
+        rank = score.rank(axis=1, ascending=False)
+        n = close.notna().sum(axis=1)
+        top = rank.le((n * self.top_fraction).clip(lower=1), axis=0)
+        return top.astype(float).where(_available(panel))
+
+
 def classic_candidates(symbols: list[str]) -> list[Strategy]:
     """The classic strategy zoo evaluated by the research tournament."""
     out: list[Strategy] = [
@@ -135,5 +168,9 @@ def classic_candidates(symbols: list[str]) -> list[Strategy]:
         Breakout(long_only=True),
         CrossSectionalMomentum(63),
         CrossSectionalMomentum(5, reverse=True),
+        # added for the 1-year experiment (designed on data before 2025-10-29)
+        TrendEnsemble(),
+        Breakout((55, 100, 200), long_only=True, name="breakout_slow_lf"),
+        TrendRotation(),
     ]
     return out

@@ -1,0 +1,50 @@
+{
+  "created_at": "2026-10-30T15:00:31.723477+00:00",
+  "data_end": "2025-10-29 00:00:00+00:00",
+  "experiment": "year1: pruned + improved strategies, designed on data before data_end",
+  "selection_window": [
+    "2021-01-01",
+    "2025-10-29 00:00:00+00:00"
+  ],
+  "strategies": [
+    "tsmom_lf",
+    "macd_lf",
+    "breakout_lf",
+    "trend_ens_lf",
+    "breakout_slow_lf",
+    "xs_top_lf",
+    "tsmom"
+  ],
+  "alphas": {
+    "tsmom_lf": 0.08161749863008426,
+    "macd_lf": 0.08161749863008426,
+    "breakout_lf": 0.08161749863008426,
+    "trend_ens_lf": 0.08161749863008426,
+    "breakout_slow_lf": 0.08161749863008426,
+    "xs_top_lf": 0.08161749863008426,
+    "tsmom": 0.5102950082194945
+  },
+  "candidates": [
+    "hold_btc",
+    "basket_long",
+    "tsmom",
+    "tsmom_lf",
+    "macd_lf",
+    "breakout_lf",
+    "trend_ens_lf",
+    "breakout_slow_lf",
+    "xs_top_lf"
+  ],
+  "deep_models": {},
+  "dev_sharpe_2021_2025": {
+    "tsmom": 0.658,
+    "tsmom_lf": 1.064,
+    "macd_lf": 0.959,
+    "breakout_lf": 1.026,
+    "trend_ens_lf": 1.094,
+    "breakout_slow_lf": 1.111,
+    "xs_top_lf": 1.054,
+    "hold_btc": 0.57,
+    "basket_long": 0.789
+  }
+}

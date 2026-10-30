@@ -1,0 +1,21 @@
+{
+ "start": "2025-10-29 00:00:00+00:00",
+ "end": "2026-10-29 00:00:00+00:00",
+ "books": [
+  "daily"
+ ],
+ "walk_forward": false,
+ "retrain_deep": false,
+ "in_sample_notes": [],
+ "spreads": "/home/user/tradinglab/config/sim_spreads.json",
+ "runs": {
+  "daily": {
+   "cycles": 8760,
+   "seconds": 2035.4,
+   "steps": [
+    "2025-10-29 00:00:00+00:00"
+   ],
+   "left_out": []
+  }
+ }
+}
