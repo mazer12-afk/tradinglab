@@ -1,10 +1,10 @@
 # Unattended live experiment (src/tradinglab/experiment.py, config/experiment.yaml).
 #
-# Each run is one shift of ~5.5 h (GitHub-hosted jobs last at most 6 h). Shifts chain back to
-# back two ways: a successful shift queues the next one itself (workflow_dispatch, which the
-# GITHUB_TOKEN may trigger), and the half-hourly schedule queues one too (recovery after a failed
-# shift). Within the concurrency group only one run waits; it starts the moment the shift ends.
-# Bars missed in the hand-over are replayed on restart (marked, never traded).
+# Each run is one shift of ~5.5 h (GitHub-hosted jobs last at most 6 h). A successful shift queues
+# the next one itself (workflow_dispatch, which the GITHUB_TOKEN may trigger); within the
+# concurrency group only one run waits and it starts the moment the shift ends. Bars missed in the
+# hand-over are replayed on restart (marked, never traded). The vault-2w experiment has ended, so
+# the half-hourly recovery schedule (cron "7,37 * * * *") is off; add it back for a new experiment.
 #
 # State and records live on the records branch (config: experiment.records_branch), pushed
 # hourly. Scheduled runs only work while the repository is public (free Actions minutes);
@@ -12,8 +12,6 @@
 # branch every run exits immediately.
 name: experiment
 on:
-  schedule:
-    - cron: "7,37 * * * *"
   workflow_dispatch:
     inputs:
       minutes:
