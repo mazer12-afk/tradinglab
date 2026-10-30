@@ -198,7 +198,12 @@ class Supervisor:
 
 
 def finish(cfg: LabConfig, records: Path, meta: dict) -> dict:
-    """End of experiment: liquidate every account at live prices, write FINISHED.json."""
+    """End of experiment: liquidate every account at live prices, write FINISHED.json.
+
+    Nothing trades here: the daemons marked and traded every bar up to the end, so the books are only
+    closed (an engine cycle would trade the bars after the end, again on every retry). Closing a flat
+    book changes nothing, so a retry after a partial close-out only closes what is left.
+    """
     from tradinglab.data.store import MarketData
     from tradinglab.intraday.live import IntradayEngine, IntradayFeed
     from tradinglab.intraday.policy import policies_by_name
@@ -218,7 +223,6 @@ def finish(cfg: LabConfig, records: Path, meta: dict) -> dict:
             feed.load()
             eng = IntradayEngine(cfg, feed, store, Path(cfg.paths.models_dir) / "intraday" / "live",
                                  policies=policies_by_name(cfg.intraday.live_policies))
-            eng.cycle()               # mark the last bars before closing out
             eng.liquidate(reason="experiment end")
             for name, st in eng.status().items():
                 final[name] = {k: st[k] for k in ("equity", "vault", "pnl", "return", "sweeps", "trades")}
@@ -231,7 +235,6 @@ def finish(cfg: LabConfig, records: Path, meta: dict) -> dict:
             feed = LiveFeed(md, cfg.universe.symbols, cfg.walkforward.data_start, cfg.live.feed,
                             default_funding_8h=cfg.market.default_funding_8h)
             eng = LiveEngine(cfg, feed, store, load_selection(cfg))
-            eng.cycle()
             eng.liquidate(reason="experiment end")
             for name, st in eng.status()["accounts"].items():
                 final[f"daily:{name}"] = {k: st[k] for k in ("equity", "vault", "pnl", "return")}

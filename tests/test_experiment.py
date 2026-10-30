@@ -86,3 +86,56 @@ def test_failed_close_out_pushes_records_and_is_retried(tmp_path, monkeypatch):
     assert not (rec / "FINISH_ERROR.txt").exists()
     assert X.run(cfg, None, rec, minutes=5) == "already-finished"
     assert calls["n"] == 2
+
+
+def test_finish_only_closes_books_and_never_trades(tmp_path, monkeypatch):
+    """The close-out (and every retry of it) liquidates; an engine cycle would trade bars after the end."""
+    import tradinglab.data.store as DS
+    import tradinglab.intraday.live as IL
+    import tradinglab.live.engine as LE
+    import tradinglab.live.feed as LF
+
+    calls = []
+
+    class Feed:
+        def __init__(self, *a, **k):
+            pass
+
+        def load(self):
+            pass
+
+    class Engine:
+        def __init__(self, *a, **k):
+            pass
+
+        def cycle(self, *a, **k):
+            raise AssertionError("finish must not trade")
+
+        def liquidate(self, reason=""):
+            calls.append(reason)
+            return {}
+
+    class Intraday(Engine):
+        def status(self):
+            return {"intraday:a": {"equity": 1.0, "vault": 2.0, "pnl": 3.0, "return": 0.1, "sweeps": 1, "trades": 5}}
+
+    class Daily(Engine):
+        def status(self):
+            return {"accounts": {"main": {"equity": 4.0, "vault": 0.0, "pnl": -1.0, "return": -0.2}}}
+
+    monkeypatch.setattr(DS, "MarketData", lambda *a, **k: None)
+    monkeypatch.setattr(IL, "IntradayFeed", Feed)
+    monkeypatch.setattr(IL, "IntradayEngine", Intraday)
+    monkeypatch.setattr(LF, "LiveFeed", Feed)
+    monkeypatch.setattr(LE, "LiveEngine", Daily)
+    monkeypatch.setattr(LE, "load_selection", lambda cfg: {})
+    cfg = _cfg(tmp_path)
+    sd = tmp_path / "run" / "state"
+    for db in ("intraday.sqlite", "lab.sqlite"):
+        StateStore(sd / db).close()
+    rec = tmp_path / "records"
+    rec.mkdir()
+    out = X.finish(cfg, rec, {"start": "2026-10-15 00:00:00+00:00", "end": "2026-10-29 00:00:00+00:00"})
+    assert calls == ["experiment end", "experiment end"]
+    assert set(out["final"]) == {"intraday:a", "daily:main"}
+    assert json.loads((rec / "FINISHED.json").read_text())["final"]["daily:main"]["equity"] == 4.0

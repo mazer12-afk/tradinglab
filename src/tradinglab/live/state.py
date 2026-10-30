@@ -213,7 +213,8 @@ class StateStore:
         df = pd.DataFrame([dict(r) for r in self.conn.execute(
             "SELECT ts, equity, cash, gross, net FROM equity WHERE account=? ORDER BY ts", (account,))])
         if not df.empty:
-            df["ts"] = pd.to_datetime(df["ts"], utc=True)
+            # bar marks have whole seconds, close-out marks wall-clock microseconds: parse each as ISO 8601
+            df["ts"] = pd.to_datetime(df["ts"], utc=True, format="ISO8601")
             df = df.set_index("ts")
         return df
 

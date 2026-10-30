@@ -241,11 +241,14 @@ def test_daily_vault_banks_profit_then_waits_for_next_decision(tmp_path, cfg, ho
     st = engine.status()["accounts"][vaulted]
     assert st["vault"] == pytest.approx(v["amount"].sum())
     assert st["pnl"] == pytest.approx(st["equity"] + st["vault"] - cfg.portfolio.initial_capital)
-    # End of experiment: everything is liquidated at live quotes, final equity = cash.
-    out = engine.liquidate(feed.now + pd.Timedelta(minutes=1))
+    # End of experiment: everything is liquidated at live quotes, final equity = cash. The close-out
+    # mark carries wall-clock microseconds while bar marks do not; status must still read the curve.
+    out = engine.liquidate(feed.now + pd.Timedelta(minutes=1, microseconds=123_456))
     for name in (plain, vaulted):
         assert store.positions(name) == {}
         assert store.last_equity(name)["equity"] == pytest.approx(out[name])
+        assert store.equity_curve(name)["equity"].iloc[-1] == pytest.approx(out[name])
+    assert set(engine.status()["accounts"]) >= {plain, vaulted}
 
 
 def test_daily_vault_sweep_is_one_transaction(tmp_path, cfg, hourly, monkeypatch):
