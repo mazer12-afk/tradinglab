@@ -1,5 +1,6 @@
 """Test-year reference for the pruned 5-minute book: monthly-retrained LightGBM (live recipe) + rules, net of costs."""
 import dataclasses, logging, sys
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -58,8 +59,14 @@ for name, w in [("lgbm_1h", sel(preds[12], 12, 3.0, 12)), ("lgbm_4h", sel(preds[
     r = bt.returns
     daily = (1 + r).groupby(r.index.floor("D")).prod() - 1
     eq = (1 + daily).cumprod()
+    free = dataclasses.replace(ic, fee_bps=0.0, slippage_bps={}, default_slippage_bps=0.0)
+    g = backtest_weights(w, d, free, start=EV, end=T1).returns
+    gd = (1 + g).groupby(g.index.floor("D")).prod() - 1
+    ww = w[(w.index >= EV) & (w.index < T1)]
     out[name] = {"return": eq.iloc[-1] - 1, "sharpe": daily.mean() / daily.std() * np.sqrt(365),
-                 "mdd": (eq / eq.cummax() - 1).min()}
+                 "mdd": (eq / eq.cummax() - 1).min(), "return_before_costs": (1 + gd).prod() - 1,
+                 "turnover": float(ww.diff().abs().sum(axis=1).sum()), "net_exposure": float(ww.sum(axis=1).mean())}
+    eq.rename(name).to_csv(Path(sys.argv[1]).with_name(f"curve_{name}.csv"))
 t = pd.DataFrame(out).T
 print(t.round(3).to_string())
 t.to_csv(sys.argv[1])

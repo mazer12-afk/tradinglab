@@ -14,3 +14,5 @@ Run from the repository root with the project's Python. Everything before step 5
 6. `reference_daily.py OUT.csv`, `reference_intra.py OUT.csv`: test-year backtests of every strategy, pruned ones
    included.
 7. `prune_rolling.py [OUT.csv]`: the pruning rule applied at each year start since 2020.
+8. `ml_gross.py OUT.json`: the daily LightGBM in the test year after and before costs.
+9. `prep.py`: the data for `reports/simulations/year1/report.html` (paths inside point to a scratch area).

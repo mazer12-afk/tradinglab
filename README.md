@@ -258,7 +258,11 @@ learning strategy covers its costs. Do not trade real money on these results.
 
 Reproduce: `tradinglab --config config/year1.yaml simulate --books daily --start 2025-10-29 --end 2026-10-29
 --out runs/year1`. The development scripts are in `scripts/year1/` and the results in
-`reports/simulations/year1/`.
+`reports/simulations/year1/`; the full report is `reports/simulations/year1/report.html`.
+
+**LightGBM in the test year** (cut before the test, run afterwards as a reference): the 5-minute models lost
+57 % (1h) and 23 % (4h), the new daily model 21 %. Before fees and spread the 4h model broke even and the
+1h model lost 27 %; the daily model's forecasts lost 13 % (44 % net long in a falling year).
 
 ## Live paper trading
 
