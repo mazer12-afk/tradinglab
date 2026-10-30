@@ -11,6 +11,7 @@
     report       write the HTML dashboard (live + research)
     intraday-train / intraday-run / intraday-status   5-minute AI day-trading accounts
     experiment-run   one shift of the unattended live experiment (see tradinglab.experiment)
+    simulate     the live engines on archived data: weeks of paper trading in minutes (tradinglab.simulate)
 """
 
 from __future__ import annotations
@@ -216,6 +217,25 @@ def cmd_experiment_run(cfg, args) -> int:
     return 0
 
 
+def cmd_simulate(cfg, args) -> int:
+    import pandas as pd
+
+    from tradinglab.simulate import simulate
+
+    if args.end is None and args.days is None:
+        raise SystemExit("give --end or --days")
+    end = args.end or pd.Timestamp(args.start) + pd.Timedelta(days=args.days)
+    res = simulate(cfg, args.start, end, Path(args.out), books=tuple(args.books),
+                   allow_in_sample=args.allow_in_sample, spreads_path=args.spreads, retrain=args.walk_forward,
+                   retrain_deep=args.retrain_deep)
+    s = res["summary"].sort_values(["book", "return"], ascending=[True, False])
+    print(s.to_string(index=False, formatters={"return": "{:+.2%}".format}, float_format="{:,.2f}".format))
+    for note in res["meta"]["in_sample_notes"]:
+        print("IN-SAMPLE:", note)
+    print(json.dumps(res["meta"]["runs"]))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tradinglab", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -257,6 +277,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--commit-every", type=float, default=60.0, help="push a snapshot every N minutes")
     p.add_argument("--records-branch", default=None, help="override experiment.records_branch")
     p.add_argument("--duration-days", type=float, default=None, help="override experiment.duration_days")
+    p = sub.add_parser("simulate", help="run the live engines on archived data (fast-forward paper trading)")
+    p.add_argument("--start", required=True, help="UTC start, e.g. 2026-10-15T23:47")
+    p.add_argument("--end", default=None, help="UTC end (or --days)")
+    p.add_argument("--days", type=float, default=None, help="length in days")
+    p.add_argument("--out", required=True, help="empty directory for the simulated state and summary")
+    p.add_argument("--books", nargs="+", choices=["intraday", "daily"], default=["intraday", "daily"])
+    p.add_argument("--spreads", default=None, help="half-spread file (default config/sim_spreads.json)")
+    p.add_argument("--walk-forward", action="store_true",
+                   help="retrain the models monthly on data before each step (for windows in the past)")
+    p.add_argument("--retrain-deep", action="store_true",
+                   help="with --walk-forward also retrain the deep models (~30 min per model per month); "
+                        "otherwise they are left out")
+    p.add_argument("--allow-in-sample", action="store_true",
+                   help="run even if the models were trained on part of this window (results flagged)")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)
@@ -264,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
                "backtest": cmd_backtest, "probe": cmd_probe, "cycle": cmd_cycle, "run": cmd_run,
                "status": cmd_status, "report": cmd_report, "intraday-train": cmd_intraday_train,
                "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status,
-               "experiment-run": cmd_experiment_run}[args.cmd]
+               "experiment-run": cmd_experiment_run, "simulate": cmd_simulate}[args.cmd]
     return handler(cfg, args)
 
 

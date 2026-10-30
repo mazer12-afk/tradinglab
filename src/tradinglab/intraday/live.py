@@ -201,6 +201,10 @@ class IntradayEngine:
                 self.models[key] = LGBMForecaster().load(path)
         return self.models[key]
 
+    def _features(self, d: IntradayData):
+        """Model features over the price buffer (the simulator supplies precomputed signals instead)."""
+        return build_features(d, 12)
+
     def _outputs(self, spec: PolicySpec, fs, d: IntradayData, rows: np.ndarray) -> np.ndarray:
         """Model (or rule) output for each bar index in ``rows`` → [len(rows), N]."""
         N = len(fs.symbols)
@@ -270,7 +274,7 @@ class IntradayEngine:
             return rep
         self.ensure_accounts(now)
         d = self.feed.data(t_last)
-        fs = build_features(d, 12)
+        fs = self._features(d)
         idx = d.index
         new = idx[-1:] if last_done is None else idx[(idx > last_done) & (idx <= t_last)]
         rep.new_bars = len(new)

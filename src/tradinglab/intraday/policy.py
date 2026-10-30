@@ -67,6 +67,15 @@ class SelectiveScorer:
         return {"preds": [list(map(float, p)) for p in self.preds],
                 "abs_s": [list(map(float, a)) for a in self.abs_s], "last_bar": self.last_bar}
 
+    def __deepcopy__(self, memo) -> "SelectiveScorer":
+        # History entries are never modified in place (``score`` only appends new arrays), so copying the
+        # deques is a full copy; deep-copying thousands of small arrays every cycle cost ~0.1 s per bar.
+        new = SelectiveScorer.__new__(SelectiveScorer)
+        new.preds = deque(self.preds, maxlen=self.preds.maxlen)
+        new.abs_s = deque(self.abs_s, maxlen=self.abs_s.maxlen)
+        new.last_bar = self.last_bar
+        return new
+
     def score(self, pred: np.ndarray, bar=None) -> np.ndarray:
         """Update forecast history with bar t's prediction and return score_t."""
         self.preds.append(np.asarray(pred, dtype=float))
@@ -142,12 +151,11 @@ class HysteresisBook:
             changed = self.pos != old
             self.frozen[changed | (self.pos == 0)] = 0.0
             return None
-        cand = candidate_weights(pd.Series(self.pos, index=self.symbols), d, cfg).to_numpy()
-        for i in range(len(self.symbols)):
-            if self.pos[i] == 0.0:
-                self.frozen[i] = 0.0
-            elif self.pos[i] != old[i] or self.frozen[i] == 0.0:
-                self.frozen[i] = cand[i]
+        resize = (self.pos != 0.0) & ((self.pos != old) | (self.frozen == 0.0))
+        if resize.any():   # sizing is costly and only new positions take a size
+            cand = candidate_weights(pd.Series(self.pos, index=self.symbols), d, cfg).to_numpy()
+            self.frozen[resize] = cand[resize]
+        self.frozen[self.pos == 0.0] = 0.0
         return pd.Series(self.frozen.copy(), index=self.symbols)
 
 

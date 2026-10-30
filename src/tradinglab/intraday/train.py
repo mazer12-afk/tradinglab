@@ -15,7 +15,7 @@ import pandas as pd
 from tradinglab.config import LabConfig
 from tradinglab.data.exchanges import BinanceSpot
 from tradinglab.data.store import MarketData
-from tradinglab.intraday.data import load_intraday
+from tradinglab.intraday.data import IntradayData, load_intraday
 from tradinglab.intraday.features import build_features
 from tradinglab.intraday.policy import DEFAULT_POLICIES, PolicySpec
 
@@ -37,16 +37,17 @@ def live_history(cfg: LabConfig, start: str | None = None):
 
 def train_live_intraday(cfg: LabConfig, policies: list[PolicySpec] = DEFAULT_POLICIES,
                         out_dir: Path | None = None, deep_epochs: int | None = None,
-                        kinds: tuple[str, ...] = ("lgbm", "deep")) -> dict:
+                        kinds: tuple[str, ...] = ("lgbm", "deep"), history: IntradayData | None = None) -> dict:
     """Train the models used by ``policies``; with ``kinds`` restrict to lgbm and/or deep,
-    keeping the other models (and their manifest entries) as they are."""
+    keeping the other models (and their manifest entries) as they are. ``history`` replaces the
+    archive + live history (the simulator trains on data up to each walk-forward step)."""
     from tradinglab.intraday.models import LGBMForecaster
     from tradinglab.intraday.research import train_rows
 
     ic = cfg.intraday
     out_dir = out_dir or Path(cfg.paths.models_dir) / "intraday" / "live"
     out_dir.mkdir(parents=True, exist_ok=True)
-    d = live_history(cfg)
+    d = live_history(cfg) if history is None else history
     train_end = d.index[-1] + pd.Timedelta(minutes=5)
     old = json.loads((out_dir / "manifest.json").read_text()) if (out_dir / "manifest.json").exists() else {}
     manifest = {"trained_at": pd.Timestamp.now(tz="UTC").isoformat(), "data_end": str(d.index[-1]),

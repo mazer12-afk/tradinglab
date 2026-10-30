@@ -134,6 +134,56 @@ During the few minutes between shifts, bars are marked on restart but not traded
 
 Scheduled shifts only run while the repository is public (GitHub Actions minutes are free for public repositories).
 
+## Fast simulation: weeks of paper trading in minutes
+
+`tradinglab simulate` runs the live engines, every account and the vault rule on archived market data, with
+a simulated clock. The two-week vault-2w experiment (80 accounts) replays in about **11 minutes** on 4 CPU
+cores instead of 14 days:
+
+```bash
+tradinglab --config config/experiment.yaml simulate --start 2026-10-15T23:47:45 --days 14 --out runs/sim1
+tradinglab --config config/experiment.yaml simulate --start 2026-07-01 --end 2026-10-01 --walk-forward --out runs/q3
+```
+
+Each run writes `intraday.sqlite` / `lab.sqlite` (the same state files as a live run), `summary.csv` (one row
+per account) and `simulation.json`. `--books intraday|daily` runs one book only.
+
+**What is simulated, and how.** Only the market data source and the clock change; trading rules, sizing,
+the vault, fees, impact and funding are the live engines' own code (`tradinglab.simulate`).
+* Fills cross a modelled spread around archived prices (5-minute bar close; open of the hour for the daily
+  book, the 1-minute open for cycles inside an hour), ± each coin's median live half-spread measured from
+  the vault-2w fills (`config/sim_spreads.json`: 0 bp for BTC up to 6.4 bp for ETC).
+* Funding: settled rates (OKX history for the 5-minute book, as live; the Binance archive for the daily
+  book). The daily models see only what the monthly archive had published, as live.
+* Speed: model signals are computed once per run; the 5-minute book is sized on two weeks of data (the
+  sizing EWMA has a one-day span, so older data weighs < 1e-12); the daily book cycles hourly.
+
+**Checked against the live run (15–29 Oct 2026).**
+
+| | 5-minute book (24 accounts) | daily book (56 accounts) |
+|---|---|---|
+| same trades as live (bar, coin, side) | 75–99 % of fills | 100 % for every control account |
+| vault sweeps as live | 24 of 24 accounts | 55 of 56 accounts |
+| final result vs live, median gap | $197 per $100k | $45 per $100k |
+| hourly returns, correlation with live | 0.99–1.00 | – |
+| fees and spread vs live | within 1 % | – |
+| strategy ranking | identical | identical |
+
+Prices differ by about 2 bp (5-minute) and 7 bp (daily) per fill; the simulator shows no systematic
+advantage (−0.08 bp per fill on 162,556 matched fills). Vault twins are path dependent: one daily twin
+(Breakout, 1 %) marked $26 above its trigger in the simulation where live marked $30 below it, banked an
+hour earlier and ended $1.8k apart. Treat a single twin's result as that sensitive.
+Tests (`tests/test_simulate.py`) check that the simulator reproduces the production engines' fills and
+equity exactly when both see the same data, and that nothing reads data from after the simulated clock.
+
+**Out of sample only.** The live models were trained on data up to 13 Oct 2026, so simulating earlier
+windows with them would flatter them; `simulate` refuses that (`--allow-in-sample` overrides and flags
+the result). `--walk-forward` makes past windows honest: at the start and on the first of each month the
+models are retrained on data closed by then (LightGBM: about a minute per step) and the engines restart on
+them. The deep models take about 30 minutes each per step; they are retrained only with `--retrain-deep`
+and left out otherwise. The production blend `main` was chosen by the research tournament on data up to
+13 Oct 2026, so walk-forward runs before that leave it out.
+
 ## Live paper trading
 
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The
