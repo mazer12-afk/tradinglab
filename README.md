@@ -80,6 +80,15 @@ Full tables: `reports/research/` (`index.html`, `candidates_oos.csv`,
 
 **Question:** which strategies make money on live markets, and does banking profit as it appears help?
 
+**Result (15–29 Oct 2026; full report in `analysis/report.html` on the `experiment/vault-2w` branch).**
+The market fell (12-coin basket −9.8 %, 30-coin −14.4 %), much of it on the last day. 4 of 20 strategies
+made money: LightGBM 4h +7.7 % and three daily books that were about half net short (LSTM +4.0 %,
+DeePM-lite +3.2 %, Breakout +2.4 %). None is statistically distinguishable from luck: the 20 strategies
+behave like about three independent bets, and the best of such a field typically shows +6.5–7 % by chance.
+The vault rule worked as specified (33 sweeps, all valid; $60,462 banked across 14 twins) and added
+$11,753 net versus the controls, almost all in the daily deep-learning books. `deep_neutral` lost 67 % to
+trading costs and should not run again as built.
+
 **The vault rule.** Every account starts with $100,000. A *vault twin* of an account trades the same
 strategy, but as soon as its marked equity reaches $100,000 × (1 + θ) it:
 1. closes every position at live prices, paying fees and spread;
@@ -105,8 +114,8 @@ An account's result is its vault plus its trading equity.
 - **Final liquidation:** at the end every account is liquidated at live prices.
 
 **Where it runs.** `.github/workflows/experiment.yml` on GitHub-hosted runners. Each run is a shift of
-about 5.5 hours. Each clean shift queues the next one, and a half-hourly schedule recovers a failed
-shift; a concurrency group keeps exactly one shift waiting, so shifts run back to back.
+about 5.5 hours. Each clean shift queues the next one; a concurrency group keeps exactly one shift
+waiting, so shifts run back to back. (A half-hourly recovery schedule ran during vault-2w and is now off.)
 During the few minutes between shifts, bars are marked on restart but not traded.
 
 **Records:** branch `experiment/vault-2w`, pushed hourly.
