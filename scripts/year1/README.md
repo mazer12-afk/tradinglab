@@ -16,3 +16,4 @@ Run from the repository root with the project's Python. Everything before step 5
 7. `prune_rolling.py [OUT.csv]`: the pruning rule applied at each year start since 2020.
 8. `ml_gross.py OUT.json`: the daily LightGBM in the test year after and before costs.
 9. `prep.py`: the data for `reports/simulations/year1/report.html` (paths inside point to a scratch area).
+10. `yearly.py [OUT.csv]`: calendar-year return of every daily strategy since 2019, and the funding a hedged short perpetual collects.
