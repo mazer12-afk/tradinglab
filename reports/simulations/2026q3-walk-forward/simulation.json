@@ -1,0 +1,44 @@
+{
+ "start": "2026-07-01 00:00:00+00:00",
+ "end": "2026-10-01 00:00:00+00:00",
+ "books": [
+  "intraday",
+  "daily"
+ ],
+ "walk_forward": true,
+ "retrain_deep": false,
+ "in_sample_notes": [
+  "daily: the production blend ('main') was selected on data up to 2026-10-13 00:00:00+00:00; left out"
+ ],
+ "spreads": "/home/user/tradinglab/config/sim_spreads.json",
+ "runs": {
+  "intraday": {
+   "bars": 26497,
+   "seconds": 1624.4,
+   "steps": [
+    "2026-07-01 00:00:00+00:00",
+    "2026-08-01 00:00:00+00:00",
+    "2026-09-01 00:00:00+00:00"
+   ],
+   "left_out": [
+    "deep_lstm_attn",
+    "deep_neutral"
+   ]
+  },
+  "daily": {
+   "cycles": 2208,
+   "seconds": 523.3,
+   "steps": [
+    "2026-07-01 00:00:00+00:00",
+    "2026-08-01 00:00:00+00:00",
+    "2026-09-01 00:00:00+00:00"
+   ],
+   "left_out": [
+    "main",
+    "shadow:dl_lstm",
+    "shadow:dl_mom_trans",
+    "shadow:dl_deepm"
+   ]
+  }
+ }
+}

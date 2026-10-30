@@ -176,6 +176,15 @@ hour earlier and ended $1.8k apart. Treat a single twin's result as that sensiti
 Tests (`tests/test_simulate.py`) check that the simulator reproduces the production engines' fills and
 equity exactly when both see the same data, and that nothing reads data from after the simulated clock.
 
+**Example: Jul–Sep 2026, walk-forward (37 minutes for three months).** A strong rally (12-coin basket
++57 %, 30-coin +68 %), simulated out of sample with monthly retraining; the deep models and `main` were left
+out. Only the long-leaning daily books made money: long basket +32.8 %, slow breakout +29.0 %, slow trend
++18.9 %. The 5-minute LightGBM models lost 18–24 % (−$9k to −$12k before costs, net short in a rally; fees
+and spread did the rest) and the 4-hour momentum rule lost 42 %, three quarters of it to costs. Banking
+profit cost money in this trend: 18 of the 21 vault twins that swept ended behind their control, −$80.7k in
+total, the opposite of the falling vault-2w fortnight (+$11.8k). Summaries: `reports/simulations/`
+(including the account-by-account comparison with the live run in `vault-2w-check/`).
+
 **Out of sample only.** The live models were trained on data up to 13 Oct 2026, so simulating earlier
 windows with them would flatter them; `simulate` refuses that (`--allow-in-sample` overrides and flags
 the result). `--walk-forward` makes past windows honest: at the start and on the first of each month the

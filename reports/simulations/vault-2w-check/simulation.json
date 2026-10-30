@@ -1,0 +1,30 @@
+{
+ "start": "2026-10-15 23:47:45.211859+00:00",
+ "end": "2026-10-29 23:47:45.211859+00:00",
+ "books": [
+  "intraday",
+  "daily"
+ ],
+ "walk_forward": false,
+ "retrain_deep": false,
+ "in_sample_notes": [],
+ "spreads": "/home/user/tradinglab/config/sim_spreads.json",
+ "runs": {
+  "intraday": {
+   "bars": 4033,
+   "seconds": 491.7,
+   "steps": [
+    "2026-10-15 23:47:45.211859+00:00"
+   ],
+   "left_out": []
+  },
+  "daily": {
+   "cycles": 337,
+   "seconds": 113.8,
+   "steps": [
+    "2026-10-15 23:47:45.211859+00:00"
+   ],
+   "left_out": []
+  }
+ }
+}
