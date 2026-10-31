@@ -264,6 +264,31 @@ Reproduce: `tradinglab --config config/year1.yaml simulate --books daily --start
 57 % (1h) and 23 % (4h), the new daily model 21 %. Before fees and spread the 4h model broke even and the
 1h model lost 27 %; the daily model's forecasts lost 13 % (44 % net long in a falling year).
 
+## Day-trading research (1-minute bars, tested 29 Oct 2025 → 29 Oct 2026)
+
+**Question:** is there a day-trading rule for the 12 liquid perpetuals that makes money after fees?
+**Answer: none found.** The full report is `reports/daytrade/report.html`.
+
+* **Simulator** (`src/tradinglab/daytrade/`): individual trades on 1-minute USD-M perpetual bars.
+  * Market orders pay the coin's live half-spread, 1 bp impact and the 5 bp taker fee.
+  * Limit orders fill only when a later minute trades 1 bp through them, and pay the 2 bp maker fee.
+  * A stop fills before a take-profit in the same minute; funding is paid or received at each settlement.
+  * Tests are in `tests/test_daytrade.py`.
+* **Ideas** (event studies, Aug 2023 – Aug 2024): no edge large enough to beat about 9 bp of costs per round trip
+  for BTC leading the other coins (1–2 bp), breakouts (they fade), late-day momentum (≈5 bp per hour) or
+  hour-of-day patterns (±6 bp, none significant). The lab's 5-minute AI models earned 2.4 bp per unit traded
+  before costs against 7.3 bp of cost. The one large effect was the rebound after extreme 5-minute moves
+  (+15–27 bp beyond 5 standard deviations).
+* **Fading extreme moves in both directions:** every grid variant made money on Aug 2023 – Aug 2024 (best Sharpe
+  2.2) and every one lost on Sep 2024 – Oct 2025. Split by direction, buying after crashes made money in both
+  periods and selling after spikes lost in both.
+* **Buy the crash** (`config/daytrade_frozen.json`, committed before the test). After a 5-minute close more than
+  8 standard deviations below the previous one, a limit buy 1 standard deviation lower; sell 4 hours after the
+  fill.
+  * Development: Sharpe 3.6 (2023–24) and 0.9 (2024–25).
+  * **Test year: −1.9 %**, Sharpe −0.12, worst drawdown −6.9 %, 206 trades. Its edge per trade before fees fell
+    from +80 bp to +56 bp to +4 bp, below the 6.9 bp of fees.
+
 ## Live paper trading
 
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The
