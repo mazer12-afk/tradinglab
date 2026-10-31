@@ -1,0 +1,14 @@
+{
+  "frozen_at": "2026-10-31",
+  "strategy": "buy_the_crash",
+  "description": "Long-only cascade reversal on 12 USD-M perpetuals: after a 5-minute close more than k sigma below the previous close (sigma = EWMA std of 5-minute log returns over the previous ~day), post a limit buy 1 sigma below that close, valid 10 minutes; exit at the open 240 minutes after the fill. No take-profit, no stop. 20 % of equity per trade, one trade per coin, open notional capped at 1x equity.",
+  "params": {"k": 8.0, "sides": "long", "entry": "limit", "offset": 1.0, "ttl": 10, "tp": 0.0, "sl": 0.0, "hold": 240, "size": 0.2, "max_gross": 1.0},
+  "costs": {"maker_bps": 2.0, "taker_bps": 5.0, "impact_bps": 1.0, "through_bps": 1.0, "half_spread": "config/sim_spreads.json"},
+  "selection": "best Sharpe on the design period 2023-08-01 → 2024-09-01 among 64 long-only variants (all profitable there)",
+  "development": {
+    "design_2023-08_2024-08": {"sharpe": 3.64, "ann_return": 0.423, "max_dd": -0.035, "net_bp_per_trade": 72.8, "trades": 268},
+    "second_half_2024-09_2025-10": {"sharpe": 0.88, "ann_return": 0.111, "max_dd": -0.110, "net_bp_per_trade": 48.9, "trades": 136,
+      "note": "not a clean confirmation: the long-only idea came from looking at both halves (the both-sides version failed here)"}
+  },
+  "test": {"period": ["2025-10-29", "2026-10-29"], "runs": 1, "reference_only": ["k=7 and k=6, same other params", "the original both-sides version (k=7)"]}
+}
