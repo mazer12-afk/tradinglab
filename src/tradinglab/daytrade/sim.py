@@ -220,7 +220,11 @@ class Book:
 def run_book(trades: pd.DataFrame, capital: float = 100_000.0, max_gross: float = 2.0,
              start=None, end=None) -> Book:
     """Accept filled trades in entry order (one per coin at a time, gross cap), compound realised P&L."""
-    t = trades[trades["filled"]].sort_values(["entry_time", "symbol"]).copy()
+    t = trades[trades["filled"]].copy()
+    if "priority" in t:              # same-minute entries: the strongest signal is taken first
+        t = t.assign(_p=-t["priority"]).sort_values(["entry_time", "_p", "symbol"]).drop(columns="_p")
+    else:
+        t = t.sort_values(["entry_time", "symbol"])
     if start is not None:
         t = t[t["entry_time"] >= utc(start)]
     if end is not None:

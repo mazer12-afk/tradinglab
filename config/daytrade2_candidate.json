@@ -1,0 +1,12 @@
+{
+  "frozen_at": "2026-11-01",
+  "strategy": "ml_event_filter_long",
+  "status": "best candidate of the guarded search; NOT accepted (deflated Sharpe 0.41 < 0.95 after 37 trials) - test-year run is informative only",
+  "description": "Events: 5-minute moves beyond 3 standard deviations on 12 USD-M perpetuals (decision one minute after the 5-minute close). A LightGBM regression (huber) predicts the 4-hour forward log return from 23 features (move size and coin-specific part, open-interest change over 5 min/1 h/1 day, taker buy/sell ratio over 5 min/1 h, top-trader and crowd long/short ratios, last funding, market return over 1 h/1 d/3 d, volatility level, hour, weekday, minutes to funding) plus the coin; retrained at the start of every month on all events whose label was complete before it. Buy at market when the forecast exceeds +60 bp (strongest forecast first), sell at market 240 minutes later. 20 % of equity per trade, open positions capped at 1x equity.",
+  "params": {"event_abs_z": 3.0, "theta": 0.006, "sides": "long", "entry": "market", "hold": 240, "size": 0.2, "max_gross": 1.0,
+             "lgbm": {"objective": "huber", "alpha": 0.02, "learning_rate": 0.03, "num_leaves": 15, "min_data_in_leaf": 200,
+                      "feature_fraction": 0.8, "bagging_fraction": 0.8, "bagging_freq": 1, "lambda_l2": 10.0, "rounds": 200, "seed": 0}},
+  "development": {"F1_2023-02_2023-07": 0.31, "F2_2023-08_2024-08": 0.50, "F3_2024-09_2025-10": 0.10, "sharpe": 1.17,
+                  "deflated_sharpe": 0.41, "net_bp_per_trade": 31.3, "trades": 1246, "trials_in_registry": 37},
+  "test": {"period": ["2025-10-29", "2026-10-29"], "runs": 1}
+}
