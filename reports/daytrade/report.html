@@ -173,6 +173,19 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
   <p class="fig-note">Test-year return and Sharpe of the frozen rule and its neighbours. The neighbours were run after the frozen rule, as a robustness check only; none of them replaces it.</p>
 </section>
 
+<section aria-labelledby="fwd-h">
+  <div class="sec-head"><div class="eyebrow">Next · Forward test</div><h2 id="fwd-h">Running now on days that did not exist when the rule was frozen</h2>
+  <p class="lede">A daily job on GitHub trades every new day from 29 Oct 2026 with exactly the committed rule and model schedule. Binance's futures API is blocked from GitHub's servers, so it uses Binance's public archive, which publishes each day's 1-minute bars and futures metrics the next morning: results arrive a day late, but every trade is on data the rule has never seen. Before launch, the daily runner reproduced the research run trade for trade on 1–27 Oct 2026.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Arm</th><th>Rule</th><th>Why it is there</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Frozen</td><td>Forecast &gt; 60 bp, hold 4 hours</td><td style="white-space:normal">The candidate exactly as committed before its test year.</td></tr>
+      <tr><td>Second arm</td><td>Forecast &gt; 45 bp, hold 2 hours</td><td style="white-space:normal">The best nearby setting in the test year. Chosen after seeing that year, so only its forward days count.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Results are committed daily to the branch <code>experiment/daytrade-forward</code> (<code>status.json</code>, <code>trades.csv</code>, <code>equity.csv</code>). At about one trade every three days, it needs at least three months before the result says much.</p>
+</section>
+
 <section aria-labelledby="ideas-h">
   <div class="sec-head"><div class="eyebrow">Round 1 · Ideas</div><h2 id="ideas-h">Where an intraday edge could be</h2>
   <p class="lede">Average move after each signal on the design period (Aug 2023 – Aug 2024), in basis points, in the direction the idea predicts. A round trip costs about 4 bp with limit orders on both sides, about 9 bp with a limit entry and market exit, and 14–16 bp with market orders (fees, spread and impact).</p></div>
