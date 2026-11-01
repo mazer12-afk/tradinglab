@@ -1,0 +1,25 @@
+# Which Binance futures endpoints answer from GitHub's runners? (manual; prints HTTP codes and latency)
+name: probe-binance
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe
+        run: |
+          for u in \
+            "https://fapi.binance.com/fapi/v1/ping" \
+            "https://www.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=1m&limit=2" \
+            "https://www.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=5m&limit=2" \
+            "https://www.binance.com/futures/data/topLongShortPositionRatio?symbol=BTCUSDT&period=5m&limit=2" \
+            "https://www.binance.com/futures/data/topLongShortAccountRatio?symbol=BTCUSDT&period=5m&limit=2" \
+            "https://www.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=5m&limit=2" \
+            "https://www.binance.com/futures/data/takerlongshortRatio?symbol=BTCUSDT&period=5m&limit=2" \
+            "https://www.binance.com/fapi/v1/ticker/bookTicker?symbol=BTCUSDT" \
+            "https://www.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1" \
+            "https://data.binance.vision/?prefix=data/futures/um/daily/metrics/BTCUSDT/"; do
+            out=$(curl -s -m 15 -w " | HTTP %{http_code} in %{time_total}s" "$u" | tail -c 260)
+            echo "$u"; echo "   $out"
+          done
