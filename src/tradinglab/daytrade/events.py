@@ -1,8 +1,14 @@
 """Extreme-move events with futures-metrics features, and the walk-forward LightGBM forecast on them.
 
 The research behind it is in ``scripts/daytrade2`` and ``reports/daytrade2``. Timing: the 5-minute bar ending
-at T is judged at T + 1 minute (the metrics snapshot of T plus a minute of publication delay); the decision
-uses the close of the minute starting at T, and any trade fills from the next minute.
+at T is judged at T + 1 minute; the decision uses the close of the minute starting at T, and any trade fills
+from the next minute.
+
+Futures metrics and their publication delay: the archive's value stamped X is Binance's live value stamped
+X + 5 minutes (open interest, long/short ratios) or X (taker ratio), published about 1-2.3 and 7.6 minutes after
+those stamps (measured on the live API on 1 Nov 2026). An archive value stamped X is therefore known only from
+about X + 8 minutes, so with ``metrics_lag=2`` a decision at T + 1 minute uses values stamped T - 10 minutes or
+earlier. The first research runs used ``metrics_lag=0``, which looked about 6-8 minutes ahead.
 """
 
 from __future__ import annotations
@@ -23,8 +29,11 @@ FEATURES = ["z", "iz", "abs_z", "doi_z", "sig5", "sig5_rel", "ret_1h", "ret_4h",
             "hour", "dow", "to_settle"]
 
 
+METRICS_LAG = 2                    # 5-minute steps between a metrics stamp and the first decision that may use it
+
+
 def event_table(m: Minutes, metrics: dict[str, pd.DataFrame], funding: dict[str, pd.Series],
-                start=None, end=None) -> pd.DataFrame:
+                start=None, end=None, metrics_lag: int = METRICS_LAG) -> pd.DataFrame:
     """One row per event (5-minute |z| > EVENT_Z) with its features, the coin, the decision close and sigma,
     and the label (4-hour forward log return; NaN until known). Rows from ``start`` to ``end`` (decision time)."""
     c = m.close
@@ -37,7 +46,7 @@ def event_table(m: Minutes, metrics: dict[str, pd.DataFrame], funding: dict[str,
     z = r5 / sig
     idio = r5.sub(r5.mean(axis=1), axis=0)
     iz = idio / idio.ewm(span=288, min_periods=100).std().shift(1)
-    met = {s: metrics[s].reindex(grid) for s in syms}
+    met = {s: metrics[s].reindex(grid).shift(metrics_lag) for s in syms}
     oi = pd.DataFrame({s: np.log(met[s]["sum_open_interest_value"]) for s in syms})
     doi = oi.diff()
     taker = pd.DataFrame({s: np.log(met[s]["sum_taker_long_short_vol_ratio"]) for s in syms})

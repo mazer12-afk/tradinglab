@@ -46,7 +46,19 @@ def arms() -> list[dict]:
 
 def load_state(rec: Path) -> dict:
     p = rec / "state.json"
-    return json.loads(p.read_text()) if p.exists() else {"start": str(START.date()), "last_day": None}
+    return json.loads(p.read_text()) if p.exists() else {"start": str(START.date()), "last_day": None,
+                                                           "metrics_lag": E.METRICS_LAG}
+
+
+def reset_if_stale(rec: Path) -> None:
+    """Records built with another metrics timing are discarded (git keeps them) and the test restarts at START."""
+    p = rec / "state.json"
+    if p.exists() and json.loads(p.read_text()).get("metrics_lag") != E.METRICS_LAG:
+        log.warning("records use another metrics timing: restarting the forward test from %s", START.date())
+        for f in ("events.parquet", "trades.csv", "equity.csv", "status.json", "state.json"):
+            (rec / f).unlink(missing_ok=True)
+        for f in (rec / "models").glob("*.txt"):
+            f.unlink()
 
 
 def save_json(path: Path, obj) -> None:
@@ -140,6 +152,7 @@ def run(cfg: LabConfig, rec: Path, until=None, seed: Path | None = None) -> dict
 
     rec = Path(rec)
     rec.mkdir(parents=True, exist_ok=True)
+    reset_if_stale(rec)
     md = MarketData(cfg.paths.data_dir)
     if not (rec / "events.parquet").exists():
         s = pd.read_parquet(seed) if seed is not None else build_seed(cfg, md)

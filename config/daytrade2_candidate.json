@@ -3,10 +3,62 @@
   "strategy": "ml_event_filter_long",
   "status": "best candidate of the guarded search; NOT accepted (deflated Sharpe 0.41 < 0.95 after 37 trials) - test-year run is informative only",
   "description": "Events: 5-minute moves beyond 3 standard deviations on 12 USD-M perpetuals (decision one minute after the 5-minute close). A LightGBM regression (huber) predicts the 4-hour forward log return from 23 features (move size and coin-specific part, open-interest change over 5 min/1 h/1 day, taker buy/sell ratio over 5 min/1 h, top-trader and crowd long/short ratios, last funding, market return over 1 h/1 d/3 d, volatility level, hour, weekday, minutes to funding) plus the coin; retrained at the start of every month on all events whose label was complete before it. Buy at market when the forecast exceeds +60 bp (strongest forecast first), sell at market 240 minutes later. 20 % of equity per trade, open positions capped at 1x equity.",
-  "params": {"event_abs_z": 3.0, "theta": 0.006, "sides": "long", "entry": "market", "hold": 240, "size": 0.2, "max_gross": 1.0,
-             "lgbm": {"objective": "huber", "alpha": 0.02, "learning_rate": 0.03, "num_leaves": 15, "min_data_in_leaf": 200,
-                      "feature_fraction": 0.8, "bagging_fraction": 0.8, "bagging_freq": 1, "lambda_l2": 10.0, "rounds": 200, "seed": 0}},
-  "development": {"F1_2023-02_2023-07": 0.31, "F2_2023-08_2024-08": 0.50, "F3_2024-09_2025-10": 0.10, "sharpe": 1.17,
-                  "deflated_sharpe": 0.41, "net_bp_per_trade": 31.3, "trades": 1246, "trials_in_registry": 37},
-  "test": {"period": ["2025-10-29", "2026-10-29"], "runs": 1}
+  "params": {
+    "event_abs_z": 3.0,
+    "theta": 0.006,
+    "sides": "long",
+    "entry": "market",
+    "hold": 240,
+    "size": 0.2,
+    "max_gross": 1.0,
+    "lgbm": {
+      "objective": "huber",
+      "alpha": 0.02,
+      "learning_rate": 0.03,
+      "num_leaves": 15,
+      "min_data_in_leaf": 200,
+      "feature_fraction": 0.8,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 10.0,
+      "rounds": 200,
+      "seed": 0
+    }
+  },
+  "development": {
+    "F1_2023-02_2023-07": 0.31,
+    "F2_2023-08_2024-08": 0.5,
+    "F3_2024-09_2025-10": 0.1,
+    "sharpe": 1.17,
+    "deflated_sharpe": 0.41,
+    "net_bp_per_trade": 31.3,
+    "trades": 1246,
+    "trials_in_registry": 37
+  },
+  "test": {
+    "period": [
+      "2025-10-29",
+      "2026-10-29"
+    ],
+    "runs": 1
+  },
+  "timing_fix": {
+    "date": "2026-11-01",
+    "metrics_lag": 2,
+    "why": "Live API check: the archive's open-interest and long/short values stamped X equal the live values stamped X+5 min (published 1-2.3 min later) and its taker ratio stamped X is published 7.6 min after X. The first runs used them from X+1 min (about 6-8 minutes of look-ahead). With metrics_lag=2 a decision at T+1 min uses only values stamped T-10 min or earlier, all published by then.",
+    "rerun_same_design": {
+      "F1_2023-02_2023-07": 0.744,
+      "F2_2023-08_2024-08": 0.47,
+      "F3_2024-09_2025-10": 0.091,
+      "test_2025-10-29_2026-10-29": {
+        "return": 0.12,
+        "sharpe": 1.075,
+        "max_dd": -0.055,
+        "trades": 150,
+        "net_bp_per_trade": 39.7
+      },
+      "forecast_correlation": 0.15
+    },
+    "effect": "the result does not depend on the look-ahead; the corrected timing is used from now on (forward and live tests)"
+  }
 }
