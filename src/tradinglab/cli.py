@@ -12,6 +12,7 @@
     intraday-train / intraday-run / intraday-status   5-minute AI day-trading accounts
     experiment-run   one shift of the unattended live experiment (see tradinglab.experiment)
     simulate     the live engines on archived data: weeks of paper trading in minutes (tradinglab.simulate)
+    daytrade-forward   forward paper test of the frozen day-trading candidate on newly published days
 """
 
 from __future__ import annotations
@@ -236,6 +237,14 @@ def cmd_simulate(cfg, args) -> int:
     return 0
 
 
+def cmd_daytrade_forward(cfg, args) -> int:
+    from tradinglab.daytrade.forward import run
+
+    status = run(cfg, Path(args.records), until=args.until, seed=Path(args.seed) if args.seed else None)
+    print(json.dumps(status, indent=1, default=str))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tradinglab", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -291,6 +300,10 @@ def main(argv: list[str] | None = None) -> int:
                         "otherwise they are left out")
     p.add_argument("--allow-in-sample", action="store_true",
                    help="run even if the models were trained on part of this window (results flagged)")
+    p = sub.add_parser("daytrade-forward", help="forward paper test of the frozen day-trading candidate")
+    p.add_argument("--records", required=True, help="records directory (its own git branch)")
+    p.add_argument("--until", default=None, help="last day to trade (default: the latest fully published day)")
+    p.add_argument("--seed", default=None, help="history events parquet (default: built from the archive)")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)
@@ -298,7 +311,8 @@ def main(argv: list[str] | None = None) -> int:
                "backtest": cmd_backtest, "probe": cmd_probe, "cycle": cmd_cycle, "run": cmd_run,
                "status": cmd_status, "report": cmd_report, "intraday-train": cmd_intraday_train,
                "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status,
-               "experiment-run": cmd_experiment_run, "simulate": cmd_simulate}[args.cmd]
+               "experiment-run": cmd_experiment_run, "simulate": cmd_simulate,
+               "daytrade-forward": cmd_daytrade_forward}[args.cmd]
     return handler(cfg, args)
 
 

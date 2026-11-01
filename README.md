@@ -281,6 +281,17 @@ run once on the test year anyway.
 * **Status:** a candidate, not a proven method. One year of 135 trades is about one standard error from zero,
   so it goes to a forward paper test on new days.
 
+**Forward paper test (running):** `.github/workflows/daytrade-forward.yml` runs daily (07:41 UTC) and executes
+`tradinglab daytrade-forward`, which trades the frozen candidate on every day published after 29 Oct 2026.
+* **Data:** Binance's futures API is geo-blocked from GitHub's runners, so the test uses the public archive.
+  Each day's 1-minute bars and futures metrics appear the next day, and a day is traded once the following day
+  is out too, for exits.
+* **Code path:** the runner uses the same package code as the research. It reproduced the test year trade for
+  trade (`scripts/daytrade2/repro_check.py`, `forward_check.py`).
+* **Records:** branch `experiment/daytrade-forward` holds `status.json`, `trades.csv`, `equity.csv` and the
+  monthly models.
+* **Judging it:** wait at least three months before drawing a conclusion.
+
 **Round 1:**
 
 **Question:** is there a day-trading rule for the 12 liquid perpetuals that makes money after fees?
