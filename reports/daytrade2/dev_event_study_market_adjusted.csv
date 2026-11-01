@@ -1,0 +1,37 @@
+idea,fold,events,raw60,adj60,raw240,adj240
+"follow spike |z|>4, OI not falling",F1,2685,18.5,3.4,28.0,7.5
+"follow spike |z|>4, OI not falling",F2,2820,8.9,0.5,19.6,3.9
+"follow spike |z|>4, OI not falling",F3,2805,36.7,8.6,47.6,9.6
+"follow spike |z|>4, OI rising (z>2)",F1,1840,17.9,4.4,24.7,11.3
+"follow spike |z|>4, OI rising (z>2)",F2,1475,3.6,3.1,14.5,9.1
+"follow spike |z|>4, OI rising (z>2)",F3,633,103.9,37.6,109.3,41.2
+"buy crash |z|>4, OI not falling",F1,260,-19.8,-6.7,-2.1,-3.0
+"buy crash |z|>4, OI not falling",F2,1600,28.7,3.5,42.9,2.8
+"buy crash |z|>4, OI not falling",F3,2495,37.2,2.0,34.5,3.5
+"follow coin-only spike |iz|>4, OI not falling",F1,3029,4.3,1.2,9.5,6.7
+"follow coin-only spike |iz|>4, OI not falling",F2,3429,6.1,0.9,10.0,3.5
+"follow coin-only spike |iz|>4, OI not falling",F3,3247,17.5,-0.1,26.6,-0.3
+"follow coin-only drop |iz|>4, OI not falling (short)",F1,1146,-16.4,3.3,-3.3,3.2
+"follow coin-only drop |iz|>4, OI not falling (short)",F2,1536,-9.2,-6.5,-16.1,-5.6
+"follow coin-only drop |iz|>4, OI not falling (short)",F3,2117,-46.7,-6.3,-61.7,-10.8
+buy coin-only drop |iz|>4 (reversal),F1,2305,15.0,2.1,17.1,6.1
+buy coin-only drop |iz|>4 (reversal),F2,2307,10.8,3.6,19.3,4.2
+buy coin-only drop |iz|>4 (reversal),F3,2380,35.0,1.4,50.2,6.7
+"follow spike |z|>5, OI not falling",F1,1334,31.9,9.0,43.8,19.8
+"follow spike |z|>5, OI not falling",F2,1341,7.9,-0.5,21.6,5.7
+"follow spike |z|>5, OI not falling",F3,1195,55.9,9.7,74.7,9.7
+"follow spike |z|>5, OI rising (z>2)",F1,964,30.8,9.6,38.9,24.5
+"follow spike |z|>5, OI rising (z>2)",F2,768,-1.3,2.2,8.0,10.6
+"follow spike |z|>5, OI rising (z>2)",F3,320,136.2,46.3,149.9,46.4
+"buy crash |z|>5, OI not falling",F1,95,-20.1,-5.5,3.1,5.2
+"buy crash |z|>5, OI not falling",F2,762,43.4,4.0,64.4,2.4
+"buy crash |z|>5, OI not falling",F3,1045,79.0,1.2,80.1,1.2
+"follow coin-only spike |iz|>5, OI not falling",F1,1653,9.9,3.2,22.5,11.7
+"follow coin-only spike |iz|>5, OI not falling",F2,1761,6.9,0.4,13.9,4.7
+"follow coin-only spike |iz|>5, OI not falling",F3,1489,36.5,1.6,46.8,-0.2
+"follow coin-only drop |iz|>5, OI not falling (short)",F1,480,-22.8,8.5,-2.3,9.4
+"follow coin-only drop |iz|>5, OI not falling (short)",F2,655,-19.1,-10.7,-29.5,-10.9
+"follow coin-only drop |iz|>5, OI not falling (short)",F3,861,-87.0,-14.7,-112.9,-23.0
+buy coin-only drop |iz|>5 (reversal),F1,1112,21.6,1.2,23.3,5.0
+buy coin-only drop |iz|>5 (reversal),F2,1062,24.1,6.2,36.0,9.0
+buy coin-only drop |iz|>5 (reversal),F3,986,67.8,8.4,92.7,16.1

@@ -1,0 +1,94 @@
+"""Round 3: LightGBM meta-model on extreme-move events with futures-metrics features, retrained monthly (walk-forward)."""
+import json, sys, time
+import numpy as np
+import pandas as pd
+import lightgbm as lgb
+from pathlib import Path
+sys.path.insert(0, sys.argv[1]); sys.path.insert(0, sys.argv[2])
+from load import load_minutes
+from signals import event_frame, intents_from_mask
+from tradinglab.config import load_config
+from tradinglab.data.store import MarketData
+from tradinglab.daytrade.sim import Costs, simulate_trades, funding_cost
+from tradinglab.daytrade.research import Registry, evaluate
+
+FOLDS3 = [("TEST", "2025-10-29", "2026-10-29")]
+REG = Registry(sys.argv[4])
+MET = Path(sys.argv[3])
+m = load_minutes("2022-07-01", "2026-10-30")
+ev = event_frame(m, MET)
+grid, syms = ev["grid"], m.symbols
+lc = np.log(m.close.ffill())
+L = lc.reindex(grid)
+H = 240
+fwd = (lc.shift(-H).reindex(grid) - L)                                # label: 4h forward log return from the decision
+met = {s: pd.read_parquet(MET / f"{s}.parquet").reindex(grid) for s in syms}
+md = MarketData(load_config().paths.data_dir)
+fr = pd.DataFrame({s: md.funding_8h(s, pd.Timestamp("2022-06-01")) for s in syms})
+fr.index = fr.index.round("min")
+fund = fr.reindex(grid, method="ffill")
+mk = lc.diff().mean(axis=1).fillna(0.0).cumsum().reindex(grid)
+feat = {
+    "z": ev["z"], "iz": ev["iz"], "abs_z": ev["z"].abs(), "doi_z": ev["doi_z"],
+    "sig5": np.log(ev["sig"]), "sig5_rel": np.log(ev["sig"] / ev["sig"].rolling(288 * 7, min_periods=288).mean()),
+    "ret_1h": L - L.shift(12), "ret_4h": L - L.shift(48), "ret_1d": L - L.shift(288),
+    "doi_1h": pd.DataFrame({s: np.log(met[s]["sum_open_interest_value"]) for s in syms}).diff(12),
+    "doi_1d": pd.DataFrame({s: np.log(met[s]["sum_open_interest_value"]) for s in syms}).diff(288),
+    "taker_5m": pd.DataFrame({s: np.log(met[s]["sum_taker_long_short_vol_ratio"]) for s in syms}),
+    "taker_1h": pd.DataFrame({s: np.log(met[s]["sum_taker_long_short_vol_ratio"]) for s in syms}).rolling(12, min_periods=8).mean(),
+    "top_ls": pd.DataFrame({s: np.log(met[s]["sum_toptrader_long_short_ratio"]) for s in syms}),
+    "top_ls_1h": pd.DataFrame({s: np.log(met[s]["sum_toptrader_long_short_ratio"]) for s in syms}).diff(12),
+    "crowd_ls": pd.DataFrame({s: np.log(met[s]["count_long_short_ratio"]) for s in syms}),
+    "funding": fund,
+}
+bc = lambda x: pd.DataFrame(np.repeat(np.asarray(x)[:, None], len(syms), axis=1), index=grid, columns=syms)
+feat.update({"mkt_1h": bc(mk - mk.shift(12)), "mkt_1d": bc(mk - mk.shift(288)), "mkt_3d": bc(mk - mk.shift(864)),
+             "hour": bc(grid.hour), "dow": bc(grid.dayofweek),
+             "to_settle": bc(((8 - grid.hour % 8) * 60 - grid.minute) % 480)})
+names = list(feat)
+event = ev["z"].abs() > 3.0
+st = event.stack(); st = st[st]
+idx = st.index
+X = np.column_stack([feat[n].stack().reindex(idx).to_numpy(dtype="float64") for n in names])
+y = fwd.stack().reindex(idx).to_numpy()
+sym_code = pd.Categorical(idx.get_level_values(1), categories=syms).codes
+X = np.column_stack([X, sym_code])
+t_ev = idx.get_level_values(0)
+print("events", len(idx), "features", len(names), flush=True)
+params = {"objective": "huber", "alpha": 0.02, "learning_rate": 0.03, "num_leaves": 15, "min_data_in_leaf": 200,
+          "feature_fraction": 0.8, "bagging_fraction": 0.8, "bagging_freq": 1, "lambda_l2": 10.0, "verbose": -1,
+          "num_threads": 4, "seed": 0, "deterministic": True}
+pred = np.full(len(idx), np.nan)
+months = pd.DatetimeIndex([pd.Timestamp("2025-10-29", tz="UTC")]).append(pd.date_range("2025-11-01", "2026-11-01", freq="MS", tz="UTC"))
+t0 = time.time()
+for a, b in zip(months[:-1], months[1:]):
+    tr = (t_ev < a - pd.Timedelta(minutes=H + 10)) & np.isfinite(y)          # labels complete before the month
+    te = (t_ev >= a) & (t_ev < b)
+    if te.sum() == 0:
+        continue
+    model = lgb.train(params, lgb.Dataset(X[tr], y[tr], categorical_feature=[X.shape[1] - 1]), num_boost_round=200)
+    pred[te] = model.predict(X[te])
+print(f"walk-forward done in {time.time()-t0:.0f}s; corr(pred, y) by fold:", flush=True)
+for f, a, b in FOLDS3:
+    s = (t_ev >= pd.Timestamp(a, tz="UTC")) & (t_ev < pd.Timestamp(b, tz="UTC")) & np.isfinite(pred) & np.isfinite(y)
+    print(f, int(s.sum()), round(float(np.corrcoef(pred[s], y[s])[0, 1]), 3), flush=True)
+P = pd.Series(pred, index=idx).unstack().reindex(index=grid, columns=syms)
+costs = Costs(half_spread=json.load(open("/home/user/tradinglab/config/sim_spreads.json"))["half_spread"])
+rates = {s: md.funding_8h(s, pd.Timestamp("2022-08-01")) for s in syms}
+spec = json.load(open("/home/user/tradinglab/config/daytrade2_candidate.json"))["params"]
+theta, H = spec["theta"], spec["hold"]
+it = intents_from_mask(ev, P > theta, 1, "market", 0.0, 0, H)
+it["priority"] = P.stack().reindex(pd.MultiIndex.from_arrays([pd.DatetimeIndex(it["t"]), it["symbol"]])).to_numpy()
+it["t"] = pd.DatetimeIndex(it["t"])
+trd = simulate_trades(m, it, costs)
+trd["funding"] = funding_cost(trd, rates)
+folds, pooled = evaluate(trd, rates, max_gross=spec["max_gross"], folds=FOLDS3)
+row = REG.add("ml_event_filter", {**spec, "run": "test year, informative (not accepted in development)"}, folds, pooled, stage="test")
+f = folds["TEST"]
+print("TEST YEAR:", {k: (round(v, 4) if isinstance(v, float) else v) for k, v in f.items()}, flush=True)
+from tradinglab.daytrade.sim import run_book
+bk = run_book(trd, start="2025-10-29", end="2026-10-29", max_gross=spec["max_gross"])
+bk.trades.to_csv(sys.argv[5] + "/trades.csv", index=False)
+((1 + bk.daily).cumprod() * 100).to_csv(sys.argv[5] + "/equity.csv")
+mon = bk.trades.groupby(bk.trades["entry_time"].dt.strftime("%Y-%m")).agg(trades=("net", "size"), net_bp=("net", lambda x: 1e4 * x.mean()), pnl=("pnl", "sum"))
+print(mon.round(1).to_string())

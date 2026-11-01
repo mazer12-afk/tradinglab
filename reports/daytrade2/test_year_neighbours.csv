@@ -1,0 +1,10 @@
+theta_bp,hold_min,trades,ann_return,sharpe,max_dd,net_bp,note
+45,120,307,0.428,2.792,-0.029,59.473,robustness only
+45,240,282,0.315,2.089,-0.057,50.075,robustness only
+45,360,275,0.380,2.262,-0.057,60.607,robustness only
+60,120,152,0.240,1.771,-0.028,73.342,robustness only
+60,240,135,0.112,1.039,-0.048,41.493,frozen candidate
+60,360,129,0.169,1.222,-0.060,63.926,robustness only
+75,120,83,0.229,1.901,-0.020,127.644,robustness only
+75,240,79,0.078,0.913,-0.033,49.758,robustness only
+75,360,74,0.136,1.248,-0.055,90.234,robustness only

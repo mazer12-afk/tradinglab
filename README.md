@@ -266,6 +266,23 @@ Reproduce: `tradinglab --config config/year1.yaml simulate --books daily --start
 
 ## Day-trading research (1-minute bars, tested 29 Oct 2025 → 29 Oct 2026)
 
+**Round 2 (guarded search with futures metrics, `reports/daytrade2/`):** Binance's 5-minute open interest,
+trader positioning and taker flow were added, and every variant was logged (`reports/daytrade2/trials.csv`).
+Acceptance needed profit in each of three development periods, Sharpe ≥ 1, ≥ 3 bp a trade after costs and a
+deflated Sharpe ≥ 0.95. None of the 39 variants passed.
+
+The best one, `config/daytrade2_candidate.json`, missed only the deflated-Sharpe bar (0.41). It was frozen and
+run once on the test year anyway.
+* **The rule:** a LightGBM model, retrained monthly, forecasts the 4-hour move after each extreme 5-minute move;
+  buy when the forecast exceeds +60 bp.
+* **Test year:** **+11.2 %** while the market fell 38 % (Sharpe 1.04, worst drawdown −4.8 %, 135 trades,
+  +41 bp a trade after costs).
+* **Robustness:** all nine nearby settings made money (+8 % to +43 %).
+* **Status:** a candidate, not a proven method. One year of 135 trades is about one standard error from zero,
+  so it goes to a forward paper test on new days.
+
+**Round 1:**
+
 **Question:** is there a day-trading rule for the 12 liquid perpetuals that makes money after fees?
 **Answer: none found.** The full report is `reports/daytrade/report.html`.
 
