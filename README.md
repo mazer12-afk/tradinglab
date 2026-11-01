@@ -280,6 +280,14 @@ run once on the test year anyway.
 * **Robustness:** all nine nearby settings made money (+8 % to +43 %).
 * **Status:** a candidate, not a proven method. One year of 135 trades is about one standard error from zero,
   so it goes to a forward paper test on new days.
+* **Timing fix (1 Nov 2026):** checking the live API against the archive showed the futures metrics were used
+  about 6–8 minutes before Binance publishes them. The archive's open interest and long/short values stamped X
+  are the live values stamped X + 5 min; the taker ratio appears 7.6 min after its stamp. `METRICS_LAG = 2` in
+  `src/tradinglab/daytrade/events.py` now makes a decision at T + 1 min use only values stamped T − 10 min or
+  earlier. The same design re-run with this timing (`reports/daytrade2/timing_fix_rerun.csv`) made money in all
+  three development periods (+74 %, +47 %, +9 % a year) and **+12.0 %** in the test year (Sharpe 1.08, worst
+  drawdown −5.5 %, 150 trades, +40 bp a trade). The edge did not come from the look-ahead. The forward and live
+  tests use the corrected timing.
 
 **On 18 coins it never saw** (`reports/daytrade2/out_of_universe_18_coins.csv`), the same design made money in
 three of four periods (+38 %, +48 %, test year +10 %) but lost 22 % in Sep 2024 – Oct 2025, with a 44 %
@@ -298,6 +306,28 @@ drawdown. The forecasts transfer (correlation 0.195); dependable profit is not s
   year. One is the frozen rule. The other, a 45 bp threshold with a 2-hour hold, was the best nearby setting in
   the test year; it was picked after seeing that year, so only its forward days count as evidence.
 * **Judging it:** wait at least three months before drawing a conclusion.
+
+**Live experiment (4 weeks, real time, running from 1 Nov 2026):** `.github/workflows/daytrade-live.yml` paper
+trades both arms on live Binance data as it happens (`tradinglab daytrade-live`,
+`src/tradinglab/daytrade/live.py`).
+* **Data:** 1-minute bars, the futures metrics, quotes and funding come from `www.binance.com`, which serves the
+  USD-M API to GitHub's runners (`fapi.binance.com` is geo-blocked). The live metrics are relabelled to the
+  archive's stamps the model was trained on; on 20–27 Oct the live-built features matched the archive-built
+  ones.
+* **Trading:** at each 5-minute close (decided at T + 1 min, once the metrics stamped T − 10 min are
+  published) extreme moves are scored by the month's model, trained only on archive data before the month
+  (`models/daytrade2/`). Arms buy at the live ask + 1 bp and sell at the live bid − 1 bp after the holding time,
+  paying 5 bp taker fees each way and the real funding. Each trade is 20 % of the arm's equity, one per coin,
+  at most 100 % open; each arm starts with $100,000.
+* **Checks:** `tests/test_daytrade_live.py` replays a market through the live engine and gets the simulator's
+  trades exactly; it also checks the API paging and that partly published metrics rows are filled in later.
+* **Running it:** shifts of about 5.5 h queue the next one; a half-hourly schedule restarts the chain if a shift
+  dies. After 28 days every position is closed and `FINISHED.json` is written.
+* **Records:** branch `experiment/daytrade-live`, committed hourly: `status.json` (summary), `trades.csv`,
+  `entries.csv`, `decisions.csv` (every scored event), `equity.csv` (every 5 minutes), `state.json`.
+* **What to expect:** in the test year the frozen arm made a median of 11 trades per 4 weeks (0 to 31 by
+  period), the 45 bp arm about twice as many. Four weeks check that the method trades live as simulated; they
+  cannot prove it profitable. The archive forward test covers the same days and is the comparison.
 
 **Round 1:**
 

@@ -1,0 +1,77 @@
+# Four-week real-time paper-trading experiment of the day-trading candidate (src/tradinglab/daytrade/live.py).
+# Live Binance USD-M data via www.binance.com (fapi.binance.com is geo-blocked from GitHub's runners).
+# Each run is one shift of ~5.5 h; a clean shift queues the next one itself, and the half-hourly schedule
+# restarts the chain if a shift dies. Records (state, trades, decisions, equity, status) are committed hourly
+# to the branch experiment/daytrade-live; after 28 days the last shift closes every position and writes
+# FINISHED.json, and every later run exits at once.
+name: daytrade-live
+on:
+  schedule:
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: shift length in minutes
+        default: "330"
+concurrency:
+  group: daytrade-live
+  cancel-in-progress: false
+permissions:
+  contents: write
+  actions: write
+jobs:
+  shift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Gate (public repository)
+        id: gate
+        run: |
+          private=$(curl -fsS -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}" | jq -r .private)
+          if [ "$private" = "true" ]; then
+            echo "Repository is private – skipping (shifts run only on a public repository)."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+      - name: Records branch
+        id: records
+        if: steps.gate.outputs.go == 'true'
+        run: scripts/experiment_records.sh experiment/daytrade-live
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            deploy/experiment-constraints.txt
+      - name: Restore the live data buffer
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: data/live_buffer
+          key: dtbuf-${{ github.run_id }}
+          restore-keys: dtbuf-
+      - name: Install
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        run: pip install -c deploy/experiment-constraints.txt -e ".[intraday,fast]"
+      - name: Shift
+        if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        run: tradinglab daytrade-live --records records --cache data/live_buffer --minutes "${{ inputs.minutes || '330' }}"
+      - name: Queue the next shift
+        if: success() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run daytrade-live.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+      - name: Save the live data buffer
+        if: always() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: data/live_buffer
+          key: dtbuf-${{ github.run_id }}

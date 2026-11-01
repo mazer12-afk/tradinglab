@@ -13,6 +13,7 @@
     experiment-run   one shift of the unattended live experiment (see tradinglab.experiment)
     simulate     the live engines on archived data: weeks of paper trading in minutes (tradinglab.simulate)
     daytrade-forward   forward paper test of the frozen day-trading candidate on newly published days
+    daytrade-live      one shift of the 4-week real-time day-trading experiment (tradinglab.daytrade.live)
 """
 
 from __future__ import annotations
@@ -245,6 +246,15 @@ def cmd_daytrade_forward(cfg, args) -> int:
     return 0
 
 
+def cmd_daytrade_live(cfg, args) -> int:
+    from tradinglab.daytrade.live import experiment_run
+
+    status = experiment_run(cfg, Path(args.records), minutes=args.minutes, cache=Path(args.cache) if args.cache else None,
+                            commit_every=args.commit_every)
+    print(json.dumps(status, indent=1, default=str))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tradinglab", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -304,6 +314,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--records", required=True, help="records directory (its own git branch)")
     p.add_argument("--until", default=None, help="last day to trade (default: the latest fully published day)")
     p.add_argument("--seed", default=None, help="history events parquet (default: built from the archive)")
+    p = sub.add_parser("daytrade-live", help="one shift of the 4-week real-time day-trading experiment")
+    p.add_argument("--records", required=True, help="records directory (branch experiment/daytrade-live)")
+    p.add_argument("--minutes", type=float, default=330.0, help="length of this shift")
+    p.add_argument("--cache", default=None, help="directory to keep the live data buffer between shifts")
+    p.add_argument("--commit-every", type=float, default=60.0, help="commit the records every N minutes")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)
@@ -312,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
                "status": cmd_status, "report": cmd_report, "intraday-train": cmd_intraday_train,
                "intraday-run": cmd_intraday_run, "intraday-status": cmd_intraday_status,
                "experiment-run": cmd_experiment_run, "simulate": cmd_simulate,
-               "daytrade-forward": cmd_daytrade_forward}[args.cmd]
+               "daytrade-forward": cmd_daytrade_forward, "daytrade-live": cmd_daytrade_live}[args.cmd]
     return handler(cfg, args)
 
 
