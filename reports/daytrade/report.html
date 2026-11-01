@@ -117,12 +117,13 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
 <section aria-labelledby="verdict-h">
   <div class="sec-head"><div class="eyebrow">Verdict</div><h2 id="verdict-h">One candidate made money in the test year; it is not proven yet</h2></div>
   <div class="verdict">
-    <p class="big">Round 2 added Binance's 5-minute futures data (open interest, trader positioning, taker flow) and a model that learns which extreme moves to trade. Its best rule buys only when the model forecasts a strong 4-hour rise. Frozen before the test, it made +11.2 % in a year when the market fell 38 %, and all nine nearby settings made money too.</p>
+    <p class="big">Round 2 added Binance's 5-minute futures data (open interest, trader positioning, taker flow) and a model that learns which extreme moves to trade. Its best rule buys only when the model forecasts a strong 4-hour rise. Frozen before the test, it made +11.2 % in a year when the market fell 38 %, and all nine nearby settings made money too. Re-run with a data-timing error fixed (below), it made +12.0 %.</p>
+    <p><strong>Timing fix, 1 Nov 2026.</strong> Comparing Binance's live API with its archive showed that the futures data had been used 6–8 minutes before Binance publishes it. With the timing corrected the result held: +74 %, +47 % and +9 % a year in the three development periods and +12.0 % in the test year (Sharpe 1.08, 150 trades, +40 bp a trade). The edge does not come from the look-ahead. The charts and the settings table below are from the original run.</p>
     <p>Two things keep it a candidate. It missed the development bar: after 37 attempts its deflated Sharpe was 0.41, where 0.95 was required. And one year of 135 trades is about one standard error from zero. The deciding evidence has to come from days that do not exist yet: a forward paper test.</p>
   </div>
   <div class="tiles">
-    <div class="tile"><div class="k">Test year, the frozen candidate</div><div class="v pos">+11.2 %</div><div class="s">Sharpe 1.04 · worst drawdown −4.8 % · market −38 %</div></div>
-    <div class="tile"><div class="k">Per trade, after costs</div><div class="v pos">+41 bp</div><div class="s">135 trades · 52 % winners · +51 bp before costs</div></div>
+    <div class="tile"><div class="k">Test year, corrected timing</div><div class="v pos">+12.0 %</div><div class="s">Sharpe 1.08 · worst drawdown −5.5 % · market −38 %</div></div>
+    <div class="tile"><div class="k">Per trade, after costs</div><div class="v pos">+40 bp</div><div class="s">150 trades · original run: +41 bp on 135</div></div>
     <div class="tile"><div class="k">Nearby settings in profit</div><div class="v">9 of 9</div><div class="s">+8 % to +43 % in the test year</div></div>
     <div class="tile"><div class="k">Attempts counted</div><div class="v">≈330</div><div class="s">39 in round 2's registry · ≈290 in round 1</div></div>
   </div>
@@ -131,6 +132,7 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
     <li><strong>Do not trade real money on it yet.</strong> One good year is not proof, and on 18 coins it never saw it lost 22 % in 2024–25 while making money in the other three periods. The forward test on new days decides.</li>
     <li><strong>Know what it is.</strong> It buys only, about once every three days, and holds four hours. The model mostly times the whole market after sharp moves; it does not pick coins (against the market it loses).</li>
     <li><strong>Judge it on the forward test, frozen as committed</strong> (<code>config/daytrade2_candidate.json</code>), for at least three months before drawing a conclusion.</li>
+    <li><strong>Watch the live run.</strong> Since 1 Nov 2026 both settings paper trade on live Binance prices for four weeks (see <a href="#live-h">Live</a>).</li>
   </ul>
 </section>
 
@@ -199,6 +201,25 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
     </tbody>
   </table></div>
   <p>Results are committed daily to the branch <code>experiment/daytrade-forward</code> (<code>status.json</code>, <code>trades.csv</code>, <code>equity.csv</code>). At about one trade every three days, it needs at least three months before the result says much.</p>
+</section>
+
+<section aria-labelledby="live-h">
+  <div class="sec-head"><div class="eyebrow">Now · Live, 4 weeks</div><h2 id="live-h">Both settings now trade live market data, in real time</h2>
+  <p class="lede">From 1 Nov 2026, 17:20 UTC, to 29 Nov 2026, 17:20 UTC, a GitHub job runs around the clock and paper trades both settings on Binance's live data as it happens. It works the way a real account would: it decides at each 5-minute close, buys at the live ask, sells at the live bid, and pays fees and the real funding. Each setting starts with $100,000.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Setting</th><th>Rule</th><th>Trades per 4 weeks in the test year</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Frozen</td><td>Forecast &gt; 60 bp, hold 4 hours</td><td>median 11 (0 to 31)</td></tr>
+      <tr><td>Second</td><td>Forecast &gt; 45 bp, hold 2 hours</td><td>about twice as many</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="points">
+    <li><strong>Same model, same rule.</strong> The November model was trained only on archive data before 1 Nov 2026. Trades are 20 % of equity each, one per coin, at most 100 % of equity open.</li>
+    <li><strong>Same data as the research.</strong> Binance's live futures data uses different timestamps from its archive, so the live job converts them. Live-built and archive-built inputs for 20–27 Oct gave the same 381 events and forecasts within 0.3 bp of each other.</li>
+    <li><strong>Same trades as the simulator.</strong> A replayed market run through the live engine gives exactly the simulator's trades. A test also checks that data Binance publishes in two steps is completed before it is used.</li>
+    <li><strong>Costs:</strong> 5 bp taker fee each way, 1 bp beyond the quoted price, and funding at every settlement held through.</li>
+  </ul>
+  <p>Records are committed every hour to the branch <code>experiment/daytrade-live</code>: <code>status.json</code> (summary), <code>trades.csv</code>, <code>decisions.csv</code> (every event scored), <code>equity.csv</code> (every 5 minutes). Four weeks show whether the method trades live as simulated; at about a dozen trades they cannot show that it is profitable. The archive forward test covers the same days and is the comparison.</p>
 </section>
 
 <section aria-labelledby="ideas-h">
