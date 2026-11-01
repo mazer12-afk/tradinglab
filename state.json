@@ -3,5 +3,19 @@
  "ends": "2026-11-29 17:20:04.498353+00:00",
  "arms_spec": "config/daytrade_forward_arms.json",
  "candidate_spec": "config/daytrade2_candidate.json",
- "metrics_lag": 2
+ "metrics_lag": 2,
+ "last_decision": "2026-11-01 18:15:00+00:00",
+ "last_mark": "2026-11-01 18:20:00+00:00",
+ "updated": "2026-11-01 18:20:02.378697+00:00",
+ "arms": {
+  "frozen": {
+   "equity": 100000.0,
+   "open": []
+  },
+  "theta45_hold120": {
+   "equity": 100000.0,
+   "open": []
+  }
+ },
+ "missed_closes": 0
 }
