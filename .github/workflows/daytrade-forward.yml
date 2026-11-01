@@ -56,5 +56,5 @@ jobs:
         run: |
           cd records
           git add -A
-          git commit -q -m "forward test through $(jq -r .through status.json): $(jq -r .trades status.json) trades, return $(jq -r .total_return status.json)" || echo "nothing new"
+          git commit -q -m "forward test through $(jq -r .through status.json): frozen $(jq -r .arms.frozen.trades status.json) trades, return $(jq -r .arms.frozen.total_return status.json)" || echo "nothing new"
           git push -q origin HEAD:experiment/daytrade-forward

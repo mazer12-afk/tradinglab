@@ -290,6 +290,9 @@ run once on the test year anyway.
   trade (`scripts/daytrade2/repro_check.py`, `forward_check.py`).
 * **Records:** branch `experiment/daytrade-forward` holds `status.json`, `trades.csv`, `equity.csv` and the
   monthly models.
+* **Arms:** two run side by side (`config/daytrade_forward_arms.json`), both counted only on days after the test
+  year. One is the frozen rule. The other, a 45 bp threshold with a 2-hour hold, was the best nearby setting in
+  the test year; it was picked after seeing that year, so only its forward days count as evidence.
 * **Judging it:** wait at least three months before drawing a conclusion.
 
 **Round 1:**

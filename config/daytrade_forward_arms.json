@@ -1,0 +1,10 @@
+{
+  "declared_at": "2026-11-01",
+  "note": "Arms of the forward paper test. Both use the frozen candidate's events, features and monthly model (config/daytrade2_candidate.json); they differ only in the forecast threshold and holding time. Only days after 29 Oct 2026 count.",
+  "arms": [
+    {"name": "frozen", "theta": 0.006, "hold": 240, "size": 0.2, "max_gross": 1.0,
+     "why": "the candidate exactly as frozen before its test year"},
+    {"name": "theta45_hold120", "theta": 0.0045, "hold": 120, "size": 0.2, "max_gross": 1.0,
+     "why": "the best of the nine nearby settings in the test year (+42.8 %, Sharpe 2.79); chosen after seeing that year, so its test-year result is not evidence"}
+  ]
+}

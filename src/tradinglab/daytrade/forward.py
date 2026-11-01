@@ -30,12 +30,18 @@ from tradinglab.daytrade.sim import Costs, book_stats, funding_cost, run_book, s
 log = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parents[3]
 SPEC = ROOT / "config" / "daytrade2_candidate.json"
+ARMS = ROOT / "config" / "daytrade_forward_arms.json"
 START = pd.Timestamp("2026-10-29", tz="UTC")       # first day after the frozen candidate's test year
 WINDOW_DAYS = 21                                   # history loaded around each day (features need ~10)
 
 
 def spec() -> dict:
     return json.loads(SPEC.read_text())["params"]
+
+
+def arms() -> list[dict]:
+    """The forward test's arms (threshold and holding time); the first is the frozen candidate itself."""
+    return json.loads(ARMS.read_text())["arms"]
 
 
 def load_state(rec: Path) -> dict:
@@ -73,11 +79,15 @@ def trade_day(rec: Path, cfg: LabConfig, md, day: pd.Timestamp) -> int:
     month = day.replace(day=1)
     model = model_for(rec, store, month)
     ev["pred"] = E.predict(model, ev) if len(ev) else []
-    it = E.intents(ev, ev["pred"].to_numpy(), p["theta"], p["hold"], p["size"])
     costs = Costs(half_spread=json.loads((ROOT / "config" / "sim_spreads.json").read_text())["half_spread"])
-    tr = simulate_trades(m, it, costs) if len(it) else it.assign(filled=False)
-    if len(tr):
-        tr["funding"] = funding_cost(tr, fund)
+    parts = []
+    for arm in arms():
+        it = E.intents(ev, ev["pred"].to_numpy(), arm["theta"], arm["hold"], arm["size"])
+        tr = simulate_trades(m, it, costs) if len(it) else it.assign(filled=False)
+        if len(tr):
+            tr["funding"] = funding_cost(tr, fund)
+        parts.append(tr.assign(arm=arm["name"]))
+    tr = pd.concat(parts, ignore_index=True)
     store = pd.concat([store[store["t"] < day], ev], ignore_index=True)
     store.to_parquet(rec / "events.parquet")
     path = rec / "trades.csv"
@@ -85,28 +95,32 @@ def trade_day(rec: Path, cfg: LabConfig, md, day: pd.Timestamp) -> int:
     if len(old):
         old = old[pd.to_datetime(old["t"], utc=True) < day]
     pd.concat([old, tr], ignore_index=True).to_csv(path, index=False)
-    log.info("%s: %d events, %d forecasts above %.0f bp, %d filled", day.date(), len(ev), len(it),
-             1e4 * p["theta"], int(tr["filled"].sum()) if len(tr) else 0)
+    log.info("%s: %d events; trades by arm: %s", day.date(), len(ev),
+             tr.groupby("arm")["filled"].sum().to_dict() if len(tr) else {})
     return len(tr)
 
 
 def summarise(rec: Path, through: pd.Timestamp) -> dict:
-    p = spec()
     path = rec / "trades.csv"
     tr = pd.read_csv(path) if path.exists() else pd.DataFrame()
-    status = {"strategy": "ml_event_filter_long", "spec": str(SPEC.relative_to(ROOT)), "start": str(START.date()),
-              "through": str(through.date()), "days": int((through - START).days) + 1}
-    if len(tr) and tr["filled"].any():
-        for c in ("t", "entry_time", "exit_time"):
-            tr[c] = pd.to_datetime(tr[c], utc=True)
-        bk = run_book(tr, start=START, end=through + pd.Timedelta(days=1), max_gross=p["max_gross"])
-        st = book_stats(bk)
-        eq = (1 + bk.daily).cumprod() * 100
-        eq.rename("equity_index").to_csv(rec / "equity.csv")
-        status.update({k: (round(float(v), 6) if isinstance(v, (float, np.floating)) else v) for k, v in st.items()})
-        status["total_return"] = round(float(eq.iloc[-1] / 100 - 1), 6) if len(eq) else 0.0
-    else:
-        status.update({"trades": 0, "total_return": 0.0})
+    status = {"strategy": "ml_event_filter_long", "spec": str(SPEC.relative_to(ROOT)), "arms_spec": str(ARMS.relative_to(ROOT)),
+              "start": str(START.date()), "through": str(through.date()), "days": int((through - START).days) + 1,
+              "note": "annualised figures mean little until there are months of data", "arms": {}}
+    curves = {}
+    for arm in arms():
+        t = tr[tr["arm"] == arm["name"]].copy() if len(tr) and "arm" in tr else pd.DataFrame()
+        st = {"trades": 0, "total_return": 0.0}
+        if len(t) and t["filled"].any():
+            for c in ("t", "entry_time", "exit_time"):
+                t[c] = pd.to_datetime(t[c], utc=True)
+            bk = run_book(t, start=START, end=through + pd.Timedelta(days=1), max_gross=arm["max_gross"])
+            st = {k: (round(float(v), 6) if isinstance(v, (float, np.floating)) else v) for k, v in book_stats(bk).items()}
+            eq = (1 + bk.daily).cumprod() * 100
+            curves[arm["name"]] = eq
+            st["total_return"] = round(float(eq.iloc[-1] / 100 - 1), 6) if len(eq) else 0.0
+        status["arms"][arm["name"]] = st
+    if curves:
+        pd.DataFrame(curves).to_csv(rec / "equity.csv")
     save_json(rec / "status.json", status)
     return status
 
