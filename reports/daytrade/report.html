@@ -128,7 +128,7 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
   </div>
   <h3>What to do with this</h3>
   <ul class="points">
-    <li><strong>Do not trade real money on it yet.</strong> One good year is not proof; a forward test on new days is the next step.</li>
+    <li><strong>Do not trade real money on it yet.</strong> One good year is not proof, and on 18 coins it never saw it lost 22 % in 2024–25 while making money in the other three periods. The forward test on new days decides.</li>
     <li><strong>Know what it is.</strong> It buys only, about once every three days, and holds four hours. The model mostly times the whole market after sharp moves; it does not pick coins (against the market it loses).</li>
     <li><strong>Judge it on the forward test, frozen as committed</strong> (<code>config/daytrade2_candidate.json</code>), for at least three months before drawing a conclusion.</li>
   </ul>
@@ -171,6 +171,21 @@ footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-s
     </tbody>
   </table></div>
   <p class="fig-note">Test-year return and Sharpe of the frozen rule and its neighbours. The neighbours were run after the frozen rule, as a robustness check only; none of them replaces it.</p>
+</section>
+
+<section aria-labelledby="oou-h">
+  <div class="sec-head"><div class="eyebrow">Round 2 · Coins it never saw</div><h2 id="oou-h">On 18 other coins: a real signal, but not a dependable profit</h2>
+  <p class="lede">The same design, unchanged (features, model settings, 60 bp threshold, 4-hour hold, monthly retraining), applied to the lab's 18 other coins, which played no part in its development: TRX, XLM, ATOM, NEAR, UNI, ETC, FIL, AAVE, HBAR, ALGO, VET, INJ, SUI, APT, ARB, OP, ICP and LDO. The forecasts transfer (their correlation with the outcome is 0.195, as on the original 12). The profit does not hold everywhere.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Period</th><th>Trades</th><th>Return a year</th><th>Sharpe</th><th>Worst DD</th><th>After costs</th></tr></thead>
+    <tbody>
+      <tr><td>Feb – Jul 2023</td><td>449</td><td class="pos">+37.6 %</td><td>1.13</td><td>−12.1 %</td><td class="pos">+21.0 bp</td></tr>
+      <tr><td>Aug 2023 – Aug 2024</td><td>625</td><td class="pos">+47.5 %</td><td>1.24</td><td>−23.6 %</td><td class="pos">+38.8 bp</td></tr>
+      <tr><td>Sep 2024 – Oct 2025</td><td>635</td><td class="neg">−21.8 %</td><td>−0.68</td><td>−43.9 %</td><td class="neg">−17.4 bp</td></tr>
+      <tr class="hl"><td>Test year, Oct 2025 – Oct 2026</td><td>273</td><td class="pos">+10.0 %</td><td>0.57</td><td>−18.2 %</td><td class="pos">+21.1 bp</td></tr>
+    </tbody>
+  </table></div>
+  <p>Three of four periods made money, including the falling test year, but one lost 22 % with a 44 % drawdown. These coins move harder, and 20 % of equity a trade is a lot on them. The candidate stays a candidate.</p>
 </section>
 
 <section aria-labelledby="fwd-h">

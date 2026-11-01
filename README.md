@@ -281,6 +281,10 @@ run once on the test year anyway.
 * **Status:** a candidate, not a proven method. One year of 135 trades is about one standard error from zero,
   so it goes to a forward paper test on new days.
 
+**On 18 coins it never saw** (`reports/daytrade2/out_of_universe_18_coins.csv`), the same design made money in
+three of four periods (+38 %, +48 %, test year +10 %) but lost 22 % in Sep 2024 – Oct 2025, with a 44 %
+drawdown. The forecasts transfer (correlation 0.195); dependable profit is not shown.
+
 **Forward paper test (running):** `.github/workflows/daytrade-forward.yml` runs daily (07:41 UTC) and executes
 `tradinglab daytrade-forward`, which trades the frozen candidate on every day published after 29 Oct 2026.
 * **Data:** Binance's futures API is geo-blocked from GitHub's runners, so the test uses the public archive.
