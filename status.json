@@ -2,13 +2,13 @@
  "experiment": "daytrade-live-4w",
  "started": "2026-11-01 17:20:04.498353+00:00",
  "ends": "2026-11-29 17:20:04.498353+00:00",
- "updated": "2026-11-04 17:59:50.444952+00:00",
+ "updated": "2026-11-04 18:59:52.435270+00:00",
  "missed_5min_closes": 0,
  "arms": {
   "frozen": {
    "realised_equity": 100000.0,
-   "marked_equity": 98923.94,
-   "return": -0.010761,
+   "marked_equity": 98691.45,
+   "return": -0.013086,
    "closed_trades": 0,
    "open_positions": 5,
    "win_rate": null,
