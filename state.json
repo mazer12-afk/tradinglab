@@ -4,9 +4,9 @@
  "arms_spec": "config/daytrade_forward_arms.json",
  "candidate_spec": "config/daytrade2_candidate.json",
  "metrics_lag": 2,
- "last_decision": "2026-11-05 11:30:00+00:00",
- "last_mark": "2026-11-05 11:30:00+00:00",
- "updated": "2026-11-05 11:32:08.083510+00:00",
+ "last_decision": "2026-11-05 12:30:00+00:00",
+ "last_mark": "2026-11-05 12:30:00+00:00",
+ "updated": "2026-11-05 12:32:14.713749+00:00",
  "arms": {
   "frozen": {
    "equity": 98579.36493644818,
