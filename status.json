@@ -2,7 +2,7 @@
  "experiment": "daytrade-live-4w",
  "started": "2026-11-01 17:20:04.498353+00:00",
  "ends": "2026-11-29 17:20:04.498353+00:00",
- "updated": "2026-11-05 15:02:11.546807+00:00",
+ "updated": "2026-11-05 16:02:50.025164+00:00",
  "missed_5min_closes": 0,
  "arms": {
   "frozen": {
@@ -17,10 +17,10 @@
   },
   "theta45_hold120": {
    "realised_equity": 98928.12,
-   "marked_equity": 98928.12,
-   "return": -0.010719,
+   "marked_equity": 98904.45,
+   "return": -0.010956,
    "closed_trades": 5,
-   "open_positions": 0,
+   "open_positions": 1,
    "win_rate": 0.0,
    "net_bp_per_trade": -107.19,
    "fees_and_funding_bp": 10.99
