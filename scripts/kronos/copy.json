@@ -23,5 +23,11 @@
   "<strong>Significance:</strong> hit rates are tested with each day as one observation, since the 12 coins tend to move together.",
   "<strong>Speed:</strong> Kronos's own sampler recomputes the whole context for every path at every step, about 2.3 seconds per path here. The lab's sampler computes the context once per coin and shares it across the paths. It gives the same draws (tested against Kronos's sampler with the same random seed) about 200 times faster: 14 seconds for 12 coins × 100 paths.",
   "<strong>Costs:</strong> 5 bp taker fee and 1 bp slippage each way, plus the actual funding paid or received."
+ ],
+ "ar_h": "Autoresearch found a profitable rule, but not one that needs Kronos",
+ "ar": [
+  "We then ran Karpathy's autoresearch loop: one editable strategy file and a fixed harness that scores it; a change is kept only if the score improves. Kronos's outputs every 4 hours from Jan 2024 to Oct 2026 were computed once: its hidden state and 32 sampled 4-hour paths for each coin. The score was the Sharpe ratio after costs on Jul 2025 – Mar 2026. Apr – Oct 2026 stayed locked until the loop had finished.",
+  "Of 13 ideas, the winner ignores Kronos's direction calls and uses its volatility forecast. It holds the coins Kronos expects to be calm and shorts the ones it expects to be jumpy, market-neutral. It trades slowly, moving positions 5 % toward their targets every 4 hours, so costs stay near 0.4 bp a day. In the locked months it made +14.2 % (Sharpe 1.43, worst drawdown −6.9 %), with gains in 6 of 7 months.",
+  "The same rule using each coin's realised volatility over the last day, with no Kronos at all, made +13.1 % in the locked months and did better in the scored ones. Kronos's direction calls, its hidden state and models trained on it added nothing. The profit comes from a known effect, calmer coins beating jumpier ones, which Kronos happens to measure. Over both periods the rule's Sharpe is 1.16 (+29 % in 16 months): good odds of a real effect, not proof."
  ]
 }

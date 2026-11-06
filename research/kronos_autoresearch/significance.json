@@ -1,0 +1,9 @@
+{
+ "trials": 13,
+ "dev_dsr": 0.196,
+ "dev_dsr_strict": 0.058,
+ "holdout_psr_vs_0": 0.859,
+ "both_periods_psr_vs_0": 0.908,
+ "both_periods_sharpe": 1.164,
+ "both_periods_return": 0.2919
+}

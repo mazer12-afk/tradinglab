@@ -385,6 +385,30 @@ lab's 12 coins? **Answer: not usefully.** Report: `reports/kronos/report.html`; 
   * `tests/test_kronos.py` checks that it matches Kronos exactly (`KRONOS_TEST=1`).
   * Scripts in `scripts/kronos/`: `evaluate.py`, `analyse.py`, `live_forecast.py`, `report.py`.
 
+### Autoresearch on Kronos (Karpathy-style loop, `research/kronos_autoresearch/`)
+
+**Question:** can a rule built on Kronos make money after costs? **Answer:** yes, one does, but it doesn't need Kronos.
+
+* **The method** (`program.md`): the agent may edit only `strategy.py`. The fixed harness `prepare.py` scores each
+  version, a change is kept only if the score improves (`record.py`), and every run is logged in `results.tsv`.
+* **Kronos inputs:** its outputs every 4 hours from Jan 2024 to Oct 2026 were computed once
+  (`scripts/kronos/cache.py`, run in parallel by `kronos-cache.yml` and stored on the branch `experiment/kronos-cache`).
+  For each coin that is its hidden state and 32 sampled 4-hour paths.
+* **Scoring:** walk-forward with a monthly refit; market-neutral; gross exposure at most 1; 6 bp per unit traded plus
+  funding. The score is the Sharpe after costs on Jul 2025 – Mar 2026. Apr – Oct 2026 stayed locked until the end
+  (`final.py`).
+* **Result after 13 ideas and 2 controls:** the winner holds the coins Kronos expects to be calm and shorts the ones
+  it expects to be jumpy, trading slowly.
+  * Scored months: Sharpe 0.97 (+13.1 %).
+  * Locked months: Sharpe 1.43 (+14.2 %, worst drawdown −6.9 %).
+  * All 16 months: Sharpe 1.16 (+29 %), a 91 % probability that the true Sharpe is above zero. The deflated Sharpe of
+    the pick is 0.20, below the 0.95 that would be convincing.
+* **The control:** the same rule on each coin's realised volatility, with no Kronos, did as well.
+  * Scored months: Sharpe 1.03 (+15.0 %).
+  * Locked months: Sharpe 1.29 (+13.1 %).
+  * The profit is the known low-volatility effect. Kronos's direction calls, hidden state and supervised models on it
+    added nothing.
+
 ## Live paper trading
 
 Started **2026-10-13 13:31 UTC** with $100,000 virtual capital per account. The

@@ -63,6 +63,7 @@ def build(d: Path, copy: dict) -> str:
                      [str(t) for t in pd.date_range(ex["origin"], periods=24, freq="1h")], [], q("q10"), q("q50"), q("q90"),
                      float(ex["last"]), actual=q("act"))
 
+    ar = autoresearch_section(copy)
     fan = C.fan(live["history"], live["future_t"], live["path_close"], live["p10"], live["p50"], live["p90"], live["last_close"])
     hz = ["1", "4", "12", "24"]
     cov = C.bars([f"{h} h ahead" for h in hz],
@@ -125,6 +126,7 @@ def build(d: Path, copy: dict) -> str:
   </div>
 </section>
 
+{ar}
 <section aria-labelledby="now-h">
   <div class="sec-head"><div class="eyebrow">Now · the picture from the post</div><h2 id="now-h">What Kronos says about Bitcoin for the next 24 hours</h2>
   <p class="lede">{copy['now']}</p></div>
@@ -192,6 +194,48 @@ def build(d: Path, copy: dict) -> str:
 <footer><div>Code: <code>src/tradinglab/kronos.py</code>, <code>scripts/kronos/</code>. Results: <code>reports/kronos/</code>. Kronos: github.com/shiyu-coder/Kronos (MIT licence).</div></footer>
 </div>"""
     return page
+
+
+def autoresearch_section(copy: dict) -> str:
+    """The Karpathy-style autoresearch loop on Kronos (research/kronos_autoresearch), if it has been run."""
+    d = Path(__file__).resolve().parents[2] / "research" / "kronos_autoresearch"
+    if not (d / "holdout.json").exists():
+        return ""
+    res = pd.read_csv(d / "results.tsv", sep="\t")
+    hold = json.loads((d / "holdout.json").read_text())
+    sig = json.loads((d / "significance.json").read_text())
+    names = list(hold)
+    cols = dict(zip(names, ["--s1", "--s4", "--muted"]))
+    curves = {}
+    for n in names:
+        bm = {**hold[n]["dev"]["by_month"], **hold[n]["holdout"]["by_month"]}
+        idx = pd.to_datetime([k + "-01" for k in bm]) + pd.offsets.MonthEnd(0)
+        curves[n] = pd.Series([1.0, *(1 + pd.Series(list(bm.values()))).cumprod()],
+                              index=[idx[0] - pd.offsets.MonthEnd(1), *idx])
+    eq = pd.DataFrame(curves)
+    short = {names[0]: "Kronos volatility rule", names[1]: "Same rule, no Kronos", names[2]: "Baseline"}
+    chart = C.lines(eq, cols, labels=short)
+    st = {"keep": "kept", "discard": "discarded", "control": "control", "crash": "crashed"}
+    rows = "".join(f'<tr{" class=hl" if r.status == "keep" else ""}><td>{int(r.run)}</td><td style="white-space:normal;text-align:left">{C.esc(r.description)}</td>'
+                   f'<td>{r.score:+.2f}</td><td>{st.get(r.status, r.status)}</td></tr>' for r in res.itertuples())
+    hrows = "".join(f'<tr{" class=hl" if i == 0 else ""}><td>{C.esc(short[n])}</td><td>{hold[n]["dev"]["sharpe"]:+.2f}</td>'
+                    f'<td>{pct(hold[n]["dev"]["total_return"], 1, True)}</td><td>{hold[n]["holdout"]["sharpe"]:+.2f}</td>'
+                    f'<td class="{"pos" if hold[n]["holdout"]["total_return"] > 0 else "neg"}">{pct(hold[n]["holdout"]["total_return"], 1, True)}</td>'
+                    f'<td>{pct(hold[n]["holdout"]["max_drawdown"], 1)}</td><td>{hold[n]["holdout"]["turnover_per_day"]:.2f}</td></tr>'
+                    for i, n in enumerate(names))
+    paras = "".join(f"<p>{x}</p>" for x in copy["ar"])
+    return f"""<section aria-labelledby="ar-h">
+  <div class="sec-head"><div class="eyebrow">Autoresearch · can Kronos be made profitable?</div><h2 id="ar-h">{copy['ar_h']}</h2></div>
+  <div class="verdict">{paras}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Rule</th><th>Scored Sharpe</th><th>Scored return</th><th>Locked Sharpe</th><th>Locked return</th><th>Worst DD (locked)</th><th>Turnover / day</th></tr></thead>
+    <tbody>{hrows}</tbody></table></div>
+  <div class="fig"><div class="fig-title">Account value by month: scored months Jul 2025 – Mar 2026, then the locked months Apr – Oct 2026</div>{chart}
+  <div class="fig-note">Market-neutral, gross exposure at most 1, 6 bp per unit traded plus funding. Over all 16 months the Kronos rule's Sharpe is {sig['both_periods_sharpe']:.2f} ({pct(sig['both_periods_return'], 0, True)}); probability that its true Sharpe is above zero: {pct(sig['both_periods_psr_vs_0'])}. Deflated Sharpe of the scored-period pick after {sig['trials']} ideas: {sig['dev_dsr']:.2f} (0.95 would be convincing).</div></div>
+  <details><summary>All {len(res)} runs of the loop</summary><div class="table-wrap"><table>
+    <thead><tr><th>Run</th><th style="text-align:left">Idea</th><th>Scored Sharpe</th><th>Result</th></tr></thead>
+    <tbody>{rows}</tbody></table></div></details>
+</section>"""
 
 
 def main() -> None:

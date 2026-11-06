@@ -15,3 +15,5 @@ models/intraday/wf_*.parquet
 state/intraday_heartbeat.json
 run/
 data/ext/
+data/autoresearch/
+run.log

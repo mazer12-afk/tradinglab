@@ -1,0 +1,16 @@
+run	code	score	total_return	max_drawdown	turnover_per_day	status	description
+1	149c71a	-1.5372	-0.45	-0.509	2.255	keep	baseline: sign of Kronos median 4h path, equal weights
+2	0790aa6	-4.9830	-0.5114	-0.5127	4.19	discard	market-neutral: long calm / short volatile by Kronos path spread k_sd_4 (xs z-score)
+3	cd20842	0.4483	0.0503	-0.1863	0.372	keep	k_sd_4 market-neutral, signal EWM span 12 (2 days), ease 25% per period
+4	d51c473	0.5720	0.0664	-0.1703	0.163	keep	slower: k_sd_4 EWM span 36 (6 days), ease 10%
+5	8a58c7a	0.7427	0.0945	-0.1607	0.125	keep	same, but easing and signal warmed up on the previous 4 weeks (no restart at month start)
+6	2b91960	0.7857	0.1082	-0.1399	0.122	control	control: same rule on realised 24h volatility (no Kronos)
+7	1469527	0.6777	0.0891	-0.156	0.098	discard	blend Kronos vol forecast with realised 24h vol (z-scores of logs, 50/50)
+8	343894c	0.4424	0.0488	-0.1815	0.244	discard	Kronos vol forecast + half-weight 24h reversal (m_ret_24, 1-day EWM)
+9	63cb70a	0.7101	0.0851	-0.1627	0.122	discard	Kronos vol book + size down when Kronos's market-wide vol forecast exceeds its 1-year median
+10	7530d1e	0.9734	0.1308	-0.1425	0.066	keep	slower still: span 72 (12 days), ease 5%
+11	43a08b3	0.3206	0.0263	-0.1108	0.061	discard	risk-balanced legs (equal volatility long and short, using Kronos vol) instead of dollar-neutral
+12	10282ad	0.9497	0.1164	-0.1417	0.066	discard	rank weights instead of z-score weights
+13	95a6b7b	0.6570	0.0848	-0.1332	0.068	discard	Kronos predicted high-low range instead of path spread as the volatility signal
+14	e3e0d99	0.7759	0.0736	-0.0839	0.137	discard	supervised: ridge on all Kronos path stats + PCA16 hidden state -> next-24h relative return
+15	9bdabf3	1.0288	0.1501	-0.1294	0.06	control	control: best rule (span 72, ease 5%) on realised 24h volatility instead of Kronos
