@@ -247,8 +247,11 @@ def cmd_daytrade_forward(cfg, args) -> int:
 
 
 def cmd_daytrade_live(cfg, args) -> int:
-    from tradinglab.daytrade.live import experiment_run
+    from tradinglab.daytrade.live import experiment_run, experiment_stop
 
+    if args.stop:
+        print(json.dumps(experiment_stop(cfg, Path(args.records)), indent=1, default=str))
+        return 0
     status = experiment_run(cfg, Path(args.records), minutes=args.minutes, cache=Path(args.cache) if args.cache else None,
                             commit_every=args.commit_every)
     print(json.dumps(status, indent=1, default=str))
@@ -319,6 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--minutes", type=float, default=330.0, help="length of this shift")
     p.add_argument("--cache", default=None, help="directory to keep the live data buffer between shifts")
     p.add_argument("--commit-every", type=float, default=60.0, help="commit the records every N minutes")
+    p.add_argument("--stop", action="store_true", help="end the experiment now: close positions, write FINISHED.json")
     args = ap.parse_args(argv)
     _setup_logging(args.verbose)
     cfg = load_config(args.config)

@@ -553,3 +553,20 @@ def experiment_run(cfg, rec: Path, minutes: float = 330.0, cache: Path | None = 
         git_push(rec, branch, "daytrade-live: finished – " + ", ".join(f"{n} {v:,.2f}" for n, v in eq.items()))
         return fin
     return summarise(rec)
+
+
+def experiment_stop(cfg, rec: Path, reason: str = "stopped early on request", branch: str = BRANCH) -> dict:
+    """End the live experiment now: close any open position at the live bid and write FINISHED.json."""
+    from tradinglab.experiment import git_push
+
+    rec = Path(rec)
+    if (rec / "FINISHED.json").exists():
+        return json.loads((rec / "FINISHED.json").read_text())
+    st = json.loads((rec / "state.json").read_text())
+    eq = liquidate(rec, cfg)
+    s = summarise(rec)
+    fin = {"finished": str(pd.Timestamp.now(tz="UTC")), "started": st.get("started"), "planned_end": st.get("ends"),
+           "stopped_early": True, "reason": reason, "final_equity": eq, "status": s}
+    (rec / "FINISHED.json").write_text(json.dumps(fin, indent=1, default=str) + "\n")
+    git_push(rec, branch, "daytrade-live: stopped early – " + ", ".join(f"{n} {v:,.2f}" for n, v in eq.items()))
+    return fin

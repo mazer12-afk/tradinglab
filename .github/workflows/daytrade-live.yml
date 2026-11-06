@@ -5,14 +5,16 @@
 # to the branch experiment/daytrade-live; after 28 days the last shift closes every position and writes
 # FINISHED.json, and every later run exits at once.
 name: daytrade-live
+# Stopped early on 6 Nov 2026 (on request): the restart schedule is off; run with stop=true to close out.
 on:
-  schedule:
-    - cron: "11,41 * * * *"
   workflow_dispatch:
     inputs:
       minutes:
         description: shift length in minutes
         default: "330"
+      stop:
+        description: end the experiment now (close positions, write FINISHED.json)
+        default: "false"
 concurrency:
   group: daytrade-live
   cancel-in-progress: false
@@ -63,9 +65,9 @@ jobs:
         run: pip install -c deploy/experiment-constraints.txt -e ".[intraday,fast]"
       - name: Shift
         if: steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
-        run: tradinglab daytrade-live --records records --cache data/live_buffer --minutes "${{ inputs.minutes || '330' }}"
+        run: tradinglab daytrade-live --records records --cache data/live_buffer --minutes "${{ inputs.minutes || '330' }}" ${{ inputs.stop == 'true' && '--stop' || '' }}
       - name: Queue the next shift
-        if: success() && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
+        if: success() && inputs.stop != 'true' && steps.gate.outputs.go == 'true' && steps.records.outputs.finished != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run daytrade-live.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
