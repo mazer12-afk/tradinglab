@@ -14,3 +14,4 @@ state/maintenance.json
 models/intraday/wf_*.parquet
 state/intraday_heartbeat.json
 run/
+data/ext/
