@@ -1,0 +1,79 @@
+# Precompute Kronos-small's outputs every 4 hours for the 12 coins, one month per job, in parallel
+# (scripts/kronos/cache.py). Each month's npz is committed to the branch experiment/kronos-cache, which the
+# autoresearch harness (research/kronos_autoresearch/prepare.py) reads.
+name: kronos-cache
+on:
+  workflow_dispatch:
+    inputs:
+      first:
+        description: first month (YYYY-MM)
+        default: "2024-01"
+      last:
+        description: last month (YYYY-MM)
+        default: "2026-10"
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      months: ${{ steps.months.outputs.months }}
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - id: months
+        run: |
+          python3 -c "
+          import json
+          y, m = map(int, '${{ inputs.first }}'.split('-')); Y, M = map(int, '${{ inputs.last }}'.split('-'))
+          out = []
+          while (y, m) <= (Y, M):
+              out.append(f'{y:04d}-{m:02d}'); y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+          print('months=' + json.dumps(out))" >> "$GITHUB_OUTPUT"
+      - name: Create the cache branch if missing
+        run: |
+          url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if ! git ls-remote --exit-code --heads "$url" experiment/kronos-cache >/dev/null 2>&1; then
+            git init -q -b experiment/kronos-cache c && cd c
+            git config user.name "tradinglab-bot" && git config user.email "tradinglab-bot@users.noreply.github.com"
+            echo "Kronos-small outputs every 4 hours for the 12 coins (scripts/kronos/cache.py), one npz per month." > README.md
+            git add README.md && git commit -qm "kronos cache: start" && git push -q "$url" HEAD:experiment/kronos-cache
+          fi
+  cache:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        month: ${{ fromJson(needs.plan.outputs.months) }}
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2"
+          pip install -e . einops huggingface_hub safetensors tqdm
+      - name: Kronos outputs for ${{ matrix.month }}
+        run: python scripts/kronos/cache.py --month "${{ matrix.month }}" --out out
+      - name: Commit to experiment/kronos-cache
+        run: |
+          url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git clone -q --depth 1 --filter=blob:none --sparse -b experiment/kronos-cache "$url" rec
+          cp out/*.npz rec/
+          cd rec
+          git config user.name "tradinglab-bot" && git config user.email "tradinglab-bot@users.noreply.github.com"
+          git add --sparse "${{ matrix.month }}.npz"
+          git commit -qm "kronos cache: ${{ matrix.month }}"
+          for i in $(seq 1 12); do
+            git pull -q --rebase "$url" experiment/kronos-cache && git push -q "$url" HEAD:experiment/kronos-cache && exit 0
+            sleep $((RANDOM % 20 + 5))
+          done
+          exit 1

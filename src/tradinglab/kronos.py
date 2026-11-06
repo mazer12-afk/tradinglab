@@ -182,6 +182,8 @@ class Sampler:
             s1, s2 = tk.encode(x, half=True)
             hc, ctx = prefill(m.transformer, m.embedding([s1, s2]) + m.time_emb(xs))
             hc = m.norm(hc)
+            # the model's view of each series at the last context candle: its hidden state and next-token scores
+            self.state = {"hidden": hc[:, -1].clone(), "s1_logits": m.head(hc[:, -1:])[:, -1].clone()}
             ck, cv = self._kv(hc)                                                  # the s2 layer's context keys
             logits, last = rep(m.head(hc[:, -1:])[:, -1]), rep(hc[:, -1:])
             gen, gk, gv, yst = [None] * len(m.transformer), None, None, rep(ys)
