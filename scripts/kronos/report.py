@@ -67,7 +67,7 @@ def build(d: Path, copy: dict) -> str:
     hz = ["1", "4", "12", "24"]
     cov = C.bars([f"{h} h ahead" for h in hz],
                  {"Kronos": [b["inside_p10_p90_kronos"][h] for h in hz], "Volatility band": [b["inside_p10_p90_baseline"][h] for h in hz]},
-                 {"Kronos": "--s1", "Volatility band": "--s4"}, ref=0.8, ref_label="80 %: the target", hi=1.0, W=460, H=260)
+                 {"Kronos": "--s1", "Volatility band": "--s4"}, ref=0.8, ref_label="80 %: the target", hi=1.05, W=460, H=260, ref_left=True)
     pit = [x / sum(b["pit_deciles"]) for x in b["pit_deciles"]]
     pit_chart = C.bars([f"{10 * i}" for i in range(10)], {"share": pit}, {"share": "--s1"}, ref=0.1,
                        ref_label="10 % each if right", fmt="{:.0%}", H=260, W=460)
@@ -78,13 +78,15 @@ def build(d: Path, copy: dict) -> str:
                        hi=max(0.6, max(dr[k]["hit_rate"] for k in names) + 0.05), H=230)
     book_names = {"long_short_by_forecast_sign": "Kronos long/short", "long_only_when_forecast_up": "Kronos long-only",
                   "top3_long_bottom3_short": "Kronos top 3 vs bottom 3", "confident_only_mean_beyond_half_band": "Kronos confident only",
-                  "baseline_momentum_sign": "Momentum (no model)", "buy_and_hold_basket": "Buy and hold"}
+                  "baseline_momentum_sign": "Last day continues (no model)", "buy_and_hold_basket": "Buy and hold"}
+    table_names = {**book_names, "kronos_4h_long_short": "Kronos long/short, 4-hour hold",
+                   "reversal_4h_long_short": "Last 4 h reverses, 4-hour hold (no model)"}
     cols = {"long_short_by_forecast_sign": "--s1", "long_only_when_forecast_up": "--s3", "top3_long_bottom3_short": "--s5",
             "confident_only_mean_beyond_half_band": "--s2", "baseline_momentum_sign": "--base", "buy_and_hold_basket": "--muted"}
     eq_chart = C.lines(eq[list(book_names)], cols, labels=book_names)
 
     rows = []
-    for k, n in book_names.items():
+    for k, n in table_names.items():
         r = tr[k]
         bp = r["by_period"]
         cls = lambda v: "pos" if v > 0 else "neg"                       # noqa: E731

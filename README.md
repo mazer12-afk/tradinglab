@@ -307,7 +307,12 @@ drawdown. The forecasts transfer (correlation 0.195); dependable profit is not s
   the test year; it was picked after seeing that year, so only its forward days count as evidence.
 * **Judging it:** wait at least three months before drawing a conclusion.
 
-**Live experiment (4 weeks, real time, running from 1 Nov 2026):** `.github/workflows/daytrade-live.yml` paper
+**Live experiment (real time, 1–6 Nov 2026, stopped early on request):** both arms lost on their one market-wide
+entry (4 Nov 15:05 UTC, five coins bought after a sharp jump that reversed): frozen −1.42 % (5 trades),
+45 bp arm −1.28 % (6 trades). No closes were missed. Records and `FINISHED.json` (`stopped_early`) are on the branch
+`experiment/daytrade-live`; `daytrade-live --stop` closes such a run, and the restart schedule is off.
+
+**How it ran:** `.github/workflows/daytrade-live.yml` paper
 trades both arms on live Binance data as it happens (`tradinglab daytrade-live`,
 `src/tradinglab/daytrade/live.py`).
 * **Data:** 1-minute bars, the futures metrics, quotes and funding come from `www.binance.com`, which serves the
@@ -353,6 +358,32 @@ trades both arms on live Binance data as it happens (`tradinglab daytrade-live`,
   * Development: Sharpe 3.6 (2023–24) and 0.9 (2024–25).
   * **Test year: −1.9 %**, Sharpe −0.12, worst drawdown −6.9 %, 206 trades. Its edge per trade before fees fell
     from +80 bp to +56 bp to +4 bp, below the 6.9 bp of fees.
+
+## Kronos test (open-source candlestick foundation model, 1 Jul 2025 → 27 Oct 2026)
+
+**Question:** can Kronos-small, the model in a popular post that "predicts the next 24 candlesticks", forecast the
+lab's 12 coins? **Answer: not usefully.** Report: `reports/kronos/report.html`; numbers in `reports/kronos/summary.json`.
+
+* **Test:** every day at 00:00 UTC, each coin's previous 488 hourly candles go in and 100 sampled paths for the next
+  24 hours come out: 5,808 forecasts. Kronos's weights were published on 30 Jun 2025, so the model never saw these
+  candles. Each forecast is compared with what happened and with simple rules that need no model.
+* **Direction over 24 hours:** right 50.7 % of the time, a coin toss (p = 0.61, counting each day once).
+* **The fan (p10–p90):** the price ended inside it 30 % of the time 24 hours ahead, against the 80 % such a band
+  should hold. A band sized from the last 3 days' volatility held it 82 %. Its accuracy score for the whole forecast
+  (CRPS) is 89 % worse than that band's.
+* **Volatility:** its paths track the volatility that follows (correlation 0.54), but less well than a 3-day
+  average (0.60).
+* **Trading after costs:** every rule lost.
+  * Kronos rules: long/short −52 %, long-only −41 %, top 3 vs bottom 3 −42 %.
+  * For comparison, with no model: buy and hold −64 %, following the last day's direction −7 %.
+* **One real but small edge:** 4 hours ahead it is right 54.7 % of the time (t = 3.7, in both periods). That is about
+  9 bp a trade before costs, against 12 bp for a market order, so the 4-hour rule lost 17 %. Cheaper limit-order
+  execution might change that; it is untested.
+* **Code:**
+  * `src/tradinglab/kronos.py` draws the same paths as Kronos's own sampler, about 200 times faster on a CPU. The
+    context is computed once per coin and shared by its paths.
+  * `tests/test_kronos.py` checks that it matches Kronos exactly (`KRONOS_TEST=1`).
+  * Scripts in `scripts/kronos/`: `evaluate.py`, `analyse.py`, `live_forecast.py`, `report.py`.
 
 ## Live paper trading
 

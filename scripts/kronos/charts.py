@@ -78,7 +78,8 @@ def fan(hist: dict, future_t: list[str], paths: list[list[float]], p10, p50, p90
 
 
 def bars(cats: list[str], series: dict[str, list[float]], colors: dict[str, str], ref: float | None = None,
-         ref_label: str = "", fmt="{:.0%}", H: int = 250, lo: float = 0.0, hi: float | None = None, W: int = W) -> str:
+         ref_label: str = "", fmt="{:.0%}", H: int = 250, lo: float = 0.0, hi: float | None = None, W: int = W,
+         ref_left: bool = False) -> str:
     """Grouped vertical bars, one group per category, with an optional reference line."""
     left, right, top, bottom = 44, 12, 18, 34
     hi = hi if hi is not None else max(max(v) for v in series.values()) * 1.15
@@ -102,7 +103,8 @@ def bars(cats: list[str], series: dict[str, list[float]], colors: dict[str, str]
         out.append(f'<text class="viz-cat" x="{cx:.1f}" y="{H - 12}" text-anchor="middle">{esc(c)}</text>')
     if ref is not None:
         out.append(f'<line class="viz-refline" x1="{left}" x2="{W - right}" y1="{ys(ref):.1f}" y2="{ys(ref):.1f}"/>'
-                   f'<text class="viz-reflabel" x="{W - right}" y="{ys(ref) - 6:.1f}" text-anchor="end">{esc(ref_label)}</text>')
+                   f'<text class="viz-reflabel" x="{left + 4 if ref_left else W - right}" y="{ys(ref) - 6:.1f}" '
+                   f'text-anchor="{"start" if ref_left else "end"}">{esc(ref_label)}</text>')
     out.append("</svg>")
     return "".join(out)
 

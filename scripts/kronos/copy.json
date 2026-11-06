@@ -1,0 +1,27 @@
+{
+ "h1": "Kronos's fan looks precise. Seven times in ten, the price ends outside it",
+ "lede": "Kronos is an open-source model trained on 12 billion candlesticks. A popular post shows it drawing Bitcoin's next 24 hourly candles as a fan of 100 paths. We ran the same model, Kronos-small with 100 paths, every day from 1 Jul 2025 to 27 Oct 2026 on the lab's 12 coins: 5,808 forecasts, all on candles the model had never seen. Each one was judged against what happened and against simple rules that need no model.",
+ "verdict_h": "Not usable for trading as it stands",
+ "verdict": [
+  "Over 24 hours Kronos calls the direction right 50.7 % of the time, a coin toss. Its fan is far too narrow: the price ended inside the p10–p90 band 30 % of the time, where such a band should hold it 80 % of the time. A band sized from the last three days' volatility, with no model at all, held it 82 % of the time. Every way we traded its forecasts lost money after costs.",
+  "One thing is real but small. Four hours ahead, its median path calls the direction right 54.7 % of the time, in both periods tested, which no simple rule matched. That is worth about 9 bp a trade before costs, less than the 12 bp a market order costs, so it loses money as it stands. Cheaper execution with limit orders might change that; it would need its own test."
+ ],
+ "now": "This is the chart from the post, rebuilt with the same model and settings on live Binance candles. All 100 paths end higher: after a fall, Kronos expects Bitcoin to climb back toward its 20-day average of about 80,000. Its p10–p90 band covers 1.5 % of the price, where Bitcoin's own recent volatility implies about 4.7 %. Kronos's unmodified predictor gives the same picture on the same candles, so this is the model, not our code.",
+ "dir_h": "Over 24 hours it is a coin toss; four hours ahead it does a little better",
+ "dir": "Kronos's median path pointed the right way 50.7 % of the time over 24 hours (p = 0.61, counting each day once because the coins move together), the same as assuming the last day continues. Nearer forecasts do better: 52.7 % one hour ahead and 54.7 % four hours ahead (t = 3.7), in both periods tested, where the matching simple rules score 48–52 %. That edge is about 9 bp a trade before costs.",
+ "band_h": "The fan is about half as wide as it should be",
+ "band": "A p10–p90 band should contain the outcome 80 % of the time; that is what the post's HIT counts. Kronos's band did so 58 % of the time one hour ahead and 30 % of the time 24 hours ahead. Its paths drift back toward the recent average instead of spreading out, so the band hardly widens with time. A normal band sized from the last three days' volatility caught 82–87 % at every horizon.",
+ "vol_h": "It senses when markets get jumpy, but less well than a moving average",
+ "vol": "The spread of Kronos's paths rises and falls with the volatility that follows (correlation 0.54), but a 3-day average of past volatility tracks it better (0.60). Used together, Kronos adds a little. Its paths move about 19 % less per hour than the market did.",
+ "trade_h": "Every rule built on it lost money after costs",
+ "trade": "Each rule trades once a day at 00:00 UTC and holds for 24 hours (the 4-hour rules for 4 hours). The period includes a deep fall: an equal-weight basket of the 12 coins lost 64 %. Kronos's long/short rule lost 52 %, its long-only rule 41 %, and ranking the coins against each other lost 42 %. Following the last day's direction, with no model, lost 7 %. The 4-hour rule on Kronos's best horizon lost 17 %, because costs exceed its edge.",
+ "method": [
+  "<strong>Model:</strong> Kronos-small (24.7 M parameters) and Kronos-Tokenizer-base from the Hugging Face hub, run with Kronos's own code (github.com/shiyu-coder/Kronos, commit 67b630e). The weights were uploaded on 30 Jun 2025 and have not changed since, so every forecast here is on candles the model never saw.",
+  "<strong>Data:</strong> Binance USD-M perpetuals, 1-hour candles with volume and quote volume, for BTC, ETH, SOL, XRP, DOGE, BNB, ADA, AVAX, LINK, LTC, DOT and BCH. Each forecast reads the previous 488 candles (about 20 days; the post used 512, and 488 leaves room for 24 new candles inside Kronos's 512-candle window) and samples 100 paths with Kronos's default settings (temperature 1.0, nucleus 0.9).",
+  "<strong>Schedule:</strong> one forecast per coin every day at 00:00 UTC from 1 Jul 2025 to 27 Oct 2026. Binance's archive is missing 28 Oct 2026, so later days, whose context would include it, are left out.",
+  "<strong>Baselines:</strong> “no change” for the price; the last 1, 4, 12 or 24 hours continuing or reversing for direction; a normal band sized from 3-day exponentially weighted volatility for the fan.",
+  "<strong>Significance:</strong> hit rates are tested with each day as one observation, since the 12 coins tend to move together.",
+  "<strong>Speed:</strong> Kronos's own sampler recomputes the whole context for every path at every step, about 2.3 seconds per path here. The lab's sampler computes the context once per coin and shares it across the paths. It gives the same draws (tested against Kronos's sampler with the same random seed) about 200 times faster: 14 seconds for 12 coins × 100 paths.",
+  "<strong>Costs:</strong> 5 bp taker fee and 1 bp slippage each way, plus the actual funding paid or received."
+ ]
+}

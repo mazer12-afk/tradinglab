@@ -18,8 +18,7 @@ from tradinglab.config import load_config
 from tradinglab.data.store import MarketData
 
 COST = 2 * (5 + 1) * 1e-4          # taker fee and 1 bp beyond the quote, in and out
-PERIODS = {"Jul-Oct 2025": ("2025-07-01", "2025-10-29"), "test year": ("2025-10-29", "2026-10-29"),
-           "since 29 Oct 2026": ("2026-10-29", "2026-12-31")}
+PERIODS = {"Jul-Oct 2025": ("2025-07-01", "2025-10-29"), "test year": ("2025-10-29", "2026-10-29")}
 
 
 def load(d: Path) -> pd.DataFrame:
@@ -37,10 +36,20 @@ def binom_p(k: int, n: int) -> float:
     return float(stats.binomtest(k, n, 0.5).pvalue) if n else float("nan")
 
 
-def hit(pred, act) -> dict:
+def hit(pred, act, days=None) -> dict:
+    """Share of signs called right. With ``days``, also a p-value that treats each day as one observation (the
+    12 coins move together, so their forecasts on one day are not independent tries)."""
+    pred, act = np.asarray(pred, dtype=float), np.asarray(act, dtype=float)
     m = (np.sign(pred) != 0) & (np.sign(act) != 0)
-    k, n = int((np.sign(pred[m]) == np.sign(act[m])).sum()), int(m.sum())
-    return {"hit_rate": round(k / n, 4) if n else None, "n": n, "p_value": round(binom_p(k, n), 4)}
+    ok = np.sign(pred[m]) == np.sign(act[m])
+    k, n = int(ok.sum()), int(m.sum())
+    out = {"hit_rate": round(k / n, 4) if n else None, "n": n, "p_value_naive": round(binom_p(k, n), 4)}
+    if days is not None and n:
+        daily = pd.Series(ok).groupby(np.asarray(days)[m]).mean()
+        t = (daily.mean() - 0.5) / (daily.std(ddof=1) / math.sqrt(len(daily)))
+        out.update({"days": int(len(daily)), "t_by_day": round(float(t), 2),
+                    "p_value": round(float(2 * stats.t.sf(abs(t), len(daily) - 1)), 4)})
+    return out
 
 
 def crps_samples(x: np.ndarray, y: float) -> float:
@@ -81,17 +90,37 @@ def book(weights: pd.DataFrame, rets: pd.DataFrame, fund: pd.DataFrame) -> dict:
             "daily": gross}
 
 
+def past_returns(md, f: pd.DataFrame, hours=(1, 4, 12, 24)) -> pd.DataFrame:
+    """Log return over the ``h`` hours before each forecast (from the archive's hourly closes)."""
+    from tradinglab import kronos as K
+
+    out = pd.DataFrame(index=f.index)
+    for s, g in f.groupby("symbol"):
+        c = np.log(K.hourly(md, s, (g["origin"].min() - pd.Timedelta(days=3)).tz_localize(None))["close"])
+        last = c.reindex(g["origin"] - pd.Timedelta(hours=1)).to_numpy()
+        for h in hours:
+            out.loc[g.index, f"past{h}"] = last - c.reindex(g["origin"] - pd.Timedelta(hours=1 + h)).to_numpy()
+    return out
+
+
 def analyse(f: pd.DataFrame, md, syms) -> dict:
     out = {"forecasts": int(len(f)), "days": int(f["origin"].nunique()), "coins": int(f["symbol"].nunique()),
            "first": str(f["origin"].min().date()), "last": str(f["origin"].max().date())}
     a, q50, mean = f["act24"].to_numpy(), f["q50_24"].to_numpy(), f["mean24"].to_numpy()
+    day = f["origin"].to_numpy()
+    past = past_returns(md, f)
 
     # direction
-    out["direction_24h"] = {"kronos_median": hit(q50, a), "kronos_mean": hit(mean, a),
-                            "momentum_24h": hit(f["ctx_ret24"].to_numpy(), a), "reversal_24h": hit(-f["ctx_ret24"].to_numpy(), a),
-                            "always_up": hit(np.ones_like(a), a)}
-    out["direction_by_hour"] = {h: hit(f["q50"].map(lambda x: float(x[h - 1])).to_numpy(), f["act"].map(lambda x: float(x[h - 1])).to_numpy())["hit_rate"]
-                                for h in (1, 4, 12, 24)}
+    out["direction_24h"] = {"kronos_median": hit(q50, a, day), "kronos_mean": hit(mean, a, day),
+                            "momentum_24h": hit(f["ctx_ret24"].to_numpy(), a, day), "reversal_24h": hit(-f["ctx_ret24"].to_numpy(), a, day),
+                            "always_up": hit(np.ones_like(a), a, day)}
+    at = lambda col, h: f[col].map(lambda x: float(x[h - 1])).to_numpy()                 # noqa: E731
+    out["direction_by_hour"] = {h: hit(at("q50", h), at("act", h), day)["hit_rate"] for h in (1, 4, 12, 24)}
+    out["direction_by_hour_detail"] = {h: {"kronos": hit(at("q50", h), at("act", h), day),
+                                           "reversal_same_span": hit(-past[f"past{h}"].to_numpy(), at("act", h), day),
+                                           "momentum_same_span": hit(past[f"past{h}"].to_numpy(), at("act", h), day),
+                                           "agree_with_reversal": round(float((np.sign(at("q50", h)) == -np.sign(past[f"past{h}"])).mean()), 3)}
+                                       for h in (1, 4, 12, 24)}
     # correlation with what happened
     ic_daily = f.groupby("origin").apply(lambda g: stats.spearmanr(g["mean24"], g["act24"])[0] if len(g) > 3 else np.nan,
                                          include_groups=False).dropna()
@@ -154,7 +183,18 @@ def analyse(f: pd.DataFrame, md, syms) -> dict:
         "baseline_reversal_sign": (-np.sign(mom)).div(n, axis=0),
         "buy_and_hold_basket": rets.notna().astype(float).div(n, axis=0),
     }
+    r4 = np.exp(f.assign(a4=at("act", 4)).pivot(index="origin", columns="symbol", values="a4")) - 1
+    q4 = f.assign(k4=at("q50", 4)).pivot(index="origin", columns="symbol", values="k4")
+    p4 = f.assign(p4=past["past4"]).pivot(index="origin", columns="symbol", values="p4")
+    no_fund = fund * 0.0                                   # 4-hour holds from 00:00 cross no settlement
     res, daily = {}, {}
+    for k, w, rr in (("kronos_4h_long_short", np.sign(q4).div(n, axis=0), r4),
+                     ("reversal_4h_long_short", (-np.sign(p4)).div(n, axis=0), r4)):
+        b = book(w.reindex_like(rr), rr.fillna(0.0), no_fund.reindex_like(rr).fillna(0.0))
+        daily[k] = b.pop("daily")
+        res[k] = b
+        res[k]["by_period"] = {p: round(float((1 + daily[k][(daily[k].index >= s) & (daily[k].index < e)]).prod() - 1), 4)
+                               for p, (s, e) in PERIODS.items()}
     for k, w in books.items():
         b = book(w.reindex_like(rets), rets.fillna(0.0), fund)
         daily[k] = b.pop("daily")
@@ -162,7 +202,8 @@ def analyse(f: pd.DataFrame, md, syms) -> dict:
         res[k]["by_period"] = {p: round(float((1 + daily[k][(daily[k].index >= s) & (daily[k].index < e)]).prod() - 1), 4)
                                for p, (s, e) in PERIODS.items()}
     out["trading"] = res
-    out["by_period_direction"] = {p: hit(q50[(f["origin"] >= s) & (f["origin"] < e)], a[(f["origin"] >= s) & (f["origin"] < e)])
+    out["by_period_direction"] = {p: hit(q50[(f["origin"] >= s) & (f["origin"] < e)], a[(f["origin"] >= s) & (f["origin"] < e)],
+                                         day[(f["origin"] >= s) & (f["origin"] < e)])
                                   for p, (s, e) in PERIODS.items()}
     out["by_coin_direction"] = {s: hit(g["q50_24"].to_numpy(), g["act24"].to_numpy())["hit_rate"] for s, g in f.groupby("symbol")}
     return out, pd.DataFrame(daily)
