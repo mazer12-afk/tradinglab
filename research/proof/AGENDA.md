@@ -21,9 +21,7 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 
 ## Queue (each goes through PROTOCOL.md; fresh confirmation data must be pre-registered first)
 
-1. **Pre-register fresh set B:** the next 60 USDT perpetuals by volume that also trade on spot, beyond the 57 in
-   `fresh_universe.json`. It is the confirmation data for new carry and cross-sectional rules (all 2020-2026 data of
-   the 87 coins used so far has been seen).
+1. **Fresh set B: pre-registered** (`fresh_universe_b.json`, 60 coins, 7 Nov 2026). Use it only to confirm a frozen rule.
 2. **Settlement drift (day trading):** after settlements whose rate is above 30 %/yr, prices fell about 14 bp over
    the next 3 hours (12 coins, 2020-2023, design data). A short from settlement + 1 h to + 4 h barely covers 12 bp
    of costs. Look for a sharper version: bigger rates, coin-relative returns. Confirm on other coins and later
