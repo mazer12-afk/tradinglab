@@ -1,0 +1,283 @@
+{
+ "rule": "R5",
+ "params": {
+  "lookback": 120,
+  "kind": "scaled",
+  "smooth": 10,
+  "vol_days": 30
+ },
+ "vol_target": 0.15,
+ "sets": {
+  "12 coins 2024-2026": {
+   "sharpe": 0.437,
+   "total_return": 0.1816,
+   "cagr": 0.0609,
+   "max_drawdown": -0.1968,
+   "turnover_per_day": 0.018,
+   "cost_per_year": -0.004,
+   "funding_per_year": -0.0092,
+   "avg_net_dollars": -0.016,
+   "by_year": {
+    "2024": 0.2378,
+    "2025": -0.0027,
+    "2026": -0.0428
+   },
+   "beta": 0.009,
+   "alpha_per_year": 0.0711,
+   "alpha_t": 0.72,
+   "coins": 12,
+   "cost_x2_total_return": 0.1682,
+   "neighbours": [
+    {
+     "params": {
+      "lookback": 60,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": 0.3683,
+     "sharpe": 0.736
+    },
+    {
+     "params": {
+      "lookback": 240,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": -0.1987,
+     "sharpe": -0.361
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 5,
+      "vol_days": 30
+     },
+     "total_return": 0.2302,
+     "sharpe": 0.522
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 20,
+      "vol_days": 30
+     },
+     "total_return": 0.0484,
+     "sharpe": 0.184
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 15
+     },
+     "total_return": 0.1322,
+     "sharpe": 0.346
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 60
+     },
+     "total_return": 0.1797,
+     "sharpe": 0.434
+    }
+   ]
+  },
+  "18 other coins 2020-2026": {
+   "sharpe": 0.069,
+   "total_return": -0.0176,
+   "cagr": -0.0026,
+   "max_drawdown": -0.3003,
+   "turnover_per_day": 0.023,
+   "cost_per_year": -0.0051,
+   "funding_per_year": -0.012,
+   "avg_net_dollars": -0.055,
+   "by_year": {
+    "2020": -0.1224,
+    "2021": 0.0422,
+    "2022": 0.2145,
+    "2023": 0.0849,
+    "2024": 0.1078,
+    "2025": -0.1742,
+    "2026": -0.1088
+   },
+   "beta": -0.007,
+   "alpha_per_year": 0.016,
+   "alpha_t": 0.25,
+   "coins": 18,
+   "cost_x2_total_return": -0.0514,
+   "neighbours": [
+    {
+     "params": {
+      "lookback": 60,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": 0.637,
+     "sharpe": 0.508
+    },
+    {
+     "params": {
+      "lookback": 240,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": -0.0078,
+     "sharpe": 0.074
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 5,
+      "vol_days": 30
+     },
+     "total_return": 0.0162,
+     "sharpe": 0.098
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 20,
+      "vol_days": 30
+     },
+     "total_return": -0.0343,
+     "sharpe": 0.053
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 15
+     },
+     "total_return": -0.0744,
+     "sharpe": 0.016
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 60
+     },
+     "total_return": -0.1308,
+     "sharpe": -0.036
+    }
+   ]
+  },
+  "57 fresh coins 2020-2026": {
+   "sharpe": 0.187,
+   "total_return": 0.1245,
+   "cagr": 0.0173,
+   "max_drawdown": -0.2104,
+   "turnover_per_day": 0.019,
+   "cost_per_year": -0.0041,
+   "funding_per_year": -0.0122,
+   "avg_net_dollars": -0.076,
+   "by_year": {
+    "2020": 0.0786,
+    "2021": 0.0321,
+    "2022": 0.1354,
+    "2023": -0.0561,
+    "2024": -0.0048,
+    "2025": 0.0789,
+    "2026": -0.1222
+   },
+   "beta": -0.036,
+   "alpha_per_year": 0.0508,
+   "alpha_t": 0.83,
+   "coins": 57,
+   "cost_x2_total_return": 0.0933,
+   "neighbours": [
+    {
+     "params": {
+      "lookback": 60,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": 0.4237,
+     "sharpe": 0.384
+    },
+    {
+     "params": {
+      "lookback": 240,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 30
+     },
+     "total_return": 0.1316,
+     "sharpe": 0.193
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 5,
+      "vol_days": 30
+     },
+     "total_return": 0.1505,
+     "sharpe": 0.207
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 20,
+      "vol_days": 30
+     },
+     "total_return": -0.0221,
+     "sharpe": 0.062
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 15
+     },
+     "total_return": 0.1319,
+     "sharpe": 0.193
+    },
+    {
+     "params": {
+      "lookback": 120,
+      "kind": "scaled",
+      "smooth": 10,
+      "vol_days": 60
+     },
+     "total_return": 0.0979,
+     "sharpe": 0.165
+    }
+   ]
+  }
+ },
+ "combined_sharpe": 0.18,
+ "trials_in_family": 9,
+ "combined_psr": 0.7681,
+ "combined_dsr": 0.215,
+ "share_of_years_positive": 0.529,
+ "checks": {
+  "sharpe>=1": false,
+  "psr>=0.99": false,
+  "dsr>=0.95": false,
+  "years>=75%": false,
+  "all_sets_positive": false,
+  "maxdd>=-20%": false,
+  "neighbours_positive": false,
+  "cost_x2_positive": false,
+  "alpha_t>=2": false
+ },
+ "proven": false
+}
