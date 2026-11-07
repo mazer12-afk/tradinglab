@@ -26,23 +26,40 @@ TWELVE = CFG.intraday.symbols
 OTHERS = [s for s in CFG.universe.symbols if s not in TWELVE]
 
 
+class ArchiveSource:
+    """Hourly spot and perpetual closes and funding settlements from Binance's public archive."""
+
+    def __init__(self):
+        self.md = MarketData(CFG.paths.data_dir)
+
+    def spot(self, s: str, start: pd.Timestamp) -> pd.Series:
+        return self.md.klines(s, "1h", start.tz_localize(None), market="spot")["close"].astype(float)
+
+    def perp(self, s: str, start: pd.Timestamp) -> pd.Series:
+        return self.md.klines(s, "1h", start.tz_localize(None), market="um")["close"].astype(float)
+
+    def funding(self, s: str, start: pd.Timestamp) -> pd.Series:
+        return self.md.funding_8h(s, start.tz_localize(None))
+
+
 class CarryPanel:
     """Daily grid (00:00 UTC) with each coin's spot and perpetual returns over the next day and the funding paid in
-    it, and the funding history up to each day (for the rules)."""
+    it, and the funding history up to each day (for the rules). ``source`` supplies the data (default: archive)."""
 
-    def __init__(self, symbols: list[str], start: str, end: str):
-        md = MarketData(CFG.paths.data_dir)
+    def __init__(self, symbols: list[str], start: str, end: str, source=None):
+        src = source or ArchiveSource()
         s0, s1 = pd.Timestamp(start, tz="UTC"), pd.Timestamp(end, tz="UTC")
-        lf = (s0 - pd.Timedelta(days=60)).tz_localize(None)
+        lf = s0 - pd.Timedelta(days=60)
         self.grid = pd.date_range(s0, s1, freq="D", inclusive="left")
         sp, pp, fr = {}, {}, {}
         for s in symbols:
             try:
-                a = md.klines(s, "1h", lf, market="spot")["close"].astype(float)
-                b = md.klines(s, "1h", lf, market="um")["close"].astype(float)
+                a, b = src.spot(s, lf), src.perp(s, lf)
             except Exception:                      # noqa: BLE001 - not listed on one of the two markets
                 continue
-            r = md.funding_8h(s, lf)
+            if a.empty or b.empty:
+                continue
+            r = src.funding(s, lf)
             idx = pd.DatetimeIndex(r.index)
             r.index = (idx.tz_localize("UTC") if idx.tz is None else idx.tz_convert("UTC")).round("h")
             sp[s], pp[s], fr[s] = a, b, r[~r.index.duplicated(keep="last")]

@@ -1,0 +1,238 @@
+{
+ "R2": {
+  "rule": "R2",
+  "sets": {
+   "12 coins 2024-2026": {
+    "sharpe": 6.621,
+    "total_return": 0.0841,
+    "cagr": 0.029,
+    "max_drawdown": -0.0024,
+    "funding_per_year": 0.0439,
+    "basis_per_year": -0.0003,
+    "cost_per_year": -0.0151,
+    "avg_notional": 0.79,
+    "by_year": {
+     "2024": 0.0694,
+     "2025": 0.0109,
+     "2026": 0.0029
+    },
+    "beta": -0.001,
+    "alpha_per_year": 0.0287,
+    "alpha_t": 11.2,
+    "coins": 12,
+    "psr_vs_0": 1.0,
+    "cost_x2_total_return": 0.039,
+    "neighbours": [
+     {
+      "params": {
+       "lookback_days": 7,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.0721,
+      "sharpe": 5.588
+     },
+     {
+      "params": {
+       "lookback_days": 28,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.0893,
+      "sharpe": 7.06
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.05,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.0765,
+      "sharpe": 5.654
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.2,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.0857,
+      "sharpe": 7.402
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.125
+      },
+      "total_return": 0.0811,
+      "sharpe": 6.939
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.5
+      },
+      "total_return": 0.087,
+      "sharpe": 6.26
+     }
+    ]
+   },
+   "18 other coins 2020-2026": {
+    "sharpe": 5.888,
+    "total_return": 0.5944,
+    "cagr": 0.0707,
+    "max_drawdown": -0.0112,
+    "funding_per_year": 0.0933,
+    "basis_per_year": -0.0017,
+    "cost_per_year": -0.0232,
+    "avg_notional": 0.832,
+    "by_year": {
+     "2020": 0.1167,
+     "2021": 0.278,
+     "2022": -0.0048,
+     "2023": 0.0392,
+     "2024": 0.0738,
+     "2025": 0.0084,
+     "2026": -0.0024
+    },
+    "beta": -0.0,
+    "alpha_per_year": 0.0686,
+    "alpha_t": 15.41,
+    "coins": 18,
+    "psr_vs_0": 1.0,
+    "cost_x2_total_return": 0.3605,
+    "neighbours": [
+     {
+      "params": {
+       "lookback_days": 7,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.556,
+      "sharpe": 5.648
+     },
+     {
+      "params": {
+       "lookback_days": 28,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.6153,
+      "sharpe": 6.098
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.05,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.5365,
+      "sharpe": 5.303
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.2,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.5822,
+      "sharpe": 5.965
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.125
+      },
+      "total_return": 0.5631,
+      "sharpe": 6.166
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.5
+      },
+      "total_return": 0.5758,
+      "sharpe": 5.549
+     }
+    ]
+   }
+  },
+  "combined_sharpe": 5.625,
+  "trials_in_family": 12,
+  "combined_psr": 1.0,
+  "combined_dsr": 1.0,
+  "share_of_years_positive": 0.8,
+  "checks": {
+   "sharpe>=1": true,
+   "psr>=0.99": true,
+   "dsr>=0.95": true,
+   "years>=75%": true,
+   "all_sets_positive": true,
+   "maxdd>=-20%": true,
+   "neighbours_positive": true,
+   "cost_x2_positive": true,
+   "alpha_t>=2_and_|beta|<0.2": true
+  },
+  "proven": true
+ },
+ "R3": {
+  "rule": "R3",
+  "sets": {
+   "BTC+ETH 2024-2026": {
+    "sharpe": 10.091,
+    "total_return": 0.1095,
+    "cagr": 0.0375,
+    "max_drawdown": -0.006,
+    "funding_per_year": 0.0462,
+    "basis_per_year": 0.0,
+    "cost_per_year": -0.0094,
+    "avg_notional": 0.999,
+    "by_year": {
+     "2024": 0.0758,
+     "2025": 0.0248,
+     "2026": 0.0065
+    },
+    "beta": -0.0,
+    "alpha_per_year": 0.0369,
+    "alpha_t": 16.98,
+    "coins": 12,
+    "psr_vs_0": 1.0,
+    "cost_x2_total_return": 0.0805,
+    "neighbours": []
+   }
+  },
+  "combined_sharpe": 10.091,
+  "trials_in_family": 12,
+  "combined_psr": 1.0,
+  "combined_dsr": 1.0,
+  "share_of_years_positive": 1.0,
+  "checks": {
+   "sharpe>=1": true,
+   "psr>=0.99": true,
+   "dsr>=0.95": true,
+   "years>=75%": true,
+   "all_sets_positive": true,
+   "maxdd>=-20%": true,
+   "neighbours_positive": true,
+   "cost_x2_positive": true,
+   "alpha_t>=2_and_|beta|<0.2": true
+  },
+  "proven": true
+ }
+}
