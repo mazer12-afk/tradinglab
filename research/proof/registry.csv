@@ -1,3 +1,6 @@
 id,family,rule,design_data,confirm_data,frozen_commit,result,notes
 1,xs-lowvol,see research/kronos_autoresearch/results.tsv runs 1-15 (13 ideas + 2 controls),12 coins Jul 2025 - Mar 2026 (+ Apr - Oct 2026 holdout),,,exploration,loop that produced the low-volatility rule
-2,xs-lowvol,lowvol_rv (research/proof/rules.py),12 coins Jul 2025 - Oct 2026,12 coins 2021-2023 + 18 other coins 2021 - Oct 2026,see git log,pending,frozen before confirmatory test
+2,xs-lowvol,lowvol_rv (research/proof/rules.py),12 coins Jul 2025 - Oct 2026,12 coins 2021-2023 + 18 other coins 2021 - Oct 2026,2d7b050,FAILED all 9 checks,-64% on both sets; profits only in falling years (short beta); see results/lowvol_rv.json
+3,carry,design grid: lookback 3/7/14 x enter 5/10/20 %/yr + always BTC+ETH (10 settings),12 coins 2020-2023,,,exploration,all 10 profitable on design data (Sharpe 7-9)
+4,carry,R2 funding_carry lookback 14 enter 10% leave 0 max 1/4 (research/proof/carry.py),12 coins 2020-2023,12 coins 2024 - Oct 2026 + 18 other coins 2020 - Oct 2026,see git log,pending,frozen before confirmatory test
+5,carry,R3 always carry BTC+ETH 50/50,none (parameter-free reference),BTC+ETH 2024 - Oct 2026,see git log,pending,frozen before confirmatory test
