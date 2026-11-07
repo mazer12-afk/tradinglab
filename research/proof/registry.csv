@@ -1,0 +1,2 @@
+id,family,rule,design_data,confirm_data,frozen_commit,result,notes
+1,xs-lowvol,see research/kronos_autoresearch/results.tsv runs 1-15 (13 ideas + 2 controls),12 coins Jul 2025 - Mar 2026 (+ Apr - Oct 2026 holdout),,,exploration,loop that produced the low-volatility rule
