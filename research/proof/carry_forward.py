@@ -1,4 +1,4 @@
-"""Forward (paper) test of the frozen funding-carry rules R2 and R3 on live Binance data (PROTOCOL.md section 5).
+"""Forward (paper) test of the frozen funding-carry rules R2, R3 and R4 on live Binance data (PROTOCOL.md section 5).
 
 Every day it rebuilds the panel from www.binance.com (spot and perpetual hourly candles, funding settlements),
 applies the frozen rules (research/proof/carry.py, confirm_carry.py) from START to the last complete day, and writes
@@ -26,7 +26,8 @@ import confirm_carry as K  # noqa: E402
 API = "https://www.binance.com"
 START = pd.Timestamp("2026-11-08", tz="UTC")       # first day after the rules were frozen and confirmed
 ENDS = START + pd.Timedelta(days=28)               # minimum length; it keeps running afterwards
-UNIVERSE = C.TWELVE
+FRESH = json.loads((HERE / "fresh_universe.json").read_text())["symbols"]
+UNIVERSE = C.TWELVE + C.OTHERS + FRESH            # R2/R3 trade the 12 coins; R4 the whole wide universe
 
 
 class LiveSource:
@@ -80,7 +81,21 @@ class LiveSource:
         return pd.Series({pd.Timestamp(int(x["fundingTime"]), unit="ms", tz="UTC"): float(x["fundingRate"]) for x in rows}, dtype=float)
 
 
+def subset(p, syms):
+    """A view of a CarryPanel restricted to ``syms`` (the rules normalise across the coins they see)."""
+    import copy
+
+    q = copy.copy(p)
+    q.symbols = [x for x in p.symbols if x in syms]
+    for k in ("spot_ret", "perp_ret", "fund_next", "live"):
+        setattr(q, k, getattr(p, k)[q.symbols])
+    q.fund_hist = {x: p.fund_hist[x] for x in q.symbols}
+    return q
+
+
 def rule_weights(p, rule):
+    if rule == "R4":
+        return C.funding_carry(p, **K.R4)
     return C.funding_carry(p, **K.R2) if rule == "R2" else K.btc_eth(p)
 
 
@@ -102,11 +117,10 @@ def main() -> None:
     status = {"started": str(START.date()), "minimum_end": str(ENDS.date()), "through": str(last.date()),
               "updated": str(pd.Timestamp.now(tz="UTC")), "rules": {}}
     daily = {}
-    for rule, syms in (("R2", C.TWELVE), ("R3", C.TWELVE)):
-        p = live
-        cols = [s for s in syms if s in p.symbols]
-        W = rule_weights(p, rule).reindex(columns=p.symbols).fillna(0.0)
-        W[[c for c in p.symbols if c not in cols]] = 0.0
+    arch_panel = None
+    for rule, syms in (("R2", C.TWELVE), ("R3", C.TWELVE), ("R4", UNIVERSE)):
+        p = subset(live, syms)
+        W = rule_weights(p, rule)
         b = C.book(p, W)
         b = b[b.index >= START]
         eq = (1 + b["net"]).cumprod()
@@ -119,9 +133,9 @@ def main() -> None:
         daily[rule] = b.assign(equity=eq)
         # implementation check against the archive wherever it already has the data
         try:
-            arch = C.CarryPanel(UNIVERSE, lo, end)
-            Wa = rule_weights(arch, rule).reindex(columns=arch.symbols).fillna(0.0)
-            Wa[[c for c in arch.symbols if c not in cols]] = 0.0
+            arch_panel = arch_panel or C.CarryPanel(UNIVERSE, lo, end)
+            arch = subset(arch_panel, syms)
+            Wa = rule_weights(arch, rule)
             ba = C.book(arch, Wa)
             common = b.index.intersection(ba.index[ba[["basis", "funding"]].abs().sum(axis=1) > 0])
             if len(common):
