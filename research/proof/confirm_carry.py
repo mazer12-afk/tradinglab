@@ -108,3 +108,24 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# --------------------------------------------------------------------- R4, frozen 7 Nov 2026 (registry id 7)
+R4 = {"lookback_days": 14, "enter_apr": 0.10, "leave_apr": 0.0, "max_share": 0.10}
+R4_TRIALS = 4 + 1              # its design grid on the 30 known coins + R4 itself
+
+
+def confirm_r4() -> dict:
+    """R4: R2's entry/exit on a wide universe, at most 1/10 of the book per coin. Designed on the 30 known coins
+    (2020 - Oct 2026); confirmed on the 57 fresh coins of fresh_universe.json (2020 - Oct 2026)."""
+    global TRIALS, R2
+    fresh = json.loads((HERE / "fresh_universe.json").read_text())["symbols"]
+    TRIALS, R2_saved, R2 = R4_TRIALS, R2, R4                       # run_set/neighbours use R2's slot
+    try:
+        s, r = run_set("57 fresh coins 2020-2026", fresh, "2020-01-01", "2026-10-28", "R2")
+        out = verdict("R4", {"57 fresh coins 2020-2026": s}, [r])
+    finally:
+        TRIALS, R2 = 12, R2_saved
+    path = HERE / "results" / "carry_r4.json"
+    path.write_text(json.dumps(out, indent=1, default=str) + "\n")
+    return out
