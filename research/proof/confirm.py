@@ -58,7 +58,7 @@ def main() -> None:
     nets = []
     for st in a.sets:
         uni, lo, hi = st.split(":")
-        syms = xs.TWELVE if uni == "12" else xs.OTHERS
+        syms = {"12": xs.TWELVE, "others": xs.OTHERS}.get(uni) or json.loads((HERE / "fresh_universe.json").read_text())["symbols"]
         p = xs.Panel(syms, lo, hi)
         mkt = p.market()
         b = xs.book(p, fn(p, **d))
