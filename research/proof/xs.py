@@ -130,3 +130,30 @@ def stats(b: pd.DataFrame, mkt: pd.Series | None = None) -> dict:
         out.update({"beta": round(float(beta[1]), 3), "alpha_per_year": round(float(beta[0] * PER_YEAR), 4),
                     "alpha_t": round(float(beta[0] / se[0]), 2)})
     return out
+
+
+def trailing_funding(p: Panel, days: float) -> pd.DataFrame:
+    """Average funding per settlement-day over the ``days`` days before each origin (settled rates only)."""
+    out = {}
+    md = MarketData(CFG.paths.data_dir)
+    for s in p.symbols:
+        r = md.funding_8h(s, (p.start - pd.Timedelta(days=60)).tz_localize(None))
+        idx = pd.DatetimeIndex(r.index)
+        r.index = (idx.tz_localize("UTC") if idx.tz is None else idx.tz_convert("UTC")).round("h")
+        r = r[~r.index.duplicated(keep="last")]
+        ft, fc = r.index.to_numpy(), np.concatenate([[0.0], np.cumsum(r.to_numpy())])
+        b = np.searchsorted(ft, p.grid.to_numpy(), side="right")
+        a = np.searchsorted(ft, (p.grid - pd.Timedelta(days=days)).to_numpy(), side="right")
+        out[s] = (fc[b] - fc[a]) / days
+    return pd.DataFrame(out, index=p.grid)
+
+
+def vol_target(p: Panel, W: pd.DataFrame, target: float = 0.15, days: int = 30) -> pd.DataFrame:
+    """Scale the book so the unscaled book's volatility over the last ``days`` days (known before each origin) is
+    ``target`` a year; never above gross 1."""
+    raw = (W.where(p.live, 0.0).fillna(0.0) * p.r4.fillna(0.0)).sum(axis=1)
+    n = days * 6
+    est = raw.shift(1).rolling(n, min_periods=int(n * 0.8)).std() * math.sqrt(PER_YEAR)
+    gross = W.abs().sum(axis=1).replace(0, np.nan)
+    scale = np.minimum(target / est, 1.0 / gross).fillna(0.0)
+    return W.mul(scale, axis=0)

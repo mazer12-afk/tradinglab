@@ -26,6 +26,8 @@ from tradinglab.backtest.metrics import deflated_sharpe, probabilistic_sharpe  #
 def neighbours(defaults: dict) -> list[dict]:
     out = []
     for k, v in defaults.items():
+        if k == "gross":                          # the size of the book, not a signal setting
+            continue
         for f in (0.5, 2.0):
             nv = type(v)(round(v * f)) if isinstance(v, int) else v * f
             if isinstance(v, float):
@@ -38,7 +40,7 @@ def trials_in_family(family: str) -> int:
     reg = pd.read_csv(HERE / "registry.csv")
     n = 0
     for r in reg[reg["family"] == family].itertuples():
-        n += 15 if r.id == 1 else 1             # the autoresearch loop's 13 ideas and 2 controls
+        n += {1: 15, 10: 5}.get(r.id, 1)        # loops/grids logged as one line count each of their trials
     return max(n, 1)
 
 

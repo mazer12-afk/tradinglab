@@ -22,3 +22,15 @@ def lowvol_rv(p: xs.Panel, vol_hours: int = 24, span: int = 72, step: float = 0.
 RULES = {
     "lowvol_rv": {"fn": lowvol_rv, "defaults": {"vol_hours": 24, "span": 72, "step": 0.05}},
 }
+
+
+# ------------------------------------------------------------------ R6, frozen 7 Nov 2026 (registry id 11)
+def funding_xs(p: xs.Panel, days: int = 3, step: float = 0.2, gross: float = 0.5):
+    """Market-neutral funding factor: short the coins whose longs paid the most funding over the last ``days``,
+    long those where shorts paid (cross-sectional z-score of minus the trailing funding); positions move ``step``
+    of the way to target every 4 hours; constant gross exposure ``gross``. Designed on the 12 coins, 2020 - 2023."""
+    tf = xs.trailing_funding(p, days)
+    return xs.ease(xs.zscore_weights(-tf, p.live), step) * gross
+
+
+RULES["funding_xs"] = {"fn": funding_xs, "defaults": {"days": 3, "step": 0.2, "gross": 0.5}}
