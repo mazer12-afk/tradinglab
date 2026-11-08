@@ -30,10 +30,8 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
    of BTC perpetual funding over the last 30 days. Revisit only if quarterly basis runs well above funding.
    Registry id 13.
 4. ~~R6 repair~~ (8 Nov): R7 (age >= 1 year, rank, inverse vol) failed on set B (registry 15).
-6. **Basis mean reversion (intraday, market-neutral):** when the perpetual trades far from spot (hourly or 1-minute
-   closes), short the rich leg and buy the cheap one, closing when they converge. The mechanism is arbitrage, but costs
-   are ~34 bp a round trip on both legs, so only large dislocations can pay. Design on the 12 coins 2020-2023;
-   confirm on other coins / set C (pre-register first).
+6. ~~Basis mean reversion~~ (8 Nov): real convergence (gaps > 60 bp close ~50 bp in 4 h vs ~34 bp costs) but the
+   opportunities vanished after 2022 (~20 hours in all of 2023). Registry 16.
 7. **Pairs mean reversion:** closely linked coins (e.g. LTC/BCH, ETH/BTC ratio) reverting intraday. Design on the 12
    coins 2020-2023.
 5. **Carry capital efficiency:** the 1.5x capital per notional is conservative. Measure the worst intraday spike
