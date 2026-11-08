@@ -40,7 +40,7 @@ def trials_in_family(family: str) -> int:
     reg = pd.read_csv(HERE / "registry.csv")
     n = 0
     for r in reg[reg["family"] == family].itertuples():
-        n += {1: 15, 10: 5}.get(r.id, 1)        # loops/grids logged as one line count each of their trials
+        n += {1: 15, 10: 5, 14: 15}.get(r.id, 1)   # loops/grids logged as one line count each of their trials
     return max(n, 1)
 
 
@@ -58,7 +58,7 @@ def main() -> None:
     nets = []
     for st in a.sets:
         uni, lo, hi = st.split(":")
-        syms = {"12": xs.TWELVE, "others": xs.OTHERS}.get(uni) or json.loads((HERE / "fresh_universe.json").read_text())["symbols"]
+        syms = {"12": xs.TWELVE, "others": xs.OTHERS}.get(uni) or json.loads((HERE / {"fresh": "fresh_universe.json", "freshb": "fresh_universe_b.json"}[uni]).read_text())["symbols"]
         p = xs.Panel(syms, lo, hi)
         mkt = p.market()
         b = xs.book(p, fn(p, **d))

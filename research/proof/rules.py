@@ -34,3 +34,26 @@ def funding_xs(p: xs.Panel, days: int = 3, step: float = 0.2, gross: float = 0.5
 
 
 RULES["funding_xs"] = {"fn": funding_xs, "defaults": {"days": 3, "step": 0.2, "gross": 0.5}}
+
+
+# ------------------------------------------------------------------ R7, frozen 8 Nov 2026 (registry id 15)
+def funding_xs_established(p: xs.Panel, days: int = 3, step: float = 0.2, gross: float = 0.5,
+                           min_age_days: int = 365, vol_hours: int = 168):
+    """R6 repaired: the funding factor only among coins listed at least ``min_age_days`` (new listings' funding is
+    chaos, not crowding). Short the coins whose longs paid the most funding over the last ``days``, long the least,
+    by cross-sectional rank; each coin sized by the inverse of its volatility (hourly returns over ``vol_hours``);
+    positions move ``step`` of the way to target every 4 hours; constant gross exposure ``gross``. Designed on the
+    30 known coins and the 57 coins of fresh set A (2020 - Oct 2026)."""
+    first = p.close.apply(lambda c: c.first_valid_index())
+    import pandas as pd
+
+    ok = pd.DataFrame({s: p.grid >= first[s] + pd.Timedelta(days=min_age_days) for s in p.symbols}, index=p.grid) & p.live
+    rank = xs.trailing_funding(p, days).where(ok).rank(axis=1, ascending=False)          # 1 = most crowded long
+    z = rank.sub(rank.mean(axis=1), axis=0).div(rank.std(axis=1) + 1e-12, axis=0)
+    w = z / p.hourly_vol(vol_hours)
+    w = w.div(w.abs().sum(axis=1), axis=0).fillna(0.0)
+    return xs.ease(w, step) * gross
+
+
+RULES["funding_xs_established"] = {"fn": funding_xs_established,
+                                   "defaults": {"days": 3, "step": 0.2, "gross": 0.5, "min_age_days": 365, "vol_hours": 168}}
