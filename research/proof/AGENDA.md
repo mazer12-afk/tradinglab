@@ -17,7 +17,9 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 - **Passed the backtest bar:** R2, R3, R4 (funding carry). All have thin yields in 2025-26 (about 0-2 % a year) because
   funding falls in down markets.
 - **Failed:** R1 (low volatility: a disguised short-market bet), R5 (trend), R6 (cross-sectional funding factor:
-  positive alpha but uneven, drawdown 60 % on fresh coins).
+  positive alpha but uneven, drawdown 60 % on fresh coins), R7 (R6 on coins listed >= 1 year: positive everywhere
+  but weak on set B, Sharpe 0.56, alpha t 1.6). Fresh set B is now used; pre-register set C before the next
+  confirmation.
 
 ## Queue (each goes through PROTOCOL.md; fresh confirmation data must be pre-registered first)
 
@@ -27,7 +29,12 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 3. ~~Quarterly futures basis~~ (8 Nov): not better now. BTC/ETH quarterlies lock 4.6-5.6 %/yr against +6.5 %/yr
    of BTC perpetual funding over the last 30 days. Revisit only if quarterly basis runs well above funding.
    Registry id 13.
-4. **R6 repair:** the funding factor had alpha everywhere (t 0.7 / 3.0 / 2.0), but its drawdowns came from a few
-   coins. Try per-coin risk caps and inverse-volatility sizing. Design on the 30 known coins; confirm on fresh set B.
+4. ~~R6 repair~~ (8 Nov): R7 (age >= 1 year, rank, inverse vol) failed on set B (registry 15).
+6. **Basis mean reversion (intraday, market-neutral):** when the perpetual trades far from spot (hourly or 1-minute
+   closes), short the rich leg and buy the cheap one, closing when they converge. The mechanism is arbitrage, but costs
+   are ~34 bp a round trip on both legs, so only large dislocations can pay. Design on the 12 coins 2020-2023;
+   confirm on other coins / set C (pre-register first).
+7. **Pairs mean reversion:** closely linked coins (e.g. LTC/BCH, ETH/BTC ratio) reverting intraday. Design on the 12
+   coins 2020-2023.
 5. **Carry capital efficiency:** the 1.5x capital per notional is conservative. Measure the worst intraday spike
    against the short leg in all data to justify a tighter margin (it scales returns, not the test outcome).
