@@ -93,6 +93,14 @@ def subset(p, syms):
     return q
 
 
+def account(W):
+    """The paper account opens on START: the rule's state comes from history, but positions before START are not
+    held, so the account pays to open them on its first day."""
+    W = W.copy()
+    W.loc[W.index < START] = 0.0
+    return W
+
+
 def rule_weights(p, rule):
     if rule == "R4":
         return C.funding_carry(p, **K.R4)
@@ -110,7 +118,8 @@ def main() -> None:
     if last < START:
         print("nothing to do before", START.date())
         return
-    end = (last + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+    # the panel runs one day past ``last`` so that ``last`` has its next-day prices; that extra day is dropped below
+    end = (last + pd.Timedelta(days=2)).strftime("%Y-%m-%d")
     # the rules need 14 days of funding history and the panel 30 days of listing; start the panel early
     lo = (START - pd.Timedelta(days=40)).strftime("%Y-%m-%d")
     live = C.CarryPanel(UNIVERSE, lo, end, source=LiveSource())
@@ -120,9 +129,9 @@ def main() -> None:
     arch_panel = None
     for rule, syms in (("R2", C.TWELVE), ("R3", C.TWELVE), ("R4", UNIVERSE)):
         p = subset(live, syms)
-        W = rule_weights(p, rule)
+        W = account(rule_weights(p, rule))
         b = C.book(p, W)
-        b = b[b.index >= START]
+        b = b[(b.index >= START) & (b.index <= last)]
         eq = (1 + b["net"]).cumprod()
         held = W.iloc[-1][W.iloc[-1] > 0]
         status["rules"][rule] = {"days": int(len(b)), "return": round(float(eq.iloc[-1] - 1), 6),
@@ -135,8 +144,9 @@ def main() -> None:
         try:
             arch_panel = arch_panel or C.CarryPanel(UNIVERSE, lo, end)
             arch = subset(arch_panel, syms)
-            Wa = rule_weights(arch, rule)
+            Wa = account(rule_weights(arch, rule))
             ba = C.book(arch, Wa)
+            ba = ba[(ba.index >= START) & (ba.index <= last)]
             common = b.index.intersection(ba.index[ba[["basis", "funding"]].abs().sum(axis=1) > 0])
             if len(common):
                 d = (b.loc[common, "net"] - ba.loc[common, "net"]).abs()
