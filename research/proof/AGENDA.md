@@ -32,7 +32,14 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 4. ~~R6 repair~~ (8 Nov): R7 (age >= 1 year, rank, inverse vol) failed on set B (registry 15).
 6. ~~Basis mean reversion~~ (8 Nov): real convergence (gaps > 60 bp close ~50 bp in 4 h vs ~34 bp costs) but the
    opportunities vanished after 2022 (~20 hours in all of 2023). Registry 16.
-7. **Pairs mean reversion:** closely linked coins (e.g. LTC/BCH, ETH/BTC ratio) reverting intraday. Design on the 12
-   coins 2020-2023.
-5. **Carry capital efficiency:** the 1.5x capital per notional is conservative. Measure the worst intraday spike
-   against the short leg in all data to justify a tighter margin (it scales returns, not the test outcome).
+7. ~~Pairs mean reversion~~ (9 Nov): no edge (+4.9 bp at 4 h vs ~12 bp costs; negative at 12-24 h). Registry 17.
+5. ~~Carry capital efficiency~~ (9 Nov): keep 1.5x. Daily spikes against the short leg reach 46-66 % on 1 coin-day in
+   1,000 (12 coins / fresh coins), with extremes above 100 %. **Deployment requirement:** run carry where spot counts
+   as collateral for the short (unified / portfolio margin); otherwise the short can be liquidated in a squeeze and
+   leave the spot leg unhedged.
+
+## Next ideas (to be added as the queue empties)
+
+- Pre-register **fresh set C** (the next 60 coins by volume) before the next confirmation.
+- Carry: predicted funding (Binance publishes the next rate continuously) to enter or leave a day earlier.
+- Cross-exchange funding differences (OKX is reachable): needs a history source before it can be tested.
