@@ -1,0 +1,123 @@
+{
+ "rule": "R8 funding spread",
+ "params": {
+  "days": 3,
+  "top": 50,
+  "q": 0.2,
+  "gross": 0.5,
+  "lag": 1,
+  "min_age": 30
+ },
+ "period": [
+  "2024-01-01",
+  "2026-10-28"
+ ],
+ "stats": {
+  "sharpe": -0.264,
+  "total_return": -0.1886,
+  "cagr": -0.0713,
+  "max_drawdown": -0.4551,
+  "by_year": {
+   "2024": 0.1478,
+   "2025": -0.3306,
+   "2026": 0.0562
+  },
+  "cost_per_year": -0.0535,
+  "funding_per_year": 0.2033,
+  "turnover_per_day": 0.244,
+  "beta": -0.065,
+  "alpha_per_year": -0.0674,
+  "alpha_t": -0.58,
+  "psr_vs_0": 0.3274,
+  "cost_x2_total_return": -0.3024,
+  "neighbours": [
+   {
+    "params": {
+     "days": 2,
+     "top": 50,
+     "q": 0.2,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": -0.2532,
+    "sharpe": -0.407
+   },
+   {
+    "params": {
+     "days": 6,
+     "top": 50,
+     "q": 0.2,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": -0.3071,
+    "sharpe": -0.535
+   },
+   {
+    "params": {
+     "days": 3,
+     "top": 25,
+     "q": 0.2,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": 0.8022,
+    "sharpe": 0.934
+   },
+   {
+    "params": {
+     "days": 3,
+     "top": 100,
+     "q": 0.2,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": 0.0362,
+    "sharpe": 0.159
+   },
+   {
+    "params": {
+     "days": 3,
+     "top": 50,
+     "q": 0.1,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": -0.6172,
+    "sharpe": -0.768
+   },
+   {
+    "params": {
+     "days": 3,
+     "top": 50,
+     "q": 0.4,
+     "gross": 0.5,
+     "lag": 1,
+     "min_age": 30
+    },
+    "total_return": -0.0916,
+    "sharpe": -0.231
+   }
+  ]
+ },
+ "trials_in_family": 59,
+ "psr": 0.3274,
+ "dsr": 0.0025,
+ "checks": {
+  "sharpe>=1": false,
+  "psr>=0.99": false,
+  "dsr>=0.95": false,
+  "years>=75%": false,
+  "positive": false,
+  "maxdd>=-20%": false,
+  "neighbours_positive": false,
+  "cost_x2_positive": false,
+  "alpha_t>=2_and_|beta|<0.2": false
+ },
+ "proven": false
+}
