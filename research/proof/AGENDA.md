@@ -8,7 +8,10 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 - **Forward test of R2, R3, R4 (funding carry)**, from 8 Nov 2026, daily (`carry-forward.yml`, branch
   `experiment/carry-forward`). Check every day:
   - the job ran;
-  - `archive_check` shows the live and archive books agree (`max_daily_net_diff` ~ 0, `max_weight_diff` ~ 0);
+  - `archive_check`: price returns must match the archive exactly (`max_price_return_diff` 0). The archive has
+    funding only in monthly files, so funding, positions and daily P&L are compared once a month is published
+    (`funding_days`, `max_funding_diff`, `max_weight_diff`, `max_daily_net_diff`, all ~0); November's arrives in
+    early December;
   - returns and costs look sane.
   On or after 6 Dec 2026, write the forward verdict per PROTOCOL.md section 5, then tell the user.
 
@@ -40,6 +43,6 @@ Every rule tried goes in `registry.csv`. Work on one item at a time; commit each
 
 ## Next ideas (to be added as the queue empties)
 
-- Pre-register **fresh set C** (the next 60 coins by volume) before the next confirmation.
+- **Fresh set C: pre-registered** 10 Nov (`fresh_universe_c.json`, 60 coins). Use it only to confirm a frozen rule.
 - Carry: predicted funding (Binance publishes the next rate continuously) to enter or leave a day earlier.
 - Cross-exchange funding differences (OKX is reachable): needs a history source before it can be tested.

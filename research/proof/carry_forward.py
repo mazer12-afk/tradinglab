@@ -140,19 +140,34 @@ def main() -> None:
                                  "costs": round(float(b["cost"].sum()), 6), "worst_drawdown": round(float((eq / eq.cummax() - 1).min()), 6),
                                  "holding": {k: round(float(v), 3) for k, v in held.items()}}
         daily[rule] = b.assign(equity=eq)
-        # implementation check against the archive wherever it already has the data
+        # implementation check against the archive, on what the archive already has: hourly prices are published
+        # daily, funding only in monthly files (so a month's funding, and the positions that depend on it, can be
+        # compared only after the month)
         try:
             arch_panel = arch_panel or C.CarryPanel(UNIVERSE, lo, end)
             arch = subset(arch_panel, syms)
-            Wa = account(rule_weights(arch, rule))
-            ba = C.book(arch, Wa)
-            ba = ba[(ba.index >= START) & (ba.index <= last)]
-            common = b.index.intersection(ba.index[ba[["basis", "funding"]].abs().sum(axis=1) > 0])
-            if len(common):
-                d = (b.loc[common, "net"] - ba.loc[common, "net"]).abs()
-                pos = (W.loc[common] - Wa.reindex(columns=W.columns).fillna(0.0).loc[common]).abs().max().max()
-                status["rules"][rule]["archive_check"] = {"days": int(len(common)), "max_daily_net_diff": round(float(d.max()), 8),
-                                                          "max_weight_diff": round(float(pos), 6)}
+            days = b.index
+            chk = {}
+            pr = [(getattr(p, k).loc[days] - getattr(arch, k).reindex(index=days, columns=p.symbols)).abs()
+                  for k in ("spot_ret", "perp_ret")]
+            have_px = arch.spot_ret.reindex(days).notna().any(axis=1) & arch.perp_ret.reindex(days).notna().any(axis=1)
+            px_days = days[have_px.to_numpy()]
+            if len(px_days):
+                chk["price_days"] = int(len(px_days))
+                chk["max_price_return_diff"] = round(float(max(x.loc[px_days].max().max() for x in pr)), 10)
+            fund_end = min((arch.fund_hist[x].index.max() for x in arch.symbols if len(arch.fund_hist[x])), default=None)
+            if fund_end is not None:
+                f_days = days[(days + pd.Timedelta(days=1)) <= fund_end]
+                if len(f_days):
+                    fd = (p.fund_next.loc[f_days] - arch.fund_next.reindex(index=f_days, columns=p.symbols)).abs()
+                    chk["funding_days"] = int(len(f_days))
+                    chk["max_funding_diff"] = round(float(fd.max().max()), 10)
+                    Wa = account(rule_weights(arch, rule))
+                    ba = C.book(arch, Wa).reindex(f_days)
+                    chk["max_daily_net_diff"] = round(float((b.loc[f_days, "net"] - ba["net"]).abs().max()), 10)
+                    chk["max_weight_diff"] = round(float((W.loc[f_days] - Wa.reindex(index=f_days, columns=W.columns).fillna(0.0)).abs().max().max()), 6)
+                chk["archive_funding_through"] = str(fund_end)
+            status["rules"][rule]["archive_check"] = chk
         except Exception as exc:                   # noqa: BLE001 - the archive lags; report and carry on
             status["rules"][rule]["archive_check"] = {"error": str(exc)[:200]}
     for rule, d in daily.items():
