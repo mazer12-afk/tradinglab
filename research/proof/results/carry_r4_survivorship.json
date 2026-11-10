@@ -1,0 +1,110 @@
+{
+ "rule": "R4 (survivorship-free)",
+ "sets": {
+  "391 other coins incl. delisted, 2020-2026": {
+   "sharpe": 4.631,
+   "total_return": 0.5589,
+   "cagr": 0.0672,
+   "max_drawdown": -0.0202,
+   "funding_per_year": 0.0983,
+   "basis_per_year": -0.001,
+   "cost_per_year": -0.0321,
+   "avg_notional": 0.936,
+   "by_year": {
+    "2020": 0.0965,
+    "2021": 0.2925,
+    "2022": -0.0135,
+    "2023": 0.0426,
+    "2024": 0.0761,
+    "2025": -0.0016,
+    "2026": -0.0045
+   },
+   "beta": -0.0,
+   "alpha_per_year": 0.0651,
+   "alpha_t": 12.1,
+   "coins": 391,
+   "delisted_coins": 118,
+   "psr_vs_0": 1.0,
+   "cost_x2_total_return": 0.2518,
+   "neighbours": [
+    {
+     "params": {
+      "lookback_days": 7,
+      "enter_apr": 0.1,
+      "leave_apr": 0.0,
+      "max_share": 0.1
+     },
+     "total_return": 0.5043,
+     "sharpe": 4.365
+    },
+    {
+     "params": {
+      "lookback_days": 28,
+      "enter_apr": 0.1,
+      "leave_apr": 0.0,
+      "max_share": 0.1
+     },
+     "total_return": 0.5547,
+     "sharpe": 4.514
+    },
+    {
+     "params": {
+      "lookback_days": 14,
+      "enter_apr": 0.05,
+      "leave_apr": 0.0,
+      "max_share": 0.1
+     },
+     "total_return": 0.5153,
+     "sharpe": 4.565
+    },
+    {
+     "params": {
+      "lookback_days": 14,
+      "enter_apr": 0.2,
+      "leave_apr": 0.0,
+      "max_share": 0.1
+     },
+     "total_return": 0.4208,
+     "sharpe": 1.261
+    },
+    {
+     "params": {
+      "lookback_days": 14,
+      "enter_apr": 0.1,
+      "leave_apr": 0.0,
+      "max_share": 0.05
+     },
+     "total_return": 0.5281,
+     "sharpe": 4.559
+    },
+    {
+     "params": {
+      "lookback_days": 14,
+      "enter_apr": 0.1,
+      "leave_apr": 0.0,
+      "max_share": 0.2
+     },
+     "total_return": 0.5654,
+     "sharpe": 4.59
+    }
+   ]
+  }
+ },
+ "combined_sharpe": 4.631,
+ "trials_in_family": 6,
+ "combined_psr": 1.0,
+ "combined_dsr": 1.0,
+ "share_of_years_positive": 0.571,
+ "checks": {
+  "sharpe>=1": true,
+  "psr>=0.99": true,
+  "dsr>=0.95": true,
+  "years>=75%": false,
+  "all_sets_positive": true,
+  "maxdd>=-20%": true,
+  "neighbours_positive": true,
+  "cost_x2_positive": true,
+  "alpha_t>=2_and_|beta|<0.2": true
+ },
+ "proven": false
+}

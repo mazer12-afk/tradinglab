@@ -129,3 +129,42 @@ def confirm_r4() -> dict:
     path = HERE / "results" / "carry_r4.json"
     path.write_text(json.dumps(out, indent=1, default=str) + "\n")
     return out
+
+
+def robustness_wide() -> dict:
+    """R4 exactly as frozen, on every coin Binance ever listed on both spot and perpetuals that was not among the
+    87 coins used before (delisted coins included), held to each perpetual's last traded day (the conservative
+    reading; delistings are announced days ahead). Not a new rule: a survivorship check of the confirmed one."""
+    global TRIALS, R2
+    import widebook as B
+    from wide import Wide
+
+    w = Wide("2020-01-01", "2026-10-28")
+    fresh = json.loads((HERE / "fresh_universe.json").read_text())["symbols"]
+    seen = set(C.TWELVE + C.OTHERS + fresh)
+    rest = [s for s in w.symbols if s not in seen]
+    end = w.px_all.index[-1]
+    dead = [s for s in rest if w.last[s] < end - pd.Timedelta(days=2)]
+    p = B.WideCarry(w, rest, exit_before=0)
+    mkt = p.spot_ret.where(p.live).mean(axis=1)
+    TRIALS, R2_saved, R2 = R4_TRIALS + 1, R2, R4
+    try:
+        b = C.book(p, C.funding_carry(p, **R4))
+        s = C.stats(b, mkt)
+        s["coins"], s["delisted_coins"] = len(p.symbols), len([x for x in dead if x in p.symbols])
+        s["psr_vs_0"] = round(float(probabilistic_sharpe(b["net"], 0.0)), 4)
+        old = (C.SPOT_BPS, C.PERP_BPS)
+        C.SPOT_BPS, C.PERP_BPS = 2 * old[0], 2 * old[1]
+        s["cost_x2_total_return"] = round(float((1 + C.book(p, C.funding_carry(p, **R4))["net"]).prod() - 1), 4)
+        C.SPOT_BPS, C.PERP_BPS = old
+        s["neighbours"] = []
+        for nb in neighbours():
+            bn = C.book(p, C.funding_carry(p, **nb))
+            s["neighbours"].append({"params": nb, "total_return": round(float((1 + bn["net"]).prod() - 1), 4), "sharpe": C.stats(bn)["sharpe"]})
+        print(f"R4 survivorship-free: {s['coins']} coins ({s['delisted_coins']} delisted)  Sharpe {s['sharpe']:+.2f}  CAGR {s['cagr']:+.1%}  "
+              f"total {s['total_return']:+.1%}  maxDD {s['max_drawdown']:.1%}  beta {s['beta']:+.3f}  alpha t {s['alpha_t']:+.1f}  by year {s['by_year']}")
+        out = verdict("R4 (survivorship-free)", {"391 other coins incl. delisted, 2020-2026": s}, [b["net"]])
+    finally:
+        TRIALS, R2 = 12, R2_saved
+    (HERE / "results" / "carry_r4_survivorship.json").write_text(json.dumps(out, indent=1, default=str) + "\n")
+    return out

@@ -153,3 +153,25 @@ def funding_carry(p: CarryPanel, lookback_days: int = 7, enter_apr: float = 0.10
     k = on.sum(axis=1)
     w = on.div(np.maximum(k, 1.0 / max_share), axis=0)
     return w
+
+
+def topk_carry(p, lookback_days: int = 14, k: int = 10, enter_apr: float = 0.10, leave_apr: float = 0.0,
+               keep_rank: int | None = None) -> pd.DataFrame:
+    """Concentrated carry: hold spot-long / perp-short on at most ``k`` coins, those with the highest average funding
+    over the last ``lookback_days``. A coin enters when its funding is above ``enter_apr`` a year and it ranks in the
+    top ``k``; it stays until its funding falls below ``leave_apr`` or its rank falls below ``keep_rank`` (default
+    2k). Each held coin gets 1/k of the book (less if more than k are held)."""
+    keep_rank = keep_rank or 2 * k
+    sig = (p.trailing_funding(lookback_days) * 365).where(p.live)
+    rank = sig.rank(axis=1, ascending=False)
+    S, R, L = sig.to_numpy(), rank.to_numpy(), p.live.to_numpy()
+    on = np.zeros(S.shape)
+    cur = np.zeros(S.shape[1], dtype=bool)
+    for i in range(len(S)):
+        ok = L[i] & ~np.isnan(S[i])
+        stay = cur & ok & (S[i] > leave_apr) & (R[i] <= keep_rank)
+        enter = ~cur & ok & (S[i] > enter_apr) & (R[i] <= k)
+        cur = stay | enter
+        on[i] = cur
+    on = pd.DataFrame(on, index=sig.index, columns=sig.columns)
+    return on.div(np.maximum(on.sum(axis=1), k), axis=0)
