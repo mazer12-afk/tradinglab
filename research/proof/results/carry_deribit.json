@@ -1,0 +1,161 @@
+{
+ "R3": {
+  "rule": "R3 on Deribit",
+  "sets": {
+   "Deribit BTC + ETH": {
+    "sharpe": 2.442,
+    "total_return": 0.2487,
+    "cagr": 0.0304,
+    "max_drawdown": -0.0428,
+    "funding_per_year": 0.0424,
+    "basis_per_year": -0.0021,
+    "cost_per_year": -0.0102,
+    "avg_notional": 1.0,
+    "by_year": {
+     "2019": 0.025,
+     "2020": 0.0346,
+     "2021": 0.0987,
+     "2022": -0.0394,
+     "2023": 0.0426,
+     "2024": 0.054,
+     "2025": 0.0118,
+     "2026": 0.0035
+    },
+    "beta": -0.002,
+    "alpha_per_year": 0.031,
+    "alpha_t": 6.89,
+    "coins": 2,
+    "psr_vs_0": 0.9997,
+    "cost_x2_total_return": 0.1576,
+    "neighbours": []
+   }
+  },
+  "combined_sharpe": 2.442,
+  "trials_in_family": 12,
+  "combined_psr": 0.9997,
+  "combined_dsr": 0.9949,
+  "share_of_years_positive": 0.875,
+  "checks": {
+   "sharpe>=1": true,
+   "psr>=0.99": true,
+   "dsr>=0.95": true,
+   "years>=75%": true,
+   "all_sets_positive": true,
+   "maxdd>=-20%": true,
+   "neighbours_positive": true,
+   "cost_x2_positive": true,
+   "alpha_t>=2_and_|beta|<0.2": true
+  },
+  "proven": true
+ },
+ "R2": {
+  "rule": "R2 on Deribit",
+  "sets": {
+   "Deribit all perpetuals": {
+    "sharpe": 2.122,
+    "total_return": 1.1072,
+    "cagr": 0.1057,
+    "max_drawdown": -0.0451,
+    "funding_per_year": 0.1319,
+    "basis_per_year": -0.0063,
+    "cost_per_year": -0.024,
+    "avg_notional": 0.591,
+    "by_year": {
+     "2019": 0.012,
+     "2020": 0.0326,
+     "2021": 0.049,
+     "2022": -0.0285,
+     "2023": 0.5576,
+     "2024": 0.2313,
+     "2025": 0.0105,
+     "2026": 0.021
+    },
+    "beta": 0.006,
+    "alpha_per_year": 0.0982,
+    "alpha_t": 5.6,
+    "coins": 131,
+    "psr_vs_0": 1.0,
+    "cost_x2_total_return": 0.7641,
+    "neighbours": [
+     {
+      "params": {
+       "lookback_days": 7,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 1.0994,
+      "sharpe": 2.201
+     },
+     {
+      "params": {
+       "lookback_days": 28,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 1.2012,
+      "sharpe": 2.028
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.05,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 0.9742,
+      "sharpe": 2.026
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.2,
+       "leave_apr": 0.0,
+       "max_share": 0.25
+      },
+      "total_return": 1.2951,
+      "sharpe": 2.282
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.125
+      },
+      "total_return": 0.9734,
+      "sharpe": 2.57
+     },
+     {
+      "params": {
+       "lookback_days": 14,
+       "enter_apr": 0.1,
+       "leave_apr": 0.0,
+       "max_share": 0.5
+      },
+      "total_return": 1.3007,
+      "sharpe": 1.975
+     }
+    ]
+   }
+  },
+  "combined_sharpe": 2.122,
+  "trials_in_family": 12,
+  "combined_psr": 1.0,
+  "combined_dsr": 1.0,
+  "share_of_years_positive": 0.875,
+  "checks": {
+   "sharpe>=1": true,
+   "psr>=0.99": true,
+   "dsr>=0.95": true,
+   "years>=75%": true,
+   "all_sets_positive": true,
+   "maxdd>=-20%": true,
+   "neighbours_positive": true,
+   "cost_x2_positive": true,
+   "alpha_t>=2_and_|beta|<0.2": true
+  },
+  "proven": true
+ }
+}
