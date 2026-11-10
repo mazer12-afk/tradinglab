@@ -1,0 +1,203 @@
+<title>Trading Proof Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column (ledger width) with full-width figure bands; summary first, detail after. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --ink: #11161b; --ink-2: #47525d; --muted: #77828d; --rule: #dce1e6;
+  --accent: #1d5ea8; --accent-wash: #e6eef8;
+  --pos: #2a78d6; --neg: #e34948; --grid: #e6e9ec; --base: #b9c1c9;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #8a6fd1;
+  --good: #006300; --bad: #b42323; --warn-bg: #fff4dc; --warn-ink: #6b4a00;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1013; --surface: #151a1f; --ink: #e9edf0; --ink-2: #b4bdc6; --muted: #86919b; --rule: #29313a;
+  --accent: #7fb0ea; --accent-wash: #16263a;
+  --pos: #3987e5; --neg: #e66767; --grid: #222a32; --base: #46505a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #9d86e0;
+  --good: #3bbf3b; --bad: #ff8a8a; --warn-bg: #2e2510; --warn-ink: #f2cf7a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1013; --surface: #151a1f; --ink: #e9edf0; --ink-2: #b4bdc6; --muted: #86919b; --rule: #29313a;
+  --accent: #7fb0ea; --accent-wash: #16263a;
+  --pos: #3987e5; --neg: #e66767; --grid: #222a32; --base: #46505a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #9d86e0;
+  --good: #3bbf3b; --bad: #ff8a8a; --warn-bg: #2e2510; --warn-ink: #f2cf7a; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.6 var(--f-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 10px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font: 500 12px/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 clamp(28px, 4.4vw, 42px)/1.12 var(--f-display); margin: 0; letter-spacing: -.01em; text-wrap: balance; max-width: 22ch; }
+h2 { font: 600 24px/1.2 var(--f-display); margin: 0; text-wrap: balance; }
+h3 { font: 600 16px/1.3 var(--f-body); margin: 0; }
+.lede { color: var(--ink-2); max-width: 66ch; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+section { display: grid; gap: 16px; padding-block: 36px; border-bottom: 1px solid var(--rule); }
+section > .sec-head { display: grid; gap: 6px; }
+.meta { font: 400 13px/1.5 var(--f-mono); color: var(--muted); }
+.verdict { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 22px 24px; display: grid; gap: 14px; }
+.verdict p.big { font: 500 20px/1.4 var(--f-body); max-width: 60ch; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.tile .k { font-size: 13px; color: var(--ink-2); }
+.tile .v { font: 600 28px/1.15 var(--f-body); }
+.tile .s { font-size: 12.5px; color: var(--muted); }
+.v.neg { color: var(--bad); } .v.pos { color: var(--good); }
+ul.points { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 70ch; }
+.fig { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 16px 10px; display: grid; gap: 10px; min-width: 0; }
+.fig-title { font: 600 14px/1.3 var(--f-body); }
+.fig-note { font-size: 12.5px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 2px; border-radius: 2px; display: inline-block; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+.multiples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 720px) { .multiples { grid-template-columns: minmax(0, 1fr); } }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--rule); }
+th { font: 500 11.5px/1.3 var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--surface); position: sticky; top: 0; }
+td { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+td:first-child, th:first-child { text-align: left; font-family: var(--f-body); }
+tr:last-child td { border-bottom: 0; }
+td.pos { color: var(--good); } td.neg { color: var(--bad); }
+tr.hl td { background: var(--accent-wash); }
+.tag.kept { color: var(--good); border-color: currentColor; } .tag.cut { color: var(--bad); border-color: currentColor; }
+.tag { display: inline-block; font: 500 11px/1.6 var(--f-mono); padding: 0 6px; border-radius: 4px; border: 1px solid var(--rule); color: var(--ink-2); margin-left: 6px; vertical-align: 1px; }
+.callout { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; }
+.callout strong { color: inherit; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.two > * { min-width: 0; }
+.two > .fig { align-content: start; }
+details { border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
+details[open] > summary { border-bottom: 1px solid var(--rule); }
+details .table-wrap { border: 0; border-radius: 0; max-height: 560px; }
+code { font: 13px var(--f-mono); background: var(--accent-wash); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+footer { padding-top: 28px; display: grid; gap: 8px; color: var(--muted); font-size: 13px; }
+/* charts */
+.chart { width: 100%; min-width: 0; }
+.viz-grid { stroke: var(--grid); stroke-width: 1; }
+.viz-base, .viz-ref { stroke: var(--base); stroke-width: 1; }
+.viz-cross { stroke: var(--muted); stroke-width: 1; }
+.viz-leader { stroke: var(--base); stroke-width: 1; }
+.viz-tick { fill: var(--muted); font: 11px var(--f-mono); }
+.viz-cat { fill: var(--ink-2); font: 12.5px var(--f-body); }
+.viz-val { fill: var(--ink-2); font: 11.5px var(--f-mono); }
+.viz-val.viz-val-in { fill: var(--surface); }
+.viz-endlabel { fill: var(--ink-2); font: 11.5px var(--f-body); }
+.viz-reflabel { fill: var(--muted); font: 11px var(--f-body); }
+.viz-bar.is-hot { opacity: .78; }
+.viz-tip { position: fixed; z-index: 20; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,.12); display: grid; gap: 3px; max-width: 280px; }
+.viz-tip-title { font: 500 11.5px var(--f-mono); color: var(--muted); }
+.viz-tip-row { display: flex; align-items: center; gap: 8px; }
+.viz-tip-key { width: 12px; height: 2px; border-radius: 2px; flex: none; }
+.viz-tip-row strong { font: 600 13px var(--f-mono); }
+.viz-tip-label { color: var(--ink-2); }
+@media (max-width: 560px) { .tile .v { font-size: 24px; } .verdict { padding: 16px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style>
+.pill { display: inline-block; font: 500 11.5px/1.7 var(--f-mono); padding: 0 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.pass { color: var(--good); } .pill.fail { color: var(--bad); } .pill.part { color: var(--warn-ink); background: var(--warn-bg); border-color: transparent; }
+td.txt, th.txt { white-space: normal; text-align: left; font-family: var(--f-body); }
+.bar-pos { fill: var(--s1); } .bar-neg { fill: var(--neg); }
+.viz-refline { stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 5 4; }
+ol.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 70ch; }
+</style>
+<div class="txt">
+<header>
+  <div class="eyebrow">Proof programme · 7 – 10 Nov 2026 · 27 registry entries · Binance 2020 – Oct 2026, Deribit 2019 – Oct 2026</div>
+  <h1>One method passed every test: funding carry</h1>
+  <p class="lede">Every trading rule in this lab now has to pass the same nine checks, on data it had never seen, with the rule frozen before the test. Eight rules went through. Five failed. The three that passed are versions of one method, funding carry, and it also held up on a second exchange and on coins that were later delisted. It is low-risk and it only earns when the market is bullish.</p>
+</header>
+
+<section aria-labelledby="verdict-h">
+  <div class="sec-head"><div class="eyebrow">Verdict</div><h2 id="verdict-h">Proven on past data; the live check finishes on 6 Dec</h2></div>
+  <div class="verdict">
+    <p class="big">Funding carry buys a coin on the spot market and shorts the same amount on its perpetual future. The two price moves cancel out. What is left is the funding rate, a fee that holders of the future pay to the short side when the market is leaning long.</p>
+    <p>The simplest version holds that trade on Bitcoin and Ether all the time. From 2020 to Oct 2026 it made +7.4% a year on Binance with every year in profit and a worst drawdown of -1.2%, after fees on both legs. A second version trades any coin while its funding over the last 14 days is above 10 % a year. Run on every coin Binance ever listed on both markets (478 coins, 118 of them later delisted), it made +6.9% a year with a worst drawdown of -2.0%.</p>
+    <p>The return depends on the market. Both versions made 23 – 28 % in 2021 and about 8 % in 2024, and little in 2022, 2025 and 2026, when funding was low. Bitcoin's funding is running near 2.6 % a year now, so the method is earning little today.</p>
+  </div>
+  <div class="tiles">
+    <div class="tile"><div class="k">Always BTC + ETH, a year (2020 – Oct 2026)</div><div class="v pos">+7.4%</div><div class="s">7 of 7 years in profit · worst drawdown -1.2%</div></div>
+    <div class="tile"><div class="k">Any-coin rule, a year (2020 – Oct 2026)</div><div class="v pos">+6.9%</div><div class="s">478 coins, dead ones included · worst drawdown -2.0%</div></div>
+    <div class="tile"><div class="k">Tests on unseen data</div><div class="v">7 run</div><div class="s">6 passed all nine checks · 1 passed eight</div></div>
+    <div class="tile"><div class="k">Rules that failed</div><div class="v neg">5 of 8</div><div class="s">every rule that bets on price direction</div></div>
+  </div>
+</section>
+
+<section aria-labelledby="year-h">
+  <div class="sec-head"><div class="eyebrow">What it earns</div><h2 id="year-h">Strong in bull markets, flat in bear markets</h2>
+  <p class="lede">Return by year of the two versions on Binance, after costs. The any-coin rule runs on all 478 coins with both a spot market and a perpetual, and holds a delisted coin to its last traded day.</p></div>
+  <div class="fig"><div class="fig-title">Return by year, after costs</div><div class="legend"><span><i class="box" style="background:var(--s3)"></i>Always BTC + ETH, Binance</span><span><i class="box" style="background:var(--s1)"></i>Carry rule on any coin, Binance (478 coins)</span></div><svg viewBox="0 0 920 280" class="chart" role="img" aria-label="Return by year"><line class="viz-grid" x1="44" x2="908" y1="221.7" y2="221.7"/><text class="viz-tick" x="38" y="225.7" text-anchor="end">+0%</text><line class="viz-grid" x1="44" x2="908" y1="159.9" y2="159.9"/><text class="viz-tick" x="38" y="163.9" text-anchor="end">+10%</text><line class="viz-grid" x1="44" x2="908" y1="98.1" y2="98.1"/><text class="viz-tick" x="38" y="102.1" text-anchor="end">+20%</text><line class="viz-grid" x1="44" x2="908" y1="36.4" y2="36.4"/><text class="viz-tick" x="38" y="40.4" text-anchor="end">+30%</text><line class="viz-base" x1="44" x2="908" y1="221.7" y2="221.7"/><rect x="61.2" y="144.6" width="43.0" height="77.1" style="fill:var(--s3)"><title>Always BTC + ETH 2020: +12.5%</title></rect><text class="viz-val" x="82.7" y="138.6" text-anchor="middle">+12.5%</text><rect x="107.2" y="150.1" width="43.0" height="71.6" style="fill:var(--s1)"><title>Any coin 2020: +11.6%</title></rect><text class="viz-val" x="128.7" y="144.1" text-anchor="middle">+11.6%</text><text class="viz-cat" x="105.7" y="268" text-anchor="middle">2020</text><rect x="184.6" y="76.6" width="43.0" height="145.0" style="fill:var(--s3)"><title>Always BTC + ETH 2021: +23.5%</title></rect><text class="viz-val" x="206.1" y="70.6" text-anchor="middle">+23.5%</text><rect x="230.6" y="48.0" width="43.0" height="173.6" style="fill:var(--s1)"><title>Any coin 2021: +28.1%</title></rect><text class="viz-val" x="252.1" y="42.0" text-anchor="middle">+28.1%</text><text class="viz-cat" x="229.1" y="268" text-anchor="middle">2021</text><rect x="308.1" y="218.8" width="43.0" height="2.8" style="fill:var(--s3)"><title>Always BTC + ETH 2022: +0.5%</title></rect><text class="viz-val" x="329.6" y="212.8" text-anchor="middle">+0.5%</text><rect x="354.1" y="221.7" width="43.0" height="8.9" style="fill:var(--s1)"><title>Any coin 2022: -1.4%</title></rect><text class="viz-val" x="375.6" y="244.6" text-anchor="middle">-1.4%</text><text class="viz-cat" x="352.6" y="268" text-anchor="middle">2022</text><rect x="431.5" y="192.5" width="43.0" height="29.2" style="fill:var(--s3)"><title>Always BTC + ETH 2023: +4.7%</title></rect><text class="viz-val" x="453.0" y="186.5" text-anchor="middle">+4.7%</text><rect x="477.5" y="195.9" width="43.0" height="25.8" style="fill:var(--s1)"><title>Any coin 2023: +4.2%</title></rect><text class="viz-val" x="499.0" y="189.9" text-anchor="middle">+4.2%</text><text class="viz-cat" x="476.0" y="268" text-anchor="middle">2023</text><rect x="554.9" y="174.1" width="43.0" height="47.6" style="fill:var(--s3)"><title>Always BTC + ETH 2024: +7.7%</title></rect><text class="viz-val" x="576.4" y="168.1" text-anchor="middle">+7.7%</text><rect x="600.9" y="174.7" width="43.0" height="47.0" style="fill:var(--s1)"><title>Any coin 2024: +7.6%</title></rect><text class="viz-val" x="622.4" y="168.7" text-anchor="middle">+7.6%</text><text class="viz-cat" x="599.4" y="268" text-anchor="middle">2024</text><rect x="678.4" y="206.3" width="43.0" height="15.3" style="fill:var(--s3)"><title>Always BTC + ETH 2025: +2.5%</title></rect><text class="viz-val" x="699.9" y="200.3" text-anchor="middle">+2.5%</text><rect x="724.4" y="221.5" width="43.0" height="1.0" style="fill:var(--s1)"><title>Any coin 2025: +0.0%</title></rect><text class="viz-val" x="745.9" y="215.5" text-anchor="middle">+0.0%</text><text class="viz-cat" x="722.9" y="268" text-anchor="middle">2025</text><rect x="801.8" y="216.8" width="43.0" height="4.8" style="fill:var(--s3)"><title>Always BTC + ETH 2026: +0.8%</title></rect><text class="viz-val" x="823.3" y="210.8" text-anchor="middle">+0.8%</text><rect x="847.8" y="221.7" width="43.0" height="2.0" style="fill:var(--s1)"><title>Any coin 2026: -0.3%</title></rect><text class="viz-val" x="869.3" y="237.6" text-anchor="middle">-0.3%</text><text class="viz-cat" x="846.3" y="268" text-anchor="middle">2026</text></svg>
+  <div class="fig-note">Share of coins paying more than 10 % a year in funding: 2020 71% · 2021 72% · 2022 11% · 2023 40% · 2024 52% · 2025 17% · 2026 20%.</div></div>
+  <div class="fig"><div class="fig-title">Account value since 2020</div><div class="legend"><span><i class="box" style="background:var(--s3)"></i>Always BTC + ETH, Binance</span><span><i class="box" style="background:var(--s1)"></i>Carry rule on any coin, Binance (478 coins)</span><span><i class="box" style="background:var(--s4)"></i>Always BTC + ETH, Deribit</span></div><svg viewBox="0 0 920 320" class="chart" role="img"><line class="viz-grid" x1="48" x2="750" y1="276.8" y2="276.8"/><text class="viz-tick" x="42" y="280.8" text-anchor="end">+0%</text><line class="viz-grid" x1="48" x2="750" y1="195.4" y2="195.4"/><text class="viz-tick" x="42" y="199.4" text-anchor="end">+20%</text><line class="viz-grid" x1="48" x2="750" y1="113.9" y2="113.9"/><text class="viz-tick" x="42" y="117.9" text-anchor="end">+40%</text><line class="viz-grid" x1="48" x2="750" y1="32.5" y2="32.5"/><text class="viz-tick" x="42" y="36.5" text-anchor="end">+60%</text><line class="viz-base" x1="48" x2="750" y1="276.8" y2="276.8"/><text class="viz-tick" x="48.8" y="310" text-anchor="middle">2020</text><text class="viz-tick" x="151.7" y="310" text-anchor="middle">2021</text><text class="viz-tick" x="254.2" y="310" text-anchor="middle">2022</text><text class="viz-tick" x="356.7" y="310" text-anchor="middle">2023</text><text class="viz-tick" x="459.3" y="310" text-anchor="middle">2024</text><text class="viz-tick" x="562.1" y="310" text-anchor="middle">2025</text><text class="viz-tick" x="664.6" y="310" text-anchor="middle">2026</text><polyline points="48.0,276.8 50.0,276.8 51.9,276.8 53.9,276.8 55.9,276.8 57.8,276.6 59.8,273.6 61.8,266.8 63.7,264.7 65.7,262.9 67.7,261.6 69.6,264.3 71.6,264.5 73.6,264.6 75.5,264.8 77.5,264.8 79.5,264.8 81.4,264.7 83.4,263.9 85.4,262.5 87.3,262.1 89.3,261.6 91.3,261.6 93.2,261.1 95.2,260.6 97.2,260.2 99.1,259.7 101.1,259.2 103.1,258.6 105.0,258.1 107.0,256.8 109.0,252.6 110.9,250.4 112.9,247.6 114.9,245.4 116.8,244.6 118.8,243.6 120.8,242.9 122.7,242.8 124.7,242.6 126.7,242.3 128.6,242.2 130.6,241.6 132.6,240.4 134.5,240.1 136.5,238.8 138.5,237.7 140.4,235.6 142.4,233.0 144.4,232.0 146.3,231.3 148.3,229.1 150.3,228.1 152.2,223.9 154.2,215.3 156.2,211.7 158.1,208.2 160.1,205.0 162.1,198.8 164.0,190.0 166.0,181.6 167.9,179.9 169.9,178.4 171.9,173.8 173.8,170.9 175.8,169.3 177.8,164.1 179.7,159.6 181.7,152.4 183.7,151.4 185.6,150.5 187.6,146.9 189.6,144.3 191.5,144.2 193.5,143.8 195.5,143.2 197.4,142.7 199.4,142.5 201.4,143.1 203.3,143.0 205.3,143.0 207.3,142.6 209.2,143.3 211.2,142.9 213.2,142.6 215.1,141.8 217.1,140.8 219.1,139.4 221.0,136.9 223.0,135.8 225.0,135.1 226.9,134.6 228.9,134.4 230.9,133.7 232.8,132.1 234.8,129.6 236.8,127.5 238.7,125.0 240.7,123.2 242.7,122.3 244.6,121.6 246.6,120.6 248.6,120.0 250.5,119.4 252.5,118.7 254.5,118.2 256.4,117.6 258.4,117.5 260.4,117.2 262.3,117.3 264.3,117.4 266.3,117.2 268.2,116.9 270.2,116.9 272.2,116.7 274.1,116.6 276.1,116.3 278.1,115.9 280.0,115.1 282.0,114.6 284.0,114.8 285.9,115.2 287.9,115.3 289.9,115.1 291.8,115.3 293.8,115.3 295.8,114.8 297.7,114.6 299.7,114.5 301.7,115.1 303.6,115.1 305.6,115.2 307.6,114.8 309.5,114.9 311.5,114.4 313.5,114.0 315.4,113.6 317.4,113.5 319.4,113.4 321.3,113.9 323.3,114.1 325.3,114.6 327.2,116.7 329.2,117.1 331.2,116.8 333.1,116.4 335.1,116.1 337.1,115.8 339.0,115.6 341.0,115.5 343.0,116.8 344.9,117.1 346.9,117.1 348.9,117.0 350.8,116.9 352.8,116.5 354.8,116.1 356.7,115.6 358.7,115.2 360.7,114.7 362.6,113.8 364.6,113.1 366.6,112.3 368.5,111.6 370.5,111.2 372.5,110.5 374.4,110.3 376.4,110.0 378.4,109.4 380.3,109.1 382.3,108.8 384.3,108.6 386.2,108.2 388.2,107.8 390.2,107.4 392.1,107.1 394.1,106.8 396.1,106.5 398.0,106.2 400.0,105.6 401.9,105.3 403.9,105.1 405.9,104.7 407.8,104.2 409.8,103.6 411.8,103.2 413.7,102.9 415.7,102.4 417.7,101.7 419.6,101.1 421.6,100.8 423.6,100.9 425.5,100.8 427.5,100.6 429.5,100.6 431.4,100.5 433.4,100.5 435.4,100.2 437.3,100.0 439.3,99.8 441.3,99.4 443.2,98.7 445.2,97.5 447.2,96.6 449.1,95.6 451.1,95.0 453.1,94.1 455.0,93.3 457.0,91.8 459.0,89.0 460.9,87.0 462.9,86.6 464.9,85.7 466.8,84.8 468.8,84.1 470.8,83.6 472.7,83.1 474.7,82.0 476.7,78.4 478.6,74.5 480.6,71.6 482.6,70.3 484.5,67.7 486.5,66.5 488.5,65.1 490.4,64.8 492.4,64.6 494.4,64.2 496.3,63.7 498.3,63.3 500.3,62.9 502.2,62.1 504.2,61.0 506.2,59.9 508.1,59.4 510.1,58.7 512.1,58.0 514.0,57.4 516.0,57.2 518.0,56.6 519.9,56.2 521.9,56.4 523.9,56.4 525.8,56.5 527.8,56.4 529.8,56.4 531.7,56.6 533.7,56.3 535.7,55.8 537.6,55.4 539.6,55.0 541.6,54.4 543.5,53.5 545.5,52.8 547.5,52.3 549.4,50.9 551.4,49.3 553.4,48.0 555.3,46.0 557.3,44.8 559.3,44.0 561.2,43.4 563.2,42.6 565.2,41.9 567.1,41.5 569.1,40.6 571.1,40.2 573.0,40.2 575.0,39.9 577.0,39.6 578.9,39.6 580.9,39.5 582.9,39.5 584.8,39.4 586.8,39.3 588.8,39.2 590.7,39.1 592.7,39.0 594.7,38.9 596.6,39.1 598.6,38.8 600.6,38.4 602.5,37.9 604.5,37.4 606.5,37.2 608.4,36.9 610.4,36.6 612.4,36.6 614.3,36.3 616.3,35.8 618.3,35.1 620.2,34.4 622.2,33.7 624.2,33.3 626.1,32.7 628.1,32.2 630.1,32.0 632.0,31.6 634.0,31.1 635.9,30.9 637.9,30.7 639.9,30.3 641.8,30.3 643.8,30.3 645.8,30.1 647.7,29.7 649.7,29.4 651.7,29.1 653.6,28.7 655.6,28.6 657.6,28.4 659.5,28.1 661.5,27.9 663.5,27.5 665.4,27.0 667.4,26.5 669.4,26.2 671.3,26.0 673.3,25.9 675.3,26.6 677.2,27.0 679.2,27.1 681.2,27.3 683.1,27.7 685.1,27.9 687.1,28.1 689.0,28.2 691.0,28.4 693.0,28.4 694.9,28.9 696.9,29.2 698.9,29.4 700.8,29.6 702.8,29.4 704.8,29.0 706.7,28.6 708.7,28.5 710.7,28.6 712.6,28.6 714.6,28.5 716.6,28.1 718.5,27.6 720.5,27.3 722.5,27.1 724.4,26.7 726.4,26.3 728.4,25.9 730.3,25.5 732.3,24.8 734.3,24.4 736.2,24.1 738.2,23.7 740.2,23.4 742.1,23.0 744.1,23.0 746.1,22.8 748.0,22.3 750.0,22.1" style="fill:none;stroke:var(--s3);stroke-width:2"/><polyline points="48.0,276.8 50.0,276.8 51.9,276.8 53.9,276.8 55.9,276.8 57.8,276.8 59.8,275.4 61.8,271.2 63.7,270.1 65.7,269.0 67.7,268.4 69.6,270.8 71.6,271.3 73.6,271.5 75.5,271.7 77.5,271.8 79.5,271.8 81.4,271.5 83.4,270.8 85.4,269.7 87.3,269.2 89.3,268.8 91.3,268.5 93.2,267.5 95.2,266.7 97.2,266.4 99.1,265.8 101.1,265.4 103.1,264.2 105.0,263.1 107.0,261.1 109.0,257.1 110.9,253.6 112.9,248.9 114.9,246.5 116.8,244.5 118.8,243.0 120.8,242.8 122.7,242.5 124.7,242.2 126.7,241.8 128.6,241.9 130.6,241.5 132.6,240.7 134.5,240.2 136.5,240.0 138.5,239.3 140.4,237.0 142.4,234.2 144.4,233.5 146.3,232.8 148.3,230.6 150.3,230.2 152.2,228.9 154.2,220.9 156.2,218.9 158.1,216.3 160.1,213.0 162.1,203.1 164.0,186.1 166.0,175.7 167.9,175.4 169.9,174.7 171.9,169.0 173.8,163.6 175.8,161.5 177.8,152.5 179.7,143.9 181.7,131.6 183.7,131.0 185.6,129.6 187.6,125.0 189.6,123.6 191.5,127.6 193.5,128.6 195.5,129.5 197.4,129.5 199.4,129.4 201.4,129.7 203.3,129.6 205.3,129.5 207.3,129.1 209.2,129.1 211.2,128.7 213.2,128.7 215.1,127.2 217.1,125.2 219.1,123.3 221.0,119.1 223.0,118.5 225.0,118.1 226.9,117.9 228.9,118.1 230.9,116.5 232.8,115.4 234.8,112.7 236.8,110.5 238.7,107.7 240.7,105.2 242.7,104.3 244.6,103.1 246.6,102.8 248.6,102.5 250.5,102.6 252.5,102.6 254.5,101.7 256.4,101.4 258.4,101.4 260.4,101.1 262.3,101.7 264.3,102.3 266.3,102.0 268.2,102.2 270.2,103.2 272.2,102.9 274.1,102.9 276.1,103.0 278.1,103.1 280.0,104.1 282.0,104.0 284.0,104.0 285.9,103.6 287.9,103.3 289.9,103.5 291.8,105.4 293.8,106.8 295.8,107.9 297.7,107.8 299.7,108.4 301.7,109.0 303.6,108.8 305.6,108.9 307.6,108.9 309.5,109.1 311.5,108.9 313.5,109.2 315.4,109.3 317.4,110.3 319.4,111.3 321.3,112.0 323.3,112.5 325.3,112.0 327.2,111.8 329.2,111.8 331.2,111.4 333.1,111.4 335.1,110.7 337.1,110.7 339.0,110.2 341.0,108.4 343.0,109.9 344.9,109.3 346.9,109.7 348.9,109.4 350.8,109.8 352.8,110.1 354.8,110.0 356.7,110.2 358.7,110.0 360.7,110.2 362.6,110.3 364.6,109.8 366.6,109.0 368.5,108.5 370.5,108.3 372.5,107.5 374.4,107.1 376.4,107.6 378.4,107.3 380.3,106.7 382.3,106.5 384.3,106.0 386.2,105.8 388.2,105.0 390.2,104.6 392.1,104.2 394.1,103.9 396.1,103.6 398.0,103.2 400.0,102.5 401.9,102.5 403.9,102.5 405.9,102.4 407.8,102.3 409.8,101.8 411.8,101.5 413.7,101.2 415.7,101.0 417.7,100.8 419.6,100.1 421.6,100.0 423.6,99.8 425.5,99.7 427.5,99.7 429.5,99.6 431.4,99.3 433.4,99.2 435.4,98.8 437.3,98.6 439.3,98.5 441.3,98.3 443.2,97.8 445.2,96.6 447.2,95.7 449.1,95.1 451.1,94.4 453.1,92.6 455.0,91.2 457.0,89.5 459.0,86.3 460.9,84.6 462.9,84.4 464.9,84.0 466.8,83.4 468.8,82.8 470.8,82.5 472.7,80.8 474.7,78.6 476.7,73.0 478.6,67.6 480.6,63.6 482.6,62.6 484.5,59.2 486.5,57.8 488.5,56.6 490.4,56.7 492.4,56.8 494.4,56.5 496.3,56.1 498.3,55.8 500.3,55.7 502.2,55.3 504.2,54.3 506.2,53.6 508.1,53.5 510.1,53.4 512.1,53.3 514.0,53.2 516.0,52.9 518.0,52.4 519.9,52.2 521.9,52.5 523.9,52.5 525.8,52.2 527.8,51.8 529.8,52.1 531.7,51.7 533.7,51.4 535.7,51.1 537.6,51.1 539.6,50.4 541.6,50.3 543.5,49.9 545.5,49.4 547.5,49.5 549.4,48.4 551.4,46.9 553.4,45.8 555.3,42.5 557.3,41.7 559.3,41.2 561.2,40.9 563.2,40.7 565.2,40.1 567.1,39.8 569.1,39.0 571.1,39.1 573.0,39.5 575.0,39.6 577.0,40.0 578.9,40.2 580.9,40.7 582.9,40.7 584.8,40.6 586.8,43.1 588.8,43.0 590.7,43.5 592.7,43.3 594.7,42.9 596.6,42.8 598.6,43.1 600.6,42.4 602.5,42.3 604.5,42.4 606.5,42.6 608.4,42.3 610.4,42.1 612.4,41.9 614.3,41.8 616.3,43.4 618.3,43.6 620.2,43.6 622.2,43.2 624.2,43.0 626.1,42.7 628.1,42.6 630.1,42.1 632.0,41.8 634.0,41.0 635.9,40.7 637.9,40.5 639.9,39.9 641.8,40.7 643.8,41.1 645.8,41.1 647.7,40.9 649.7,41.3 651.7,41.0 653.6,40.6 655.6,40.1 657.6,40.0 659.5,40.8 661.5,40.6 663.5,40.7 665.4,41.1 667.4,40.8 669.4,40.5 671.3,40.2 673.3,40.1 675.3,41.6 677.2,40.9 679.2,40.5 681.2,40.4 683.1,40.4 685.1,40.4 687.1,40.1 689.0,46.2 691.0,46.6 693.0,46.0 694.9,46.8 696.9,49.3 698.9,49.1 700.8,49.3 702.8,49.3 704.8,48.8 706.7,49.1 708.7,49.0 710.7,48.3 712.6,47.7 714.6,47.6 716.6,47.2 718.5,46.3 720.5,46.0 722.5,45.9 724.4,45.6 726.4,46.0 728.4,45.7 730.3,45.8 732.3,44.7 734.3,45.1 736.2,44.6 738.2,44.6 740.2,44.3 742.1,43.9 744.1,43.3 746.1,43.0 748.0,42.8 750.0,42.8" style="fill:none;stroke:var(--s1);stroke-width:1.6"/><polyline points="48.0,276.8 50.0,276.9 51.9,277.0 53.9,275.4 55.9,274.9 57.8,273.1 59.8,271.2 61.8,268.4 63.7,267.0 65.7,265.8 67.7,265.9 69.6,273.2 71.6,276.3 73.6,278.4 75.5,279.1 77.5,279.6 79.5,280.4 81.4,280.6 83.4,280.8 85.4,281.3 87.3,281.9 89.3,281.6 91.3,281.5 93.2,281.2 95.2,280.8 97.2,281.0 99.1,280.8 101.1,280.9 103.1,280.6 105.0,280.3 107.0,279.3 109.0,276.9 110.9,276.4 112.9,274.5 114.9,273.8 116.8,273.6 118.8,273.5 120.8,273.7 122.7,273.7 124.7,274.1 126.7,274.3 128.6,274.6 130.6,274.4 132.6,274.3 134.5,274.3 136.5,273.3 138.5,272.9 140.4,271.5 142.4,270.2 144.4,268.9 146.3,268.6 148.3,266.2 150.3,264.0 152.2,262.9 154.2,257.6 156.2,254.7 158.1,253.5 160.1,252.4 162.1,250.2 164.0,246.8 166.0,242.9 167.9,242.2 169.9,241.4 171.9,238.1 173.8,237.4 175.8,236.5 177.8,232.3 179.7,228.4 181.7,225.6 183.7,225.0 185.6,224.5 187.6,223.2 189.6,222.0 191.5,223.2 193.5,223.5 195.5,223.4 197.4,223.7 199.4,224.5 201.4,226.0 203.3,226.4 205.3,227.3 207.3,228.1 209.2,228.7 211.2,228.3 213.2,228.6 215.1,228.3 217.1,228.1 219.1,227.6 221.0,226.6 223.0,226.1 225.0,226.3 226.9,226.4 228.9,226.7 230.9,226.5 232.8,225.3 234.8,224.1 236.8,222.9 238.7,222.1 240.7,221.3 242.7,221.6 244.6,221.8 246.6,222.0 248.6,221.9 250.5,221.8 252.5,221.6 254.5,221.1 256.4,221.1 258.4,221.1 260.4,221.3 262.3,221.6 264.3,221.8 266.3,222.1 268.2,222.2 270.2,222.3 272.2,222.6 274.1,222.8 276.1,222.9 278.1,223.0 280.0,223.0 282.0,223.1 284.0,223.0 285.9,223.3 287.9,223.4 289.9,223.2 291.8,222.9 293.8,222.7 295.8,222.7 297.7,222.8 299.7,223.0 301.7,224.6 303.6,224.9 305.6,225.0 307.6,225.2 309.5,225.6 311.5,225.5 313.5,225.8 315.4,226.0 317.4,226.0 319.4,226.5 321.3,227.2 323.3,227.7 325.3,228.8 327.2,231.7 329.2,232.1 331.2,232.7 333.1,233.0 335.1,233.2 337.1,233.4 339.0,233.7 341.0,233.6 343.0,237.3 344.9,238.1 346.9,239.0 348.9,238.9 350.8,239.2 352.8,239.4 354.8,239.8 356.7,239.6 358.7,239.7 360.7,239.3 362.6,239.1 364.6,238.8 366.6,238.6 368.5,238.5 370.5,238.0 372.5,237.9 374.4,237.8 376.4,240.5 378.4,240.5 380.3,240.5 382.3,240.1 384.3,240.2 386.2,240.1 388.2,240.0 390.2,240.0 392.1,239.6 394.1,239.8 396.1,239.9 398.0,239.8 400.0,239.4 401.9,238.9 403.9,238.1 405.9,237.6 407.8,237.0 409.8,236.5 411.8,236.0 413.7,236.0 415.7,235.8 417.7,234.8 419.6,233.7 421.6,233.2 423.6,233.0 425.5,233.2 427.5,233.1 429.5,233.1 431.4,233.2 433.4,232.8 435.4,232.8 437.3,232.1 439.3,232.1 441.3,230.7 443.2,229.6 445.2,228.5 447.2,228.2 449.1,227.5 451.1,226.7 453.1,225.7 455.0,224.5 457.0,223.2 459.0,220.7 460.9,219.8 462.9,219.0 464.9,218.4 466.8,218.2 468.8,217.9 470.8,217.1 472.7,215.6 474.7,214.5 476.7,213.0 478.6,211.3 480.6,209.2 482.6,209.0 484.5,207.1 486.5,207.2 488.5,207.2 490.4,207.8 492.4,207.9 494.4,208.2 496.3,208.0 498.3,207.8 500.3,207.1 502.2,206.2 504.2,205.5 506.2,205.4 508.1,205.5 510.1,205.3 512.1,205.3 514.0,205.2 516.0,204.9 518.0,204.7 519.9,204.3 521.9,204.9 523.9,205.1 525.8,205.1 527.8,205.3 529.8,205.4 531.7,205.4 533.7,205.5 535.7,205.2 537.6,204.9 539.6,204.5 541.6,204.0 543.5,203.5 545.5,203.0 547.5,202.2 549.4,201.3 551.4,199.6 553.4,198.0 555.3,196.8 557.3,196.5 559.3,196.4 561.2,195.9 563.2,195.1 565.2,194.8 567.1,193.9 569.1,193.4 571.1,193.2 573.0,193.5 575.0,193.4 577.0,193.4 578.9,193.6 580.9,193.9 582.9,194.2 584.8,194.4 586.8,194.6 588.8,194.8 590.7,195.2 592.7,195.3 594.7,195.4 596.6,195.3 598.6,195.2 600.6,195.1 602.5,195.0 604.5,194.8 606.5,194.9 608.4,194.9 610.4,194.8 612.4,194.9 614.3,194.8 616.3,194.2 618.3,193.7 620.2,193.1 622.2,193.1 624.2,192.7 626.1,192.1 628.1,191.7 630.1,191.8 632.0,191.7 634.0,191.5 635.9,191.3 637.9,191.4 639.9,190.7 641.8,190.6 643.8,190.5 645.8,190.3 647.7,190.0 649.7,190.2 651.7,190.2 653.6,190.1 655.6,190.3 657.6,190.3 659.5,190.4 661.5,190.5 663.5,190.1 665.4,189.8 667.4,189.4 669.4,189.2 671.3,189.2 673.3,189.1 675.3,189.5 677.2,189.6 679.2,189.6 681.2,190.0 683.1,190.2 685.1,190.3 687.1,190.2 689.0,190.6 691.0,190.4 693.0,190.3 694.9,190.5 696.9,190.7 698.9,190.9 700.8,190.9 702.8,190.8 704.8,190.8 706.7,190.7 708.7,190.8 710.7,191.0 712.6,191.0 714.6,191.1 716.6,191.2 718.5,191.0 720.5,190.8 722.5,190.8 724.4,190.4 726.4,190.3 728.4,190.3 730.3,190.0 732.3,189.8 734.3,189.5 736.2,189.4 738.2,189.2 740.2,188.7 742.1,188.8 744.1,188.7 746.1,188.4 748.0,188.2 750.0,188.2" style="fill:none;stroke:var(--s4);stroke-width:1.6"/><text class="viz-endlabel" x="756" y="26.1" style="fill:var(--s3)">BTC + ETH +63%</text><text class="viz-endlabel" x="756" y="46.8" style="fill:var(--s1)">Any coin +57%</text><text class="viz-endlabel" x="756" y="192.2" style="fill:var(--s4)">Deribit +22%</text></svg>
+  <div class="fig-note">Capital is 1.5 times the position: the spot coin paid in full plus 50 % margin for the short. Costs include a daily re-balancing of both legs, which a real account would do less often.</div></div>
+</section>
+
+<section aria-labelledby="conf-h">
+  <div class="sec-head"><div class="eyebrow">Evidence</div><h2 id="conf-h">Seven tests on data the rules had never seen</h2>
+  <p class="lede">Each rule was frozen in the repository before its test data was loaded. The nine checks: Sharpe of at least 1; two statistical tests that correct for luck and for the number of ideas tried; profit in at least 75 % of years; profit on every data set; drawdown no deeper than 20 %; profit with every setting halved or doubled; profit at double costs; and no dependence on market direction.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Rule</th><th class="txt">Unseen data</th><th>Coins</th><th>Return a year</th><th>Sharpe</th><th>Worst DD</th><th>Years in profit</th><th>Checks passed</th></tr></thead>
+    <tbody><tr><td>Carry, 12 main coins</td><td class="txt">Binance, the same 12 coins in later years (2024 – Oct 2026)</td><td>12</td><td class="pos">+2.9%</td><td>6.6</td><td>-0.2%</td><td>3 of 3</td><td><span class="pill pass">9 of 9</span></td></tr><tr><td>Carry, 12 main coins</td><td class="txt">Binance, 18 other coins (2020 – Oct 2026)</td><td>18</td><td class="pos">+7.1%</td><td>5.9</td><td>-1.1%</td><td>5 of 7</td><td><span class="pill pass">9 of 9</span></td></tr><tr><td>Always BTC + ETH</td><td class="txt">Binance, 2024 – Oct 2026</td><td>12</td><td class="pos">+3.8%</td><td>10.1</td><td>-0.6%</td><td>3 of 3</td><td><span class="pill pass">9 of 9</span></td></tr><tr><td>Carry, any coin</td><td class="txt">Binance, 57 coins never used before (2020 – Oct 2026)</td><td>57</td><td class="pos">+4.9%</td><td>5.3</td><td>-0.5%</td><td>6 of 7</td><td><span class="pill pass">9 of 9</span></td></tr><tr><td>Carry, any coin</td><td class="txt">Binance, every other coin ever listed on both markets, 118 of them later delisted, held to the last traded day (2020 – Oct 2026)</td><td>391</td><td class="pos">+6.7%</td><td>4.6</td><td>-2.0%</td><td>4 of 7</td><td><span class="pill part">8 of 9</span></td></tr><tr><td>Always BTC + ETH</td><td class="txt">Deribit, a different exchange (May 2019 – Oct 2026)</td><td>2</td><td class="pos">+3.0%</td><td>2.4</td><td>-4.3%</td><td>7 of 8</td><td><span class="pill pass">9 of 9</span></td></tr><tr><td>Carry, 12-coin rule</td><td class="txt">Deribit, all 131 perpetuals (2019 – Oct 2026) <span class="tag">see note</span></td><td>131</td><td class="pos">+10.6%</td><td>2.1</td><td>-4.5%</td><td>7 of 8</td><td><span class="pill pass">9 of 9</span></td></tr></tbody></table></div>
+  <ul class="points">
+    <li><strong>The one miss.</strong> On the complete Binance universe the rule lost a little in three bear years (2022 −1.4 %, 2025 −0.2 %, 2026 −0.5 %), so only 4 of 7 years were positive. Closing positions two days before a delisting, which Binance announces in advance, turns 2025 and 2026 positive and passes all nine.</li>
+    <li><strong>The Deribit note.</strong> The 12-coin rule passes on all 131 Deribit perpetuals, but most of its +10.6 % a year came from thinly traded contracts in 2023 – 24 that could not absorb real money. On Deribit's liquid contracts alone it made +1.8 to +2.8 % a year with no losing year.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="score-h">
+  <div class="sec-head"><div class="eyebrow">Scoreboard</div><h2 id="score-h">Every rule that reached a test</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Rule</th><th class="txt">What it does</th><th>Verdict</th><th class="txt">Result on unseen data</th></tr></thead>
+    <tbody>
+      <tr><td>R1 Low volatility</td><td class="txt">Buy calm coins, short jumpy ones (the Kronos loop's winner)</td><td><span class="pill fail">failed</span></td><td class="txt">−64 %. It only made money in falling years: a hidden bet against the market.</td></tr>
+      <tr class="hl"><td>R2 Carry, 12 coins</td><td class="txt">Spot long and perpetual short while funding is high</td><td><span class="pill pass">passed</span></td><td class="txt">+2.9 % a year (2024 – 26) and +7.1 % a year on 18 other coins.</td></tr>
+      <tr class="hl"><td>R3 Always BTC + ETH</td><td class="txt">The same trade held all the time on the two largest coins</td><td><span class="pill pass">passed</span></td><td class="txt">+3.8 % a year on Binance (2024 – 26), +3.0 % a year on Deribit (2019 – 26).</td></tr>
+      <tr class="hl"><td>R4 Carry, any coin</td><td class="txt">R2's rule on a wide universe, at most a tenth of the book per coin</td><td><span class="pill pass">passed</span></td><td class="txt">+4.9 % a year on 57 new coins; +6.7 % a year on 391 more, delisted ones included.</td></tr>
+      <tr><td>R5 Trend following</td><td class="txt">Follow each coin's 120-day trend, sized to 15 % volatility</td><td><span class="pill fail">failed</span></td><td class="txt">Sharpe 0.18. Its design-period strength came from the 2020 – 21 trends.</td></tr>
+      <tr><td>R6 Funding crowding</td><td class="txt">Short coins whose buyers pay the most funding, buy the others</td><td><span class="pill fail">failed</span></td><td class="txt">Some edge, far too uneven: a 60 % drawdown on new coins.</td></tr>
+      <tr><td>R7 Crowding, older coins</td><td class="txt">R6 only on coins listed for at least a year</td><td><span class="pill fail">failed</span></td><td class="txt">Sharpe 0.56 on 60 untouched coins; 4 of 7 years positive.</td></tr>
+      <tr><td>R8 Funding spread</td><td class="txt">Among the 50 most traded coins, buy the lowest-funding fifth and short the highest</td><td><span class="pill fail">failed</span></td><td class="txt">Sharpe 2.0 in 2020 – 23, then −19 % in 2024 – 26 (2025: −33 %).</td></tr>
+    </tbody></table></div>
+  <p>Ideas that showed no edge after costs on design data, and so never reached a test: price moves around funding payouts, quarterly futures, perpetual-versus-spot price gaps, pairs trading, concentrating carry in fewer coins, timing carry on the price premium, shorting new listings, momentum, and funding gaps between exchanges. All are in <code>research/proof/registry.csv</code>.</p>
+</section>
+
+<section aria-labelledby="learn-h">
+  <div class="sec-head"><div class="eyebrow">What the failures show</div><h2 id="learn-h">Rules that bet on direction did not survive new data</h2></div>
+  <ul class="points">
+    <li><strong>A strong backtest is not evidence.</strong> R8 had a Sharpe of 2.0 over four years with every year positive, and lost 19 % on the next three. R1 made +29 % in the months it was built on and lost 64 % elsewhere.</li>
+    <li><strong>Coin selection hides risk.</strong> Tests on today's most traded coins leave out the ones that died. Carry looked a little better on those hand-picked sets than on the complete universe.</li>
+    <li><strong>Carry passes because it does not predict prices.</strong> It collects a fee that exists whenever the market leans long. That is also why it earns nothing when the market does not.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="run-h">
+  <div class="sec-head"><div class="eyebrow">Running it</div><h2 id="run-h">What it needs, and what can go wrong</h2></div>
+  <ul class="points">
+    <li><strong>An account where spot coins count as collateral for the short</strong> (unified or portfolio margin). Coins spike 46 – 66 % in a day about once in 1,000 coin-days. Without shared collateral the short could be liquidated and leave the spot leg unhedged.</li>
+    <li><strong>Watching delisting notices.</strong> The worst single day in the test was a perpetual that rose 94 % on its last day while the spot price fell 45 %.</li>
+    <li><strong>Sudden collapses.</strong> One coin fell 83 % in a day and its funding turned sharply negative; at a tenth of the book that cost 1.3 %. The per-coin cap is what limits this.</li>
+    <li><strong>Exchange failure.</strong> No backtest covers an exchange freezing withdrawals. Money on one exchange carries that risk.</li>
+    <li><strong>Patience.</strong> In markets like 2022 or today the rule mostly sits in cash.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="open-h" style="border-bottom:0">
+  <div class="sec-head"><div class="eyebrow">Still open</div><h2 id="open-h">The live paper test</h2></div>
+  <p>Day 2 of at least 28 (through 2026-11-09). So far: 12-coin rule -0.02%, always BTC + ETH -0.09%, any-coin rule -0.13%. These are mostly the cost of opening positions. Live prices match Binance's archive exactly so far.</p>
+  <p>The test runs daily on live Binance data through the same code as the backtest. Its job is to show that the method trades live as simulated; four weeks cannot show profit. The verdict is due on or after 6 Dec 2026.</p>
+</section>
+<footer><div>Protocol: <code>research/proof/PROTOCOL.md</code> · every rule tried: <code>research/proof/registry.csv</code> · results: <code>research/proof/results/</code> · live records: branch <code>experiment/carry-forward</code>.</div></footer>
+</div>

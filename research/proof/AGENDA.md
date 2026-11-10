@@ -1,48 +1,32 @@
 # Research agenda (autonomous)
 
 The standing goal: a method that passes every line of `PROTOCOL.md`, on unseen data, and then its forward test.
-Every rule tried goes in `registry.csv`. Work on one item at a time; commit each result.
+Every rule tried goes in `registry.csv`.
+
+## Where things stand (10 Nov 2026)
+
+- **Passed the backtest bar: funding carry** (R2, R3, R4). Seven tests on unseen data: Binance later years, other
+  coins, fresh coins, the survivorship-free universe (8 of 9 checks; 9 of 9 with announced-delisting exits) and Deribit.
+  Report: `reports/proof/report.html`.
+- **Failed:** R1 low volatility, R5 trend, R6 / R7 / R8 funding-factor books. Nine more ideas showed no edge on design
+  data (registry 12, 13, 16 - 18, 20 - 22, 27).
+- The search for a second method is closed for now: every family with a plausible mechanism and testable data has
+  been through the protocol.
 
 ## Running
 
-- **Forward test of R2, R3, R4 (funding carry)**, from 8 Nov 2026, daily (`carry-forward.yml`, branch
-  `experiment/carry-forward`). Check every day:
+- **Forward test of R2, R3, R4**, from 8 Nov 2026, daily (`carry-forward.yml`, branch `experiment/carry-forward`).
+  Check every day:
   - the job ran;
-  - `archive_check`: price returns must match the archive exactly (`max_price_return_diff` 0). The archive has
-    funding only in monthly files, so funding, positions and daily P&L are compared once a month is published
-    (`funding_days`, `max_funding_diff`, `max_weight_diff`, `max_daily_net_diff`, all ~0); November's arrives in
-    early December;
+  - `archive_check`: price returns must match the archive exactly (`max_price_return_diff` 0). Funding, positions
+    and daily P&L are compared once the month's funding file is published (early December);
   - returns and costs look sane.
-  On or after 6 Dec 2026, write the forward verdict per PROTOCOL.md section 5, then tell the user.
+- **On or after 6 Dec 2026:** write the forward verdict per PROTOCOL.md section 5 into `results/forward_verdict.json`,
+  update the report and README, and tell the user.
 
-## Status of rules
+## Only if new data or a new mechanism appears
 
-- **Passed the backtest bar:** R2, R3, R4 (funding carry). All have thin yields in 2025-26 (about 0-2 % a year) because
-  funding falls in down markets.
-- **Failed:** R1 (low volatility: a disguised short-market bet), R5 (trend), R6 (cross-sectional funding factor:
-  positive alpha but uneven, drawdown 60 % on fresh coins), R7 (R6 on coins listed >= 1 year: positive everywhere
-  but weak on set B, Sharpe 0.56, alpha t 1.6). Fresh set B is now used; pre-register set C before the next
-  confirmation.
-
-## Queue (each goes through PROTOCOL.md; fresh confirmation data must be pre-registered first)
-
-1. **Fresh set B: pre-registered** (`fresh_universe_b.json`, 60 coins, 7 Nov 2026). Use it only to confirm a frozen rule.
-2. ~~Settlement drift~~ (8 Nov): dead end. Minus the market, high-funding coins trail by only 4-8 bp over 4 h
-   (costs ~24 bp hedged); raw drops are market-wide and reverse within 8 h. Registry id 12.
-3. ~~Quarterly futures basis~~ (8 Nov): not better now. BTC/ETH quarterlies lock 4.6-5.6 %/yr against +6.5 %/yr
-   of BTC perpetual funding over the last 30 days. Revisit only if quarterly basis runs well above funding.
-   Registry id 13.
-4. ~~R6 repair~~ (8 Nov): R7 (age >= 1 year, rank, inverse vol) failed on set B (registry 15).
-6. ~~Basis mean reversion~~ (8 Nov): real convergence (gaps > 60 bp close ~50 bp in 4 h vs ~34 bp costs) but the
-   opportunities vanished after 2022 (~20 hours in all of 2023). Registry 16.
-7. ~~Pairs mean reversion~~ (9 Nov): no edge (+4.9 bp at 4 h vs ~12 bp costs; negative at 12-24 h). Registry 17.
-5. ~~Carry capital efficiency~~ (9 Nov): keep 1.5x. Daily spikes against the short leg reach 46-66 % on 1 coin-day in
-   1,000 (12 coins / fresh coins), with extremes above 100 %. **Deployment requirement:** run carry where spot counts
-   as collateral for the short (unified / portfolio margin); otherwise the short can be liquidated in a squeeze and
-   leave the spot leg unhedged.
-
-## Next ideas (to be added as the queue empties)
-
-- **Fresh set C: pre-registered** 10 Nov (`fresh_universe_c.json`, 60 coins). Use it only to confirm a frozen rule.
-- Carry: predicted funding (Binance publishes the next rate continuously) to enter or leave a day earlier.
-- Cross-exchange funding differences (OKX is reachable): needs a history source before it can be tested.
+- Reverse carry (spot short, perpetual long when funding is negative): needs margin borrow-rate history.
+- Options (volatility premium): needs option price history.
+- Any new rule: all Binance history through Oct 2026 has now been used (the wide panel covers every coin), so a new
+  rule can only be confirmed on data that does not exist yet (freeze it, then wait) or on another exchange.

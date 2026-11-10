@@ -110,7 +110,7 @@ def bars(cats: list[str], series: dict[str, list[float]], colors: dict[str, str]
 
 
 def lines(df: pd.DataFrame, colors: dict[str, str], H: int = 300, fmt="{:+.0%}", base: float = 1.0,
-          labels: dict[str, str] | None = None) -> str:
+          labels: dict[str, str] | None = None, tick_freq: str = "3MS", tick_fmt: str = "%b %Y") -> str:
     """Account values over time (one line per column, indexed to ``base``), with end labels."""
     left, right, top, bottom = 48, 170, 14, 30
     t = pd.to_datetime(df.index)
@@ -124,8 +124,8 @@ def lines(df: pd.DataFrame, colors: dict[str, str], H: int = 300, fmt="{:+.0%}",
         out.append(f'<line class="viz-grid" x1="{left}" x2="{W - right}" y1="{ys(v):.1f}" y2="{ys(v):.1f}"/>'
                    f'<text class="viz-tick" x="{left - 6}" y="{ys(v) + 4:.1f}" text-anchor="end">{esc(fmt.format(v - base))}</text>')
     out.append(f'<line class="viz-base" x1="{left}" x2="{W - right}" y1="{ys(base):.1f}" y2="{ys(base):.1f}"/>')
-    for m in pd.date_range(t.min().normalize() + pd.offsets.MonthBegin(0), t.max(), freq="3MS"):
-        out.append(f'<text class="viz-tick" x="{xs(m.value):.1f}" y="{H - 10}" text-anchor="middle">{m:%b %Y}</text>')
+    for m in pd.date_range(t.min().normalize() + pd.offsets.MonthBegin(0), t.max(), freq=tick_freq):
+        out.append(f'<text class="viz-tick" x="{xs(m.value):.1f}" y="{H - 10}" text-anchor="middle">{m.strftime(tick_fmt)}</text>')
     ends = []
     for c in df.columns:
         s = df[c].dropna()

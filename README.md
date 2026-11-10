@@ -16,6 +16,38 @@ prices: unattended, crash-safe, with every decision and fill journaled.
                                                                                     reports/live.html
 ```
 
+## Proven method: funding carry (proof programme, Nov 2026)
+
+**Question:** which trading method is truly profitable, by tests fixed in advance? **Answer: funding carry, and nothing
+that bets on price direction.** Report: `reports/proof/report.html`. Every rule tried is in `research/proof/registry.csv`.
+
+* **The bar** (`research/proof/PROTOCOL.md`, written before any test): a rule is frozen in the repository first, then
+  tested once on data it has never seen. It must pass nine checks:
+  * Sharpe ≥ 1, probabilistic Sharpe ≥ 0.99, deflated Sharpe ≥ 0.95;
+  * profit in ≥ 75 % of years and on every data set;
+  * drawdown no deeper than −20 %;
+  * profit with every setting halved or doubled, and at double costs;
+  * no dependence on market direction.
+* **The method:** buy a coin on spot and short the same amount on its perpetual. Price moves cancel; the short collects
+  the funding rate. Capital is 1.5 × the position. Costs: spot 11 bp and perpetual 6 bp on every change.
+* **What passed** (`research/proof/carry.py`):
+  * **R3, always BTC + ETH.** Binance 2020 – Oct 2026: +7.4 % a year, every year in profit, worst drawdown −1.2 %.
+    Confirmed on Binance 2024 – 26 and on Deribit May 2019 – Oct 2026 (+3.0 % a year, 7 of 8 years in profit).
+  * **R2 / R4, carry while 14-day funding is above 10 % a year** (leave below 0). Confirmed on 18 other coins, on 57
+    fresh coins, and on 391 further coins of which 118 were later delisted (+6.7 % a year, worst drawdown −2.0 %).
+  * On that last, survivorship-free set the rule passes 8 of 9 checks: three bear years lost 0.2 – 1.4 %. Closing
+    two days before a delisting, which Binance announces, passes all nine.
+* **What it earns:** it depends on the market. Both versions made 23 – 28 % in 2021 and about 8 % in 2024, and little
+  in 2022, 2025 and 2026. BTC funding is near 2.6 % a year now.
+* **What failed on unseen data:** low volatility (−64 %), trend following (Sharpe 0.18), three funding-factor books
+  (the last had Sharpe 2.0 in 2020 – 23, then lost 19 % in 2024 – 26). Nine more ideas showed no edge after costs.
+* **Data:** `research/proof/wide.py` builds a survivorship-free panel of every USDT perpetual Binance ever listed
+  (906 coins, 164 delisted). `research/proof/deribit.py` loads Deribit's full funding history.
+* **Still open:** the live paper test of R2, R3 and R4 (`carry-forward.yml`, branch `experiment/carry-forward`), from
+  8 Nov 2026; verdict on or after 6 Dec 2026.
+* **To run it for real:** an account where spot coins count as collateral for the short (unified margin), and someone
+  watching delisting notices. Exchange failure is a risk no backtest covers.
+
 ## Research results (data through 2026-10-12)
 
 Walk-forward out-of-sample, **net of 10 bps per side, real funding and a 3-hour
