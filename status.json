@@ -1,50 +1,55 @@
 {
  "started": "2026-11-08",
  "minimum_end": "2026-12-06",
- "through": "2026-11-09",
- "updated": "2026-11-10 02:23:50.830694+00:00",
+ "through": "2026-11-10",
+ "updated": "2026-11-11 02:19:53.841087+00:00",
  "rules": {
   "R2": {
-   "days": 2,
-   "return": -0.00023,
-   "annualised": -0.0411,
-   "funding": 8e-05,
-   "basis": -1.1e-05,
-   "costs": -0.000299,
+   "days": 3,
+   "return": -0.000199,
+   "annualised": -0.0239,
+   "funding": 0.000119,
+   "basis": -8e-06,
+   "costs": -0.00031,
    "worst_drawdown": 0.0,
-   "holding": {}
+   "holding": {},
+   "archive_check": {
+    "price_days": 2,
+    "max_price_return_diff": 0.0,
+    "archive_funding_through": "2026-10-31 16:00:00+00:00"
+   }
   },
   "R3": {
-   "days": 2,
-   "return": -0.000924,
-   "annualised": -0.1553,
-   "funding": 0.000196,
-   "basis": 5.5e-05,
-   "costs": -0.001175,
-   "worst_drawdown": 0.0,
+   "days": 3,
+   "return": -0.000952,
+   "annualised": -0.1094,
+   "funding": 0.000263,
+   "basis": -6e-06,
+   "costs": -0.001209,
+   "worst_drawdown": -2.8e-05,
    "holding": {
     "BTCUSDT": 0.5,
     "ETHUSDT": 0.5
    },
    "archive_check": {
-    "days": 1,
-    "max_daily_net_diff": 8.078e-05,
-    "max_weight_diff": 0.0
+    "price_days": 2,
+    "max_price_return_diff": 0.0,
+    "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   },
   "R4": {
-   "days": 2,
-   "return": -0.001342,
-   "annualised": -0.2173,
-   "funding": 0.000149,
-   "basis": -8.6e-05,
-   "costs": -0.001404,
-   "worst_drawdown": 0.0,
+   "days": 3,
+   "return": -0.001368,
+   "annualised": -0.1535,
+   "funding": 0.000339,
+   "basis": -0.000272,
+   "costs": -0.001435,
+   "worst_drawdown": -2.7e-05,
    "holding": {},
    "archive_check": {
-    "days": 1,
-    "max_daily_net_diff": 0.00117911,
-    "max_weight_diff": 0.1
+    "price_days": 2,
+    "max_price_return_diff": 0.0,
+    "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   }
  }
