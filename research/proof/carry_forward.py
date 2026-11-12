@@ -133,7 +133,7 @@ def main() -> None:
         b = C.book(p, W)
         b = b[(b.index >= START) & (b.index <= last)]
         eq = (1 + b["net"]).cumprod()
-        held = W.iloc[-1][W.iloc[-1] > 0]
+        held = W.loc[last][W.loc[last] > 0]              # positions on the last complete day (the panel runs one day further)
         status["rules"][rule] = {"days": int(len(b)), "return": round(float(eq.iloc[-1] - 1), 6),
                                  "annualised": round(float(eq.iloc[-1] ** (365 / max(len(b), 1)) - 1), 4),
                                  "funding": round(float(b["funding"].sum()), 6), "basis": round(float(b["basis"].sum()), 6),
