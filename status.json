@@ -3,37 +3,37 @@
  "spec": "config/daytrade2_candidate.json",
  "arms_spec": "config/daytrade_forward_arms.json",
  "start": "2026-10-29",
- "through": "2026-11-13",
- "days": 16,
+ "through": "2026-11-14",
+ "days": 17,
  "note": "annualised figures mean little until there are months of data",
  "arms": {
   "frozen": {
-   "trades": 9,
-   "trades_per_day": 0.5625,
-   "ann_return": -0.164303,
-   "sharpe": -2.566881,
+   "trades": 13,
+   "trades_per_day": 0.764706,
+   "ann_return": -0.171409,
+   "sharpe": -2.779636,
    "max_dd": -0.013512,
-   "win_rate": 0.333333,
-   "gross_bp": -33.194627,
-   "net_bp": -43.152116,
-   "cost_bp": 9.957489,
+   "win_rate": 0.384615,
+   "gross_bp": -23.245623,
+   "net_bp": -33.216192,
+   "cost_bp": 9.970569,
    "maker_entry_share": 0.0,
    "avg_hold_min": 240.0,
-   "total_return": -0.007837
+   "total_return": -0.008719
   },
   "theta45_hold120": {
-   "trades": 16,
-   "trades_per_day": 1.0,
-   "ann_return": 0.100583,
-   "sharpe": 1.437995,
+   "trades": 23,
+   "trades_per_day": 1.352941,
+   "ann_return": 0.112721,
+   "sharpe": 1.648415,
    "max_dd": -0.01015,
-   "win_rate": 0.6875,
-   "gross_bp": 23.447201,
-   "net_bp": 13.447201,
+   "win_rate": 0.652174,
+   "gross_bp": 21.047285,
+   "net_bp": 11.047285,
    "cost_bp": 10.0,
    "maker_entry_share": 0.0,
    "avg_hold_min": 120.0,
-   "total_return": 0.00421
+   "total_return": 0.004987
   }
  }
 }
