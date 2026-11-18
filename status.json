@@ -1,51 +1,51 @@
 {
  "started": "2026-11-08",
  "minimum_end": "2026-12-06",
- "through": "2026-11-16",
- "updated": "2026-11-17 09:24:09.175759+00:00",
+ "through": "2026-11-17",
+ "updated": "2026-11-18 08:42:52.669297+00:00",
  "rules": {
   "R2": {
-   "days": 9,
-   "return": -0.000205,
-   "annualised": -0.0083,
-   "funding": 0.000175,
-   "basis": -7e-06,
-   "costs": -0.000374,
-   "worst_drawdown": -0.00013,
+   "days": 10,
+   "return": -0.000246,
+   "annualised": -0.0089,
+   "funding": 0.00018,
+   "basis": -4.4e-05,
+   "costs": -0.000382,
+   "worst_drawdown": -0.00017,
    "holding": {
     "XRPUSDT": 0.25
    },
    "archive_check": {
-    "price_days": 9,
+    "price_days": 10,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   },
   "R3": {
-   "days": 9,
-   "return": -0.000772,
-   "annualised": -0.0308,
-   "funding": 0.00063,
-   "basis": 1.2e-05,
-   "costs": -0.001414,
-   "worst_drawdown": -7.4e-05,
+   "days": 10,
+   "return": -0.000799,
+   "annualised": -0.0288,
+   "funding": 0.000694,
+   "basis": -7.7e-05,
+   "costs": -0.001415,
+   "worst_drawdown": -0.0001,
    "holding": {
     "BTCUSDT": 0.5,
     "ETHUSDT": 0.5
    },
    "archive_check": {
-    "price_days": 9,
+    "price_days": 10,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   },
   "R4": {
-   "days": 9,
-   "return": -0.001121,
-   "annualised": -0.0445,
-   "funding": 0.001169,
-   "basis": -0.000337,
-   "costs": -0.001953,
+   "days": 10,
+   "return": -0.000801,
+   "annualised": -0.0288,
+   "funding": 0.001297,
+   "basis": -0.000114,
+   "costs": -0.001983,
    "worst_drawdown": -0.00026,
    "holding": {
     "XRPUSDT": 0.036,
@@ -78,7 +78,7 @@
     "JTOUSDT": 0.036
    },
    "archive_check": {
-    "price_days": 9,
+    "price_days": 10,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
