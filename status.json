@@ -1,51 +1,51 @@
 {
  "started": "2026-11-08",
  "minimum_end": "2026-12-06",
- "through": "2026-11-25",
- "updated": "2026-11-26 09:43:33.876897+00:00",
+ "through": "2026-11-26",
+ "updated": "2026-11-27 09:49:14.187771+00:00",
  "rules": {
   "R2": {
-   "days": 18,
-   "return": -0.000207,
-   "annualised": -0.0042,
-   "funding": 0.000208,
-   "basis": 9e-06,
-   "costs": -0.000423,
+   "days": 19,
+   "return": -0.0002,
+   "annualised": -0.0038,
+   "funding": 0.000253,
+   "basis": -2.8e-05,
+   "costs": -0.000425,
    "worst_drawdown": -0.00017,
    "holding": {
     "XRPUSDT": 0.25
    },
    "archive_check": {
-    "price_days": 18,
+    "price_days": 19,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   },
   "R3": {
-   "days": 18,
-   "return": -0.000543,
-   "annualised": -0.011,
-   "funding": 0.001088,
-   "basis": -2e-06,
-   "costs": -0.001629,
+   "days": 19,
+   "return": -0.000399,
+   "annualised": -0.0076,
+   "funding": 0.001214,
+   "basis": 1.9e-05,
+   "costs": -0.001631,
    "worst_drawdown": -0.000162,
    "holding": {
     "BTCUSDT": 0.5,
     "ETHUSDT": 0.5
    },
    "archive_check": {
-    "price_days": 18,
+    "price_days": 19,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
   },
   "R4": {
-   "days": 18,
-   "return": -0.000462,
-   "annualised": -0.0093,
-   "funding": 0.002178,
-   "basis": -0.000184,
-   "costs": -0.002454,
+   "days": 19,
+   "return": -0.000472,
+   "annualised": -0.009,
+   "funding": 0.002359,
+   "basis": -0.000267,
+   "costs": -0.002563,
    "worst_drawdown": -0.00026,
    "holding": {
     "XRPUSDT": 0.038,
@@ -55,7 +55,6 @@
     "ENAUSDT": 0.038,
     "PUMPUSDT": 0.038,
     "TAOUSDT": 0.038,
-    "ONDOUSDT": 0.038,
     "PENGUUSDT": 0.038,
     "ASTERUSDT": 0.038,
     "WLFIUSDT": 0.038,
@@ -72,11 +71,12 @@
     "VIRTUALUSDT": 0.038,
     "MARSCOINUSDT": 0.038,
     "FOGOUSDT": 0.038,
+    "PARTIUSDT": 0.038,
     "MEGAUSDT": 0.038,
     "JTOUSDT": 0.038
    },
    "archive_check": {
-    "price_days": 18,
+    "price_days": 19,
     "max_price_return_diff": 0.0,
     "archive_funding_through": "2026-10-31 16:00:00+00:00"
    }
